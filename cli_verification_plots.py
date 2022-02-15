@@ -86,64 +86,66 @@ def main(
         python cli_station_scores.py --input_dir /scratch/osm/movero/wd --season 2020s4 --lt_ranges 19-24 --domain C-1E_ch --
 
     """
-    # create output directory if it doesn't exist already
-    if not Path(output_dir).exists():
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
+    print(lt_ranges)
+    if False:
+        # create output directory if it doesn't exist already
+        if not Path(output_dir).exists():
+            Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    # dbg - s.t. i don't have to add all these flags the whole time, 
-    # i just hard-code the parameters which have multiple options here
-    # and use the default path to data for the time being.
-    # /scratch/osm/movero/wd/2021s4/C-1E_ch/station_scores<lt_range>_<parameter>.dat
+        # dbg - s.t. i don't have to add all these flags the whole time, 
+        # i just hard-code the parameters which have multiple options here
+        # and use the default path to data for the time being.
+        # /scratch/osm/movero/wd/2021s4/C-1E_ch/station_scores<lt_range>_<parameter>.dat
 
-    lt_ranges = (
-        "01-06",
-        # "07-12", 
-        # "13-18", 
-        # "19-24", 
-        # "25-30"
-    )
-
-    parameters = (
-        "CLCT",
-        # "DD_10M",
-        # "FF_10M",
-        # "PMSL",
-        # "PS",
-        # "T_2M",
-        # "TD_2M",
-        # "TOT_PREC12",
-        # "TOT_PREC6",
-        # "VMAX_10M6",
-    )
-
-    scores = (
-        "ME", 
-        # "MMOD", 
-        # "MAE", 
-        # "STDE", 
-        # "RMSE", 
-        # "COR", 
-        # "NOBS", 
-        # # "FBI", 
+        lt_ranges = (
+            "01-06",
+            # "07-12", 
+            # "13-18", 
+            # "19-24", 
+            # "25-30"
         )
 
+        parameters = (
+            "CLCT",
+            # "DD_10M",
+            # "FF_10M",
+            # "PMSL",
+            # "PS",
+            # "T_2M",
+            # "TD_2M",
+            # "TOT_PREC12",
+            # "TOT_PREC6",
+            # "VMAX_10M6",
+        )
 
-    # iterate directory, create cleaned df, call plotting pipeline, save plots
-    read_files(
-        lt_ranges,
-        parameters,
-        prefix,
-        postfix,
-        input_dir,
-        output_dir,
-        season,
-        domain,
-        scores,
-        relief,
-        verbose,
-    )
+        scores = (
+            "ME", 
+            # "MMOD", 
+            # "MAE", 
+            # "STDE", 
+            # "RMSE", 
+            # "COR", 
+            # "NOBS", 
+            # # "FBI", 
+            )
 
-    return
+
+        # iterate directory, create cleaned df, call plotting pipeline, save plots
+        read_files(
+            lt_ranges,
+            parameters,
+            prefix,
+            postfix,
+            input_dir,
+            output_dir,
+            season,
+            domain,
+            scores,
+            relief,
+            verbose,
+        )
+
+        return
 
 
 if __name__ == "__main__":

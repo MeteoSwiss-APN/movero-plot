@@ -6,8 +6,8 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
 # local
-from config.parse_plot_synop_ch import limits_df
-from config.parse_plot_synop_ch import colour_df
+from config.parse_plot_synop_ch import station_score_range
+from config.parse_plot_synop_ch import station_score_colortable
 
 # class to add relief to map
 # > taken from: https://stackoverflow.com/questions/37423997/cartopy-shaded-relief
@@ -70,11 +70,11 @@ def add_features(ax):
 def add_datapoints(data, score, ax, min, max, unit, param):
 
     # TODO: take the correct cmap form the colour_df
-    cmap = colour_df[param][score]
+    cmap = station_score_colortable[param][score]
 
     # define limits for colour bar
-    lower_bound = limits_df[param + "_min"].loc[score]
-    upper_bound = limits_df[param + "_max"].loc[score]
+    lower_bound = station_score_range[param]["min"].loc[score]
+    upper_bound = station_score_range[param]["max"].loc[score]
 
     # if both are equal (i.e. 0), take the min/max values as limits
     if lower_bound == upper_bound:
@@ -235,7 +235,7 @@ def generate_map_plot(
         )
 
         # save and clear figure
-        # plt.savefig(f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
+        plt.savefig(f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
         plt.close(fig)
 
     return

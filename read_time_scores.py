@@ -2,6 +2,7 @@
 from pathlib import Path
 import numpy as np
 from pprint import pprint
+import pandas as pd
 
 # local
 from plot_time_scores import generate_timeseries_plot
@@ -21,7 +22,7 @@ from config.atab import Atab
 
 
 def read_files(
-    lt_ranges, parameters, file_prefix, file_postfix, input_dir, output_dir, season, domain, scores, relief, verbose
+    lt_ranges, parameters, file_prefix, file_postfix, input_dir, output_dir, season, domain, scores, verbose
 ) -> None:
     """ Read all ```ATAB``` files that are present in: data_dir/season/domain/<file_prefix><...><file_postfix>
         Extract relevant information (parameters/scores) from these files into a dataframe. 
@@ -38,7 +39,6 @@ def read_files(
         season (str): season of interest (i.e. 2021s4/)
         domain (str): domain of interest (i.e. C-1E_ch)
         scores (list): list of scores, for which plots should be generated
-        relief (bool): passed on to plotting pipeline - add relief to map if True
         verbose (bool): print further comments
     """
     for lt_range in lt_ranges:
@@ -52,7 +52,9 @@ def read_files(
 
             # extract header
             header = Atab(file=path, sep=" ").header
-            pprint(header)
+            if verbose:
+                print("\nFile header:")
+                pprint(header)
             
             if False: # check later, which information of the header is actually relevant for the plotting pipeline
                 relevant_header_information = {
@@ -71,50 +73,56 @@ def read_files(
 
             # extract dataframe
             df = Atab(file=path, sep=" ").data
+
+            pprint(header)
             pprint(df)
+            print(df.columns.tolist())
+            return
 
-            # > rename the first column
-            # df.rename(columns={"ScoreABO": "ABO"}, inplace=True)
+            # change type of time columns to str, s.t. they can be combined to one datetime column afterwards
+            data_types_dict = {'YYYY': str, 'MM':str, 'DD':str, 'hh':str, 'mm':str}
+            df = df.astype(data_types_dict)
 
-            # > add longitude and latitude to df
-            # df.loc["lon"] = longitudes
-            # df.loc["lat"] = latitudes
+            # create datetime column (just called time) & drop unnecessary columns
+            df['datetime'] = pd.to_datetime(df['YYYY'] + '-' + df['MM'] + '-' + df['DD'] + ' ' + df['hh'] + ':' + df['mm'])
+            df.drop(['YYYY', 'MM', 'DD', 'hh', 'mm'], axis=1, inplace=True)
 
-            # > check which relevant scroes are available; extract those from df
-            all_scores = df.columns.tolist()
-            available_scores = []
+
+
+            # > check which relevant scores are available; extract those from df
+            all_scores = df.columns.tolist() 
+            available_scores = ["datetime", "lt_hh", "lt_mm"] # TODO: clarify w/ Pirmin if lt_mm column is actually relevant ?!
             for score in scores:
                 if score in all_scores:
                     available_scores.append(score)
                 else:  # warn that a relevant score was not available in dataframe
                     print(f"{score} not available in {file}")
-            df = df.loc[available_scores]
+            
+            df = df[available_scores]
 
             # > remove/replace missing values in dataframe with np.NaN
             df = df.replace(
-                float(header["Missing value code"]), np.NaN
+                float(header["Missing value code"][0]), np.NaN
             )
 
             # > if there are rows (= scores), that only conaint np.NaN, remove them
             df = df.dropna(how = "all")
 
             if verbose:
+                print("\nDataframe after some cleaning up:")
+                pprint(df)
                 print(f"Generating plot for {parameter} for lt_range: {lt_range}. (File: {file})")
-            # for each score in df, create one map
+                # for each score in df, create one map
             
-
-
-            if False:
-                generate_timeseries_plot(
-                    data=df,
-                    lt_range=lt_range,
-                    variable=parameter,
-                    file=file,
-                    file_postfix=file_postfix,
-                    header_dict=relevant_header_information,
-                    domain=domain,
-                    output_dir=output_dir,
-                    relief=relief,
-                    verbose=verbose,
-                )
+            generate_timeseries_plot(
+                data=df,
+                lt_range=lt_range,
+                variable=parameter,
+                file=file,
+                file_postfix=file_postfix,
+                header_dict=header,
+                domain=domain,
+                output_dir=output_dir,
+                verbose=verbose,
+            )
     return

@@ -17,125 +17,101 @@ munits.registry[np.datetime64] = converter
 munits.registry[datetime.date] = converter
 munits.registry[datetime.datetime] = converter
 
+from config.parse_plot_synop_ch import time_score_range
+
 
 
 def generate_timeseries_plot(
-    multi_axes,
     data,
-    var,
-    start,
-    end,
-    datatypes,
-    outpath,
-    grid,
-    devices,
-    loc,
-    appendix,
+    lt_range,
+    variable,
+    file,
+    file_postfix,
+    header_dict,
+    domain,
+    output_dir,
     verbose,
-):
-    # TODO: complete this docstring
-    """Create timeseries plot.
+): 
+    print(f"creating plots for file: {file}")
+    pprint(data)
+    # extract scores, which are available in the dataframe (data)
+    # for each score
+    scores = data.columns.tolist()
+    scores.remove("datetime")
+    scores.remove("lt_hh")
+    scores.remove("lt_mm")
+    
+    # create lead_time_hours list, i.e. for lt_range 01-06, lt_hours = [1, 2, 3, 4, 5, 6]
+    lt_hours = range(int(lt_range[:2]), int(lt_range[-2:])+1)
 
-    Args:
-        multi_axes (bool): plot 2 yaxis if True
-        data (dict): dictionary, containing one dataframe for each device
-        var (tuple): list of variables (w/ same unit) to be added to plot
-        start (datetime obj): start time
-        end (datetime obj): end time
-        datatypes (tuple): list of output data types
-        outpath (str): output folder path
-        grid (bool): add grid to plot or not
-        devices (list): list of devices
-        loc (str): abbreviation of station name (location)
-        appendix (bool): add appendix to output name
-        verbose (bool): print 'extra' statements during computation
+    # define limits for plot (start, end time specified in header)
+    start = datetime.datetime.strptime(header_dict['Start time'][0] + ' ' + header_dict['Start time'][2], '%Y-%m-%d %H:%M')
+    end = datetime.datetime.strptime(header_dict['End time'][0] + ' ' + header_dict['End time'][1], '%Y-%m-%d %H:%M') 
+    unit = header_dict['Unit'][0]
 
-    """
-    # general
-    fig, left_ax = plt.subplots(1, 1, figsize=(8, 5), constrained_layout=True)
-    if multi_axes:
-        right_ax = left_ax.twinx()
-    if grid:
-        # align ticks by implementing ideas from:
-        # https://stackoverflow.com/questions/20243683/matplotlib-align-twinx-tick-marks
-        left_ax.grid(visible=True)
-        right_ax.grid(visible=True)
-    left_ax.set_xlim(start, end)
-    title = f"Station: {sdf[loc].long_name} | Period: {dt.strftime(start, '%d %b %H:%M')} - {dt.strftime(end, '%d %b %H:%M')}"
-    left_ax.set_title(label=title)
-    left_unit, right_unit = "", ""
+    # define further plot properties
+    grid = True
 
-    # plotting
-    colour_index = 0
-    for i, device in enumerate(devices):
-        # 1) retrieve df
-        df = data[device]
-        # df = pd.to_datetime(df["timestamp"], format="%Y-%m-%d %H:%M:%S")
+    # TODO: implement correct limits here!
+    
+    for score in scores:
+        title = f"{variable}: {score}"    
+        footer = f"Model: {header_dict['Model version'][0]} | Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]} ({lt_range}) | © MeteoSwiss"
+        # intialise figure/axes instance
+        fig, ax = plt.subplots(1, 1, figsize=(245/10, 51/10), dpi=150, constrained_layout=False)
+        
+        ax.set_title(label=title)
+        ax.set_xlim(start, end)
+        ax.set_ylabel(f"{unit}")
+        if grid:
+            ax.grid(visible=True)
+
         if verbose:
-            print(i, device)
-            pprint(df)
+            print(f"Extract dataframe for score: {score}")
+            pprint(data)
 
-        # x-axis information: dates/timestamps
-        dates = pd.to_datetime(df["timestamp"], format="%Y-%m-%d %H:%M:%S")
+        
+        # x = pd.to_datetime(df_tmp["datetime"], format="%d.%m.%Y %H:%M")
+        x = data['datetime'].values
+        y = data[score].values
+        ax.plot(x, [0]*len(x), color='grey', linestyle='--')
 
-        # check if there are more than one variable in this dataframe
-        if verbose:
-            if len(df.columns) > 2:
-                print(
-                    f"There are more than one variable ({len(df.columns)}) in the df for: {device}"
-                )
-            else:
-                print(
-                    f"There is only one variable ({len(df.columns)}) in the df for: {device}"
-                )
-
-        # iterate over the c
-        for (variable, columnData) in df.iteritems():
-            if variable == "timestamp":
-                continue
-
-            # extract current variable
-            variable = vdf[variable]
-            unit = variable.unit
-            var_short = variable.short_name
-            y = columnData.values
-            label = f"{var_short}: {device}"
-
-            # define unit for the left axes
-            if not left_unit:
-                left_unit = unit
-                left_ax.set_ylabel(f"{left_unit}")
-
-            # define unit for the right axes
-            if (not right_unit) and (unit is not left_unit):
-                right_unit = unit
-                right_ax.set_ylabel(f"{right_unit}")
-
-            # choose correct axes for the current variable and plot data
-            if unit == left_unit:
-                left_ax.plot(
-                    dates,
-                    y,
-                    color=colour_dict[colour_index],
-                    linestyle="-",
-                    label=label,
-                )
-            if unit == right_unit:
-                right_ax.plot(
-                    dates,
-                    y,
-                    color=colour_dict[colour_index],
-                    linestyle="-",
-                    label=label,
+        # define limits for yaxis if available
+        param = header_dict["Parameter"][0]
+        
+        if (param+"_min") in time_score_range.columns:
+            lower_bound = time_score_range[param]["min"].loc[score]
+            upper_bound = time_score_range[param]["max"].loc[score]
+            print(f"found limits for {param}/{score} --> {lower_bound}/{upper_bound}")
+            if lower_bound != upper_bound:
+                ax.set_ylim(lower_bound, upper_bound)
+            
+        # label = f"{header_dict['Description'][0]} {header_dict['Description'][1]} {header_dict['Description'][2]}
+        label = " ".join(header_dict['Description'])
+        ax.plot(
+                x,
+                y,
+                color='k',
+                linestyle="-",
+                label=label,
                 )
 
-            colour_index += 1
+        plt.suptitle(
+            footer,
+            x=0.125,
+            y=0.06,
+            horizontalalignment="left",
+            verticalalignment="top",
+            fontdict={
+                "size": 6,
+                "color": "k",
+            },
+        )
+        # print(f"should save: ", f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
+        plt.savefig(f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
+        plt.close(fig)
 
-    # add legends
-    h1, l1 = left_ax.get_legend_handles_labels()
-    h2, l2 = right_ax.get_legend_handles_labels()
-    left_ax.legend(h1 + h2, l1 + l2)
-    filename = f"ts_{start.day}{start.hour}_{end.day}{end.hour}"
-    save_fig(filename, datatypes, outpath, fig=fig)
-    plt.clf()
+
+
+
     return

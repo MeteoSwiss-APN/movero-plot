@@ -64,7 +64,6 @@ case_sensitive=False
 ), multiple=True, default=("CLCT",), help='Specify the parameters of interest.')
 @click.option("--prefix", type=str, default='time_scores', help='Specify file prefix. Def: station_scores')
 @click.option("--postfix", type=str, default='.dat', help='Specify output directory. Def: .dat')
-@click.option("--relief", type=bool, is_flag=True, help='Add relief to map.')
 @click.option("--verbose", type=bool, is_flag=True, help='Add comments to command prompt.')
 
 def main(
@@ -78,7 +77,6 @@ def main(
     parameters: tuple,
     prefix: str,
     postfix: str,
-    relief:bool,
     verbose:bool,
 ) -> None:
     """ CREATE MOVERO STATION SCORES PLOTS
@@ -96,10 +94,10 @@ def main(
     # /scratch/osm/movero/wd/2021s4/C-1E_ch/station_scores<lt_range>_<parameter>.dat
 
     lt_ranges = (
-        "01-06",
+        # "01-06",
         # "07-12", 
         # "13-18", 
-        # "19-24", 
+        "19-24", 
         # "25-30"
     )
 
@@ -117,14 +115,46 @@ def main(
     )
 
     scores = (
-        # "ME", 
-        # "MMOD", 
-        # "MAE", 
-        # "STDE", 
-        # "RMSE", 
-        # "COR", 
-        "NOBS", 
-        # "FBI", 
+            # "NMOD",    
+            # "NOBS",    
+            # "N",       
+            "ME",      
+            # "MAE",     
+            # "STDE",    
+            # "RMSE",    
+            # "MINE",    
+            # "MAXE",    
+            # "COR",     
+            # "COV",     
+            # "MMOD",    
+            # "MOBS",    
+            # "STDMOD",  
+            # "STDOBS",  
+            # "MINMOD",  
+            # "MINOBS",  
+            # "MAXMOD",  
+            # "MAXOBS",  
+            # "SPREAD",  
+            # "MF(2.5)",
+            # "OF(2.5)", 
+            # "ACC(2.5)",
+            # "FBI(2.5)",
+            # "POD(2.5)",
+            # "FAR(2.5)",
+            # "THS(2.5)",
+            # "ETS(2.5)",
+            # "TSS(2.5)",
+            # "HSS(2.5)",
+            # "MF(6.5)", 
+            # "OF(6.5)", 
+            # "ACC(6.5)",
+            # "FBI(6.5)",
+            # "POD(6.5)",
+            # "FAR(6.5)",
+            # "THS(6.5)",
+            # "ETS(6.5)",
+            # "TSS(6.5)",
+            # "HSS(6.5)"
         )
 
 
@@ -139,10 +169,10 @@ def main(
         season,
         domain,
         scores,
-        relief,
         verbose,
     )
 
+    print('--- Done')
     return
 
 
