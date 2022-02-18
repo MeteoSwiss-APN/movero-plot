@@ -5,7 +5,7 @@ import pprint
 
 # local
 from plot_station_scores import generate_map_plot
-from config.atab import Atab
+from utils.atab import Atab
 
 
 # These are all possible station_scores files, which need to be plotted.
@@ -51,6 +51,11 @@ def read_files(
             # define file path (atab file)
             file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
             path = Path(f"{input_dir}/{season}/{domain}/{file}")
+            print(path)
+            # check if the file exists
+            if not path.exists():
+                print(f"--- WARNING: No data file for parameter {parameter} could be found. {path} does not exist.")
+                continue
             
             # if verbose:
             #     print(f"Filepath:\t{path}") # dbg
@@ -89,7 +94,7 @@ def read_files(
                 if score in all_scores:
                     available_scores.append(score)
                 else:  # warn that a relevant score was not available in dataframe
-                    print(f"{score} not available in {file}")
+                    print(f"--- WARNING: Score {score} not available for parameter {parameter}.")
             df = df.loc[available_scores]
 
             # > remove/replace missing values in dataframe with np.NaN

@@ -6,8 +6,8 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
 # local
-from config.parse_plot_synop_ch import station_score_range
-from config.parse_plot_synop_ch import station_score_colortable
+from utils.parse_plot_synop_ch import station_score_range
+from utils.parse_plot_synop_ch import station_score_colortable
 
 # class to add relief to map
 # > taken from: https://stackoverflow.com/questions/37423997/cartopy-shaded-relief
@@ -67,9 +67,32 @@ def add_features(ax):
     return
 
 
-def add_datapoints(data, score, ax, min, max, unit, param):
+def add_datapoints(data, score, ax, min, max, unit, param, verbose=False):
 
-    # TODO: take the correct cmap form the colour_df
+    print(f"Creating plot for: {param}/{score}")
+
+    try:
+        cmap = station_score_colortable[param][score]
+
+    except KeyError:
+        possible_params = station_score_colortable.columns.tolist()
+        print(f"{param} not in {possible_params}")
+        if verbose:
+            print("Could not assign colormap to current parameter, determine correct cmap to choose.")
+            print(f"Current parameter: {param}")
+            print(f"Columns in station_score_colortable: {possible_params}") 
+        if '_' in param:
+            param_tmp = param.split('_')[0]
+            if param_tmp+'*' in possible_params:
+                if True:
+                    print(f"Found column that corresponds to current parameter: {param}-->{param_tmp}*")
+                param = param_tmp+'*'
+            else:
+                param = '*'
+                print(f"Could not find corresponding column - assign general column: {param}-->*")
+        
+
+    # choose correct colormap for plot
     cmap = station_score_colortable[param][score]
 
     # define limits for colour bar
@@ -235,6 +258,8 @@ def generate_map_plot(
         )
 
         # save and clear figure
+        # dbg:
+        # print(f"should save: {file.split(file_postfix)[0]}_{score}.png")
         plt.savefig(f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
         plt.close(fig)
 

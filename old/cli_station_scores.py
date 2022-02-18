@@ -45,23 +45,37 @@ case_sensitive=False
     "COR", 
     "NOBS", 
     "FBI",
+    "MF", 
+    "POD",
+    "FAR",
+    "THS",
+    "ETS"
 ],
 case_sensitive=False
-), multiple=True, default=("ME",), help='Specify the scores of interest. Def: ME')
+), multiple=True, help='Specify the scores of interest.')
 @click.option("--parameters", type=click.Choice([
-    "CLCT",
-    "DD_10M",
-    "FF_10M",
-    "PMSL",
-    "PS",
-    "T_2M",
-    "TD_2M",
     "TOT_PREC12",
     "TOT_PREC6",
+    "TOT_PREC1",
+    "CLCT",
+    "GLOB",
+    "DURSUN12",
+    "DURSUN1",
+    "T_2M",
+    "T_2M_KAL",
+    "TD_2M",
+    "TD_2M_KAL",
+    "RELHUM_2M",
+    "FF_10M",
+    "FF_10M_KAL",
     "VMAX_10M6",
+    "VMAX_10M1",
+    "DD_10M",
+    "PS",
+    "PMSL",
 ],
 case_sensitive=False
-), multiple=True, default=("CLCT",), help='Specify the parameters of interest.')
+), multiple=True, help='Specify the parameters of interest.')
 @click.option("--prefix", type=str, default='station_scores', help='Specify file prefix. Def: station_scores')
 @click.option("--postfix", type=str, default='.dat', help='Specify output directory. Def: .dat')
 @click.option("--relief", type=bool, is_flag=True, help='Add relief to map.')
@@ -95,37 +109,55 @@ def main(
     # and use the default path to data for the time being.
     # /scratch/osm/movero/wd/2021s4/C-1E_ch/station_scores<lt_range>_<parameter>.dat
 
-    lt_ranges = (
-        "01-06",
-        # "07-12", 
-        # "13-18", 
-        # "19-24", 
-        # "25-30"
-    )
+    # lt_ranges = (
+    #     "01-06",
+    #     "07-12", 
+    #     "13-18", 
+    #     "19-24", 
+    #     "25-30"
+    # )
 
-    parameters = (
-        "CLCT",
-        # "DD_10M",
-        # "FF_10M",
-        # "PMSL",
-        # "PS",
-        # "T_2M",
-        # "TD_2M",
-        # "TOT_PREC12",
-        # "TOT_PREC6",
-        # "VMAX_10M6",
-    )
-
-    scores = (
-        "ME", 
-        # "MMOD", 
-        # "MAE", 
-        # "STDE", 
-        # "RMSE", 
-        # "COR", 
-        # "NOBS", 
-        # # "FBI", 
+    # if no parameter has been specified; use these
+    if not parameters:
+        parameters = (
+            "TOT_PREC12",
+            "TOT_PREC6",
+            "TOT_PREC1",
+            "CLCT",
+            "GLOB",
+            "DURSUN12",
+            "DURSUN1",
+            "T_2M",
+            "T_2M_KAL",
+            "TD_2M",
+            "TD_2M_KAL",
+            "RELHUM_2M",
+            "FF_10M",
+            "FF_10M_KAL",
+            "VMAX_10M6",
+            "VMAX_10M1",
+            "DD_10M",
+            "PS",
+            "PMSL",
         )
+
+
+    if not scores:
+        scores = (
+            "ME", 
+            "MMOD", 
+            "MAE", 
+            "STDE", 
+            "RMSE", 
+            "COR", 
+            "NOBS", 
+            "FBI",
+            "MF", 
+            "POD",
+            "FAR",
+            "THS",
+            "ETS"
+            )
 
 
     # iterate directory, create cleaned df, call plotting pipeline, save plots

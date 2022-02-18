@@ -6,7 +6,7 @@ import pandas as pd
 
 # local
 from plot_time_scores import generate_timeseries_plot
-from config.atab import Atab
+from utils.atab import Atab
 
 
 # time_scores01-06_CLCT.dat       time_scores07-12_DD_10M.dat      time_scores13-18_DD_10M.dat      time_scores19-24_DD_10M.dat      time_scores25-30_DD_10M.dat

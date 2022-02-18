@@ -17,7 +17,7 @@ munits.registry[np.datetime64] = converter
 munits.registry[datetime.date] = converter
 munits.registry[datetime.datetime] = converter
 
-from config.parse_plot_synop_ch import time_score_range
+from utils.parse_plot_synop_ch import time_score_range
 
 
 
