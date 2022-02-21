@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib as mpl
 from pprint import pprint
+from pathlib import Path
 
 
 ###############################################################################################
@@ -20,9 +21,10 @@ from pprint import pprint
 ###############################################################################################
 
 verbose = False
+path = Path(Path.cwd()/'utils/plot_synop_ch') # 'utils/plot_synop_ch'
 
 # open plot_synop_ch file
-with open('config/plot_synop_ch', "r") as f:
+with open(path, "r") as f:
     lines = [line.strip() for line in f.readlines()]
 
 ###############################################################################################
@@ -50,7 +52,7 @@ verif_columns = [verif_params, verif_min_max]
 # create dataframe for station score ranges
 if True:
     station_score_range = pd.read_csv(
-        'config/plot_synop_ch',
+        path,
         sep='\s+',
         names=verif_param_range_cols,
         dtype=float,
@@ -70,7 +72,7 @@ if True:
 # create dataframe for time score ranges
 if True:
     time_score_range = pd.read_csv(
-        'config/plot_synop_ch',
+        path,
         sep='\s+',
         names=verif_param_range_cols,
         dtype=float,
@@ -89,7 +91,7 @@ if True:
 # create dataframe for daytime score ranges
 if True:
     daytime_score_range = pd.read_csv(
-        'config/plot_synop_ch',
+        path,
         sep='\s+',
         names=verif_param_range_cols,
         dtype=float,
@@ -108,7 +110,7 @@ if True:
 # create dataframe for total score ranges
 if True:
     total_score_range = pd.read_csv(
-        'config/plot_synop_ch',
+        path,
         sep='\s+',
         names=verif_param_range_cols,
         dtype=float,
@@ -127,7 +129,7 @@ if True:
 # create colour-table dataframe for the station scores (colour bar gradients)
 if True:
     station_score_colortable = pd.read_csv(
-        'config/plot_synop_ch',
+        path,
         sep='\s+',
         names=verif_param,
         dtype=str,
@@ -141,11 +143,11 @@ if True:
     if verbose:
         print('\n Station Score Colour Table')
         pprint(station_score_colortable)
-
     # https://matplotlib.org/stable/tutorials/colors/colormaps.html
     # the mapping of the gradient indeces happens here; I just picked the
     # colormaps, that seemed the most suitable. '_r' reverses the direction
     # of the gradient. 
+    # TODO: cmap 67 still needs to be replaced
     station_score_colortable = station_score_colortable.replace({'34':mpl.cm.jet})
     station_score_colortable = station_score_colortable.replace({'48':mpl.cm.cubehelix})
     station_score_colortable = station_score_colortable.replace({'52':mpl.cm.bwr})
@@ -220,7 +222,7 @@ cat_param_score_mapping_df = pd.DataFrame(data=param_score_indeces_mapping)
 # create dataframe for categorical station score ranges
 if True:
     cat_station_score_range = pd.read_csv(
-        'config/plot_synop_ch',
+        path,
         sep='\s+',
         names=cat_param_range_cols,
         dtype=float,
@@ -245,7 +247,7 @@ if True:
 # create dataframe for categorical time score ranges
 if True:
     cat_time_score_range = pd.read_csv(
-        'config/plot_synop_ch',
+        path,
         sep='\s+',
         names=cat_param_range_cols,
         dtype=float,
@@ -271,7 +273,7 @@ if True:
 # create dataframe for categorical daytime score ranges
 if True:
     cat_daytime_score_range = pd.read_csv(
-        'config/plot_synop_ch',
+        path,
         sep='\s+',
         names=cat_param_range_cols,
         dtype=float,
@@ -296,7 +298,7 @@ if True:
 # create dataframe for categorical total score ranges
 if True:
     cat_total_score_range = pd.read_csv(
-        'config/plot_synop_ch',
+        path,
         sep='\s+',
         names=cat_param_range_cols,
         dtype=float,
@@ -332,13 +334,16 @@ if True:
     cat_colortable_columns = [sublist_1, sublist_2]
 
     cat_station_score_colortable = pd.read_csv(
-        'config/plot_synop_ch',
+        path,
         sep='\s+',
         names=tmp_colortable_columns,
         dtype=int,
         skiprows=162,
         nrows = len(cat_scores[0]),
     )
+
+    # make df is of type str, s.t. the replacement works w/ strings. 
+    cat_station_score_colortable = cat_station_score_colortable.astype(str)
 
     # cat_statoin_score_colortable still has some 0, which should be mapped to either NaN or their appropriate cmap
     cat_station_score_colortable = cat_station_score_colortable.replace({'34':mpl.cm.jet})

@@ -3,8 +3,6 @@
 > **_Task_**: Replace the IDL plot scripts for the verification plots with Python scripts. 
 > There is a number of different plots, which need to be created. For each type of plot a number of scripts is necessary. 
 
-
-
 2. Time Series of verification scores
 ![](https://i.imgur.com/xXSLJ4l.png =320x230)
 
