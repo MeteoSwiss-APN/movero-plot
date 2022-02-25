@@ -24,6 +24,7 @@ from utils.parse_plot_synop_ch import cat_station_score_colortable
 # > taken from: https://stackoverflow.com/questions/37423997/cartopy-shaded-relief
 from cartopy.io.img_tiles import GoogleTiles
 class ShadedReliefESRI(GoogleTiles):
+    # TODO: download image, place in resource directory and link to it (not sure if possible, tried for like 30' and it didnt work)
     # shaded relief
     def _image_url(self, tile):
         x, y, z = tile
@@ -36,9 +37,9 @@ class ShadedReliefESRI(GoogleTiles):
 
 # enter directory / read station_scores files / call plotting pipeline
 def station_scores_pipeline(
-    params_dict, lt_ranges, file_prefix, file_postfix, input_dir, output_dir, season, domain, relief, verbose
+    params_dict, lt_ranges, file_prefix, file_postfix, input_dir, output_dir, season, model_version, relief, debug
 ) -> None:
-    """ Read all ```ATAB``` files that are present in: data_dir/season/domain/<file_prefix><...><file_postfix>
+    """ Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>
         Extract relevant information (parameters/scores) from these files into a dataframe. 
         Rows --> Scores | Columns --> Stations | For each parameter, a separate station_scores File exists. 
 
@@ -51,26 +52,26 @@ def station_scores_pipeline(
         input_dir (str): directory to seasons (i.e. /scratch/osm/movero/wd) 
         output_dir (str): output directory (i.e. plots/)
         season (str): season of interest (i.e. 2021s4/)
-        domain (str): domain of interest (i.e. C-1E_ch)
+        model_version (str): model_version of interest (i.e. C-1E_ch)
         scores (list): list of scores, for which plots should be generated
         relief (bool): passed on to plotting pipeline - add relief to map if True
-        verbose (bool): print further comments
+        debug (bool): print further comments
     """
     for lt_range in lt_ranges:
         for parameter in params_dict:
             # retrieve list of scores, relevant for current parameter
-            scores = params_dict[parameter]
+            scores = params_dict[parameter] # this scores is a list of lists
             
             # define file path to the file correpsonding to the current parameter (station_score atab file)
             file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
-            path = Path(f"{input_dir}/{season}/{domain}/{file}")
+            path = Path(f"{input_dir}/{season}/{model_version}/{file}")
             
             # check if the file exists
             if not path.exists():
                 print(f"--- WARNING: No data file for parameter {parameter} could be found. {path} does not exist.")
                 continue # go the the next parameter, since for the current parameter no file could be retrieved
             
-            if verbose:
+            if debug:
                 print(f"\nFilepath:\t{path}")
 
             # extract header
@@ -100,14 +101,14 @@ def station_scores_pipeline(
             df.loc["lon"] = longitudes
             df.loc["lat"] = latitudes
 
-            # > check which relevant relevant are available; extract those from df
+            # > check which relevant scores are available; extract those from df
             all_scores = df.index.tolist()
             available_scores = ["lon", "lat"]
             for score in scores:
-                if score in all_scores:
-                    available_scores.append(score)
+                if score[0] in all_scores:
+                    available_scores.append(score[0])
                 else:  # warn that a relevant score was not available in dataframe
-                    print(f"--- WARNING: Score {score} not available for parameter {parameter}.")
+                    print(f"--- WARNING: Score {score[0]} not available for parameter {parameter}.")
             df = df.loc[available_scores]
 
             # > remove/replace missing values in dataframe with np.NaN
@@ -118,7 +119,7 @@ def station_scores_pipeline(
             # > if there are rows (= scores), that only conaint np.NaN, remove them
             df = df.dropna(how = "all")
 
-            # if verbose:
+            # if debug:
             #     print(f"Generating plot for {parameter} for lt_range: {lt_range}. (File: {file})")
             # for each score in df, create one map
             generate_map_plot(
@@ -128,10 +129,10 @@ def station_scores_pipeline(
                 file=file,
                 file_postfix=file_postfix,
                 header_dict=relevant_header_information,
-                domain=domain,
+                model_version=model_version,
                 output_dir=output_dir,
                 relief=relief,
-                verbose=verbose,
+                debug=debug,
             )
     
 
@@ -160,7 +161,7 @@ def add_features(ax):
     gl.top_labels = False
     gl.right_labels = False
 
-    ax.add_feature(cfeature.LAND, rasterized=True, color="#FFFAF0")
+    ax.add_feature(cfeature.LAND, rasterized=True, color="white") # color="#FFFAF0"
     ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True)
     ax.add_feature(cfeature.BORDERS, linestyle="--", alpha=1, rasterized=True)
     ax.add_feature(cfeature.OCEAN, rasterized=True)
@@ -181,11 +182,11 @@ def add_features(ax):
     return
 
 
-def add_datapoints(data, score, ax, min, max, unit, param, verbose=False):
+def add_datapoints(data, score, ax, min, max, unit, param, debug=False):
     cat_score = False
     print(f"plotting:\t{param}/{score}")
     # check param, before trying to assign cmap to it
-    param = check_params(param, verbose)
+    param = check_params(param, debug)
 
     # RESOLVE CORRECT PARAMETER
     try: # try to get the cmap from the regular station_score_colortable
@@ -194,38 +195,10 @@ def add_datapoints(data, score, ax, min, max, unit, param, verbose=False):
     # if a KeyError occurs, the current parameter doesn't match the columns of the station_score_colourtable df AND/OR 
     # because the score is not present in the station_score_colourtable df. check both cases
     except KeyError:
-        # print(f"score not in regular colortable: {score not in station_score_colortable.index.tolist()}" )
-        # print(f"param not in regular colortable: {param not in station_score_colortable.columns.tolist()}")
-
-        # TODO
-        # possible_params = station_score_colortable.columns.tolist()
-        # if param not in possible_params:
-        #     # TODO: this does not quite work as it should right now. 
-            
-        #     print(f"{param} not in {possible_params}")
-        #     if param[-1].isdigit():
-        #         param_tmp_0 = "".join(filter(lambda x: not x.isdigit(), param))
-        #         res = [i for i in possible_params if '[' in i]
-        #         for element in res: 
-        #             if element.startswith(param_tmp_0):
-        #                 print(f"param has been reassigned from {param}-->{element}")
-        #                 param = element
-    
-        #     if param not in possible_params and '_' in param:
-        #         param_tmp = param.split('_')[0]
-        #         if param_tmp+'*' in possible_params:
-        #             if True:
-        #                 print(f"Found column that corresponds to current parameter: {param}-->{param_tmp}*")
-        #             param = param_tmp+'*'
-        #         else:
-        #             print(f"Could not find corresponding column - assign general column: {param}-->*")
-        #             param = '*'
-
-          
         if score not in station_score_colortable.index.tolist():
             if score in cat_station_score_colortable[param]['scores'].values:
                 cat_score = True
-                if verbose:
+                if debug:
                     print(f"{score} ∉  station score colortable. {score} ∈  categorical station score colortable.")
                 index = cat_station_score_colortable[cat_station_score_colortable[param]['scores'] == score].index.values[0]
                 cmap = cat_station_score_colortable[param]['cmap'].iloc[index]
@@ -238,13 +211,6 @@ def add_datapoints(data, score, ax, min, max, unit, param, verbose=False):
                 cmap = station_score_colortable[param][score]
             except KeyError:
                 print(f"Dont know this parameter and score combination.")
-
-        
-        # else:
-        #     print(f"Dont know this parameter and score combination.")
-
-    # # choose correct colormap for plot
-    # cmap = station_score_colortable[param][score]
 
     # define limits for colour bar
     if not cat_score:
@@ -290,7 +256,6 @@ def add_datapoints(data, score, ax, min, max, unit, param, verbose=False):
                     transform=ccrs.PlateCarree(),
                     rasterized=True,
                 )
-
 
     if tmp:
         cbar = plt.colorbar(sc, ax=ax)
@@ -340,10 +305,10 @@ def generate_map_plot(
     file,
     file_postfix,
     header_dict,
-    domain,
+    model_version,
     output_dir,
     relief,
-    verbose,
+    debug,
 ):
     """Generate Map Plot."""
 
@@ -355,17 +320,23 @@ def generate_map_plot(
 
     for score in scores:
 
-        # if verbose:
+        # if debug:
         #     print(f"Plotting score:\t{score}")
 
+        # TODO: take this out of the scores-for-loop.
         # create new dataframe, which only contains the lon/lat/score rows for all stations
-        plot_quantities = ["lon", "lat", score]
-        data_tmp = data.loc[plot_quantities]
+        # plot_quantities = ["lon", "lat", score]
+        # data_tmp = data.loc[plot_quantities]
 
-        min_value = data_tmp.loc[score].min()
-        max_value = data_tmp.loc[score].max()
+        min_value = data.loc[score].min()
+        max_value = data.loc[score].max()
+
+        # TODO: get column name from min/max and remove for loop below
+        # incomplete_df.T.idxmin()
+
         
-        for station, value in data_tmp.loc[score].items():
+        # determine the station, where the min/max occurs
+        for station, value in data.loc[score].items():
             if value == min_value:
                 min_station = station
             if value == max_value:
@@ -381,10 +352,11 @@ def generate_map_plot(
         # make sure, aspect ratio of map & figure match
         ax.set_aspect("auto")
 
-        # cut map to domain (taken from pytrajplot)
-        if domain == 'C-1E_ch':
+        # cut map to model_version (taken from pytrajplot)
+        # TODO: not really model_version
+        if 'ch' in model_version:
             ax.set_extent([5.3, 11.2, 45.4, 48.2]) 
-        if domain == 'C-1E_alps':
+        if 'alps' in model_version:
             ax.set_extent([0.7, 16.5, 42.3, 50])
 
         if relief:
@@ -394,7 +366,7 @@ def generate_map_plot(
         # add features/datapoints & text
         add_features(ax=ax)
         add_datapoints(
-            data=data_tmp,
+            data=data,
             score=score,
             ax=ax,
             min=min_value,
@@ -415,9 +387,13 @@ def generate_map_plot(
         )
 
         # save and clear figure
+        # create output directory if it doesn't exist already
+        if not Path(output_dir).exists():
+            Path(output_dir).mkdir(parents=True, exist_ok=True)
+        
         # dbg:
-        print(f"saving:\t\t{file.split(file_postfix)[0]}_{score}.png")
-        # plt.savefig(f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
+        print(f"saving:\t\t{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
+        plt.savefig(f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
         plt.close(fig)
 
     return

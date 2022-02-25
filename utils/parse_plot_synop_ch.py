@@ -159,7 +159,7 @@ if True:
     station_score_colortable = station_score_colortable.replace({'60':mpl.cm.BrBG})
     station_score_colortable = station_score_colortable.replace({'63':mpl.cm.Spectral})
     station_score_colortable = station_score_colortable.replace({'64':mpl.cm.Spectral})
-
+    station_score_colortable = station_score_colortable.replace({'67':mpl.cm.Spectral})
 ###############################################################################################
 ############## CATEGORICAL SCORES; DATAFRAMES FOR SCORE RANGES AND COLOUR TABLE ###############
 ###############################################################################################

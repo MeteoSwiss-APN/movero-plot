@@ -59,12 +59,13 @@ def check_params(param, verbose=False):
 def main():
     # run python <path/to/check_params.py> to see if the mapping works correctly. 
     # add/remove parameters from actual_params for debugging & testing
-    # actual_params = ['TOT_PREC12','TOT_PREC6','TOT_PREC1','CLCT','GLOB','DURSUN12','DURSUN1','T_2M','T_2M_KAL','TD_2M','TD_2M_KAL','RELHUM_2M','FF_10M','FF_10M_KAL','VMAX_10M6','VMAX_10M1','DD_10M','PS','PMSL', 'asdfasdf']
-    # for param in actual_params:
-    #     check_params(param)
+    actual_params = ['TOT_PREC12','TOT_PREC6','TOT_PREC1','CLCT','GLOB','DURSUN12','DURSUN1','T_2M','T_2M_KAL','TD_2M','TD_2M_KAL','RELHUM_2M','FF_10M','FF_10M_KAL','VMAX_10M6','VMAX_10M1','DD_10M','PS','PMSL', 'asdfasdf']
+    for param in actual_params:
+        param = check_params(param, True)
+        # print(param)
 
-    param = check_params('TOT_PREC12')
-    print(param)
+    # param = check_params('TOT_PREC12')
+    # print(param)
 
 if __name__ == '__main__':
     main()
