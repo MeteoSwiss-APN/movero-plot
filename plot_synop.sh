@@ -1,0 +1,1 @@
+python src/movero/plot_synop.py C-1E-CTR_ch --plot_params CLCT --plot_scores MMOD/MOBS --plot_cat_params VMAX_10M1 --plot_cat_thresh 5,12.5,20 --plot_cat_scores THS

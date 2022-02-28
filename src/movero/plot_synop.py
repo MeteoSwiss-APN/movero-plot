@@ -9,7 +9,8 @@ from pprint import pprint
 import click
 
 # local
-from station_scores import station_scores_pipeline
+from station_scores import _station_scores_pipeline
+from time_scores import _time_scores_pipeline
 
 """
 Status of merging the former plot_synop command with IDL here. 
@@ -44,7 +45,7 @@ python plot_synop.py C-1E-CTR_ch --plot_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CL
 
 # Example Command: (short)
 python plot_synop.py C-1E-CTR_ch --plot_params TOT_PREC12 --plot_scores ME --plot_cat_params VMAX_10M1 --plot_cat_thresh 5,12.5,20 --plot_cat_scores THS,ETS
-
+python plot_synop.py C-1E_ch --plot_params CLCT --plot_scores MMOD/MOBS
 """
 
 import click
@@ -69,7 +70,8 @@ import click
 # 🔰 new options for plot_synop call
 @click.option("--input_dir", type=click.Path(exists=True), default=Path('/scratch/osm/movero/wd'), help='Specify input directory.')
 @click.option("--output_dir", type=str, default=Path('plots'), help='Specify output directory. Def: plots')
-@click.option("--relief", type=bool, is_flag=True, help='Add relief to map.')
+@click.option("--relief", type=bool, is_flag=True, help='Add relief to maps.')
+@click.option("--grid", type=bool, is_flag=True, help='Add grid to plots.')
 @click.option("--season", type=click.Choice([
     "2020s4",
     "2021s1",
@@ -98,6 +100,7 @@ def main(
     input_dir: Path,
     output_dir:str,
     relief:bool,
+    grid:bool,
     season:str,
 ):
     """Entry Point for the MOVERO Plotting Pipeline. 
@@ -121,11 +124,17 @@ def main(
     """
 ##### 0. PARSE USER INPUT ##################################################################################################################################################################
     # create output directory if it doesn't exist already
-    if not Path(output_dir).exists():
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
+    # if not Path(output_dir).exists():
+    #     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     if debug:
         print('---------------------------------------------------------------------------------------------------------------------------')
+
+
+    # initialise empty dictionaries 
+    regular_params_dict = None
+    cat_params_dict = None
+    ens_params_dict = None
 
     # REGULAR PARAMETERS
     if plot_params and plot_scores: 
@@ -174,24 +183,30 @@ def main(
 
     # ENV PARAMATERS (TODO)
     if plot_ens_params and plot_ens_scores and plot_ens_thresh:
+        ens_params_dict = {}
         print('extend code here to create a end-dict.')
 
     # merge the dictionaries if the exist
+    # regular & categorical parameters together
     if regular_params_dict and cat_params_dict:
         params_dict = regular_params_dict | cat_params_dict # merges the right dict into the left and is assigned to new dict
     # TODO: cover more cases, for the various possible combinations of dictionaries
     
+    # only regular parameters
+    elif regular_params_dict and not cat_params_dict and not ens_params_dict:
+        params_dict = regular_params_dict
+
     if debug:
         print(f"Finally, the following parameter x score pairs will get plotted:")
         pprint(params_dict)
         print('---------------------------------------------------------------------------------------------------------------------------')
 
 ##### 1. INITIALISE STATION SCORES PLOTTING PIPELINE########################################################################################################################################       
-    station_scores_pipeline(
+    _station_scores_pipeline(
         params_dict=params_dict,
         lt_ranges=lt_ranges,
-        file_prefix='station_scores', 
-        file_postfix = '.dat',
+        file_prefix="station_scores", 
+        file_postfix = ".dat",
         input_dir=input_dir,
         output_dir=output_dir,
         season=season,
@@ -199,7 +214,19 @@ def main(
         relief=relief,
         debug=debug
     )
-##### 2. ???????????????????????????????????????????########################################################################################################################################
+##### 2. INITIALISE TIME SERIES PLOTTING PIPELINE###########################################################################################################################################
+    _time_scores_pipeline(
+        params_dict=params_dict,
+        lt_ranges=lt_ranges,
+        file_prefix="time_scores",
+        file_postfix=".dat",
+        input_dir=input_dir,
+        output_dir=output_dir,
+        season=season,
+        model_version=model_version,
+        grid=grid,
+        debug=debug
+    )
 ##### 3. ???????????????????????????????????????????########################################################################################################################################
 ##### 4. ???????????????????????????????????????????########################################################################################################################################
 

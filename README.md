@@ -31,11 +31,7 @@ python plot_synop.py
 ![](https://i.imgur.com/kdQrufu.png)
 Afterwards this `params_dict` should get passed to separate plotting pipelines for the various different plots. 
 
- 
-## 1. SPATIAL VERIFICATION
-![alt text](http://i.imgur.com/8o44hib.png =320x230)
-
-For each parameter, the scores *FBI, MF, POD, FAR, THS, ETS* have different threshols which are relevant. The **parameter -> score -> threshold mapping**, happens via 3 different user flags: 
+For each parameter, the scores *FBI, MF, POD, FAR, THS, ETS* have different thresholds that are relevant. The **parameter -> score -> threshold** mapping happens with three different user flags: 
 
 ```
 --plot_cat_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1 
@@ -50,44 +46,17 @@ These `cat_params` constitute a sub-set of all parameters, which can be specifie
 
 ```
 
+## 1. SPATIAL VERIFICATION
+<!-- ![alt text](http://i.imgur.com/8o44hib.png) -->
+The corresponding file for the parsing of the `station_scores` Files and generating the map plots is: [station_score.py](src/pytrajplot/cli.py).
+
+The spatial verification plots feature a map, where all measurement stations are marked with a coloured dot. The colour of this dot corresponds to a colour-bar on the right side. The smaller the deviation from the centre of th e colourbar, the better.
+
+
+
 
 
 ---
-#### OLD DOCS
-
-
-For the generation of the spatial verification plots, three scripts interact with one another. 
-First the user can call `python cli_station_scores.py --help` to see the possible user inputs:
-```
-Usage: cli_station_scores.py [OPTIONS]
-
-  CREATE MOVERO STATION SCORES PLOTS 
-
-Options:
-  --input_dir PATH                Specify input directory.
-  --output_dir TEXT               Specify output directory. Def: plots
-  --season [2020s4|2021s1|2021s2|2021s3|2021s4]
-                                  Specify the season of interest. Def: 2021s4
-  --lt_ranges [01-06|07-12|13-18|19-24|25-30]
-                                  Specify the lead time ranges of interest.
-                                  Def: 19-24
-  --domain [C-1E_ch|C-1E_alps]    Specify the domain of interest. Def: C-1E_ch
-  --scores [ME|MMOD|MAE|STDE|RMSE|COR|NOBS|FBI|MF|POD|FAR|THS|ETS]
-                                  Specify the scores of interest.
-  --parameters [TOT_PREC12|TOT_PREC6|TOT_PREC1|CLCT|GLOB|DURSUN12|DURSUN1|T_2M|T_2M_KAL|TD_2M|TD_2M_KAL|RELHUM_2M|FF_10M|FF_10M_KAL|VMAX_10M6|VMAX_10M1|DD_10M|PS|PMSL]
-                                  Specify the parameters of interest.
-  --prefix TEXT                   Specify file prefix. Def: station_scores
-  --postfix TEXT                  Specify output directory. Def: .dat
-  --relief                        Add relief to map.
-  --verbose                       Add comments to command prompt.
-  --help                          Show this message and exit.
-```
-Most of them have default values - s.t. the user doesn't need to specify anything. Perhaps the most interesting flags are: `parameters` & `scores`. 
-
-The source files for the station scores are called: `station_scores<lt-range>_<parameter>.dat`. The columns in this file correspond to the stations in Switzerland (159 in total). The rows correspond to the computed scores for the given parameter. 
-
-### cli_station_scores
-
 
 
 ## 2. TIME SERIES OF VERIFICATION SCORES

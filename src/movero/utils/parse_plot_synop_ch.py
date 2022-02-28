@@ -21,7 +21,7 @@ from pathlib import Path
 ###############################################################################################
 
 verbose = False
-path = Path(Path.cwd()/'utils/plot_synop_ch') # 'utils/plot_synop_ch'
+path = Path(Path.cwd()/'src/movero/utils/plot_synop_ch')
 
 # open plot_synop_ch file
 with open(path, "r") as f:
