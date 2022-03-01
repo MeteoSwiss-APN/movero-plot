@@ -14,6 +14,7 @@
 
 4. Numeric values of total scores
 ![](https://i.imgur.com/sAUZPIU.png)
+<img src="https://i.imgur.com/sAUZPIU.png" width="150" height="280">
 
 
 ### 0.1 `plot_synop.py`
