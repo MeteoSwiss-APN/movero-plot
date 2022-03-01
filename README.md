@@ -3,18 +3,17 @@
 > **_Task_**: Replace the IDL plot scripts for the verification plots with Python scripts. 
 > There is a number of different plots, which need to be created. For each type of plot a number of scripts is necessary. 
 
-2. Time Series of verification scores
-![](https://i.imgur.com/xXSLJ4l.png =320x230)
+1. Time Series of verification scores
+![](https://i.imgur.com/xXSLJ4l.png)
 
-3. Diurnal cycle of verification scores
-![](https://i.imgur.com/swlWBA2.png =320x230)
+2. Diurnal cycle of verification scores
+![](https://i.imgur.com/swlWBA2.png)
 
-4. Total scores depending on lead-time ranges
-![](https://i.imgur.com/ZLYzobQ.png =320x230)
+3. Total scores depending on lead-time ranges
+![](https://i.imgur.com/ZLYzobQ.png)
 
-
-5. numeric values of total scores
-![](https://i.imgur.com/sAUZPIU.png =80x230)
+4. Numeric values of total scores
+![](https://i.imgur.com/sAUZPIU.png)
 
 
 ### 0.1 `plot_synop.py`
@@ -27,8 +26,8 @@ python plot_synop.py
 --plot_cat_thresh 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
 --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
 ```
-`plot_synop` parses these user input flags into a _parameter dictionary_. Each parameter that has been provided is one key in said dictionary. For every key, one list of scores is assigned. 
-![](https://i.imgur.com/kdQrufu.png)
+`plot_synop` parses these user inputs into a _parameter dictionary_. Each parameter that has been provided is one key in this dictionary. For every key, a list of corresponding scores is assigned. 
+![**Parameters Dictitonary**](https://i.imgur.com/kdQrufu.png)
 Afterwards this `params_dict` should get passed to separate plotting pipelines for the various different plots. 
 
 For each parameter, the scores *FBI, MF, POD, FAR, THS, ETS* have different thresholds that are relevant. The **parameter -> score -> threshold** mapping happens with three different user flags: 
