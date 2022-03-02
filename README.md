@@ -72,9 +72,9 @@ The spatial verification plots feature a map, where all stations have are marked
 
 ##### Example: 
 
-<img src="https://i.imgur.com/LA2zev4.png)" alt="drawing" width="250"/>
+<img src="https://i.imgur.com/LA2zev4.png)" alt="drawing" width="300"/>
 
-<img src="https://i.imgur.com/SiHcvpW.jpg" alt="drawing" width="270"/>
+<img src="https://i.imgur.com/SiHcvpW.jpg" alt="drawing" width="300"/>
 
 
 
