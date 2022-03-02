@@ -66,45 +66,43 @@ Afterwards this `params_dict` is passed to separate plotting pipelines. There, t
 ## 1. SPATIAL VERIFICATION
 <!-- ![alt text](http://i.imgur.com/8o44hib.png) -->
 
-> [color=#b8e21f] Relevant File: [station_score.py](src/pytrajplot/cli.py)
+> Relevant File: [station_score.py](src/pytrajplot/cli.py)
 
 The spatial verification plots feature a map, where all stations have are marked with a coloured dot. The colour of this dot corresponds to a colour-bar on the right side of the map. The smaller the deviation from the centre of the colourbar, the better. One can see directly, if & where the model performed well, or rather less so.
 
-##### Example: 
-
+###### Example: Old Station Score Plot
 <img src="https://i.imgur.com/LA2zev4.png)" alt="drawing" width="300"/>
+
+###### Example: New Station Scores Plot
 <img src="https://i.imgur.com/SiHcvpW.jpg" alt="drawing" width="300"/>
-
-
-
-
-
 
 ---
 
 
 ## 2. TIME SERIES OF VERIFICATION SCORES
-The corresponding file for the parsing of the time scores files and generating the timeseries plots is: [time_scores.py](src/pytrajplot/cli.py).
+> Relevant File: [time_scores.py](src/pytrajplot/cli.py)
 
-The timeseries verification plots feature a regular line plot, where (usually) one score is ploted against time, for one parameter. 
+###### Example: Old vs. New Station Scores Plot
+![](https://i.imgur.com/g9t612p.png)
+![](https://i.imgur.com/mlwMtTY.png)
 
-###### Old Timeseries Verification Plot:
-
-###### New Timeseries Verification Plot:
-
-
-
+---
 ## 3. DIURNAL CYCLYE OF VERIFICATION SCORES
-**TODO**
+- [ ] **TODO**
+Corresponding source files: 
+
+##### Old Plot for Reference: 
+![](https://i.imgur.com/FGSW1My.png)
+
+
+___
 ## 4. TOTAL SCORES DEP. ON LEAD-TIME RANGES
-**TODO**
-## 5. NUMERIC VALUES OF TOTAL SCORES
-**TODO**
+- [ ] **TODO**
+##### Old Plot for Reference: 
+![](https://i.imgur.com/b1xsDmI.png)
 
-
-### Overview:
+___
+### Overview which plots should be created:
 ![](https://i.imgur.com/xXSLJ4l.png)
 ![](https://i.imgur.com/swlWBA2.png)
 ![](https://i.imgur.com/ZLYzobQ.png)
-![](https://i.imgur.com/sAUZPIU.png)
-<img src="https://i.imgur.com/sAUZPIU.png" width="150" height="280">
