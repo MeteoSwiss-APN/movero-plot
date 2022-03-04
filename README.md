@@ -66,7 +66,7 @@ Afterwards this `params_dict` is passed to separate plotting pipelines. There, t
 ## 1. SPATIAL VERIFICATION
 <!-- ![alt text](http://i.imgur.com/8o44hib.png) -->
 
-> Relevant File: [station_score.py](src/pytrajplot/cli.py)
+> Relevant File: [station_score.py](src/movero/station_scores.py)
 
 The spatial verification plots feature a map, where all stations have are marked with a coloured dot. The colour of this dot corresponds to a colour-bar on the right side of the map. The smaller the deviation from the centre of the colourbar, the better. One can see directly, if & where the model performed well, or rather less so.
 
@@ -80,7 +80,7 @@ The spatial verification plots feature a map, where all stations have are marked
 
 
 ## 2. TIME SERIES OF VERIFICATION SCORES
-> Relevant File: [time_scores.py](src/pytrajplot/cli.py)
+> Relevant File: [time_scores.py](src/movero/time_scores.py)
 
 ###### Example: Old vs. New Station Scores Plot
 ![](https://i.imgur.com/g9t612p.png)
@@ -88,12 +88,12 @@ The spatial verification plots feature a map, where all stations have are marked
 
 ---
 ## 3. DIURNAL CYCLYE OF VERIFICATION SCORES
-- [ ] **TODO**
-Corresponding source files: 
-
+> Relevant File: [daytime_scores.py](src/movero/daytime_scores.py)
 ##### Old Plot for Reference: 
 ![](https://i.imgur.com/FGSW1My.png)
 
+##### Old Plot for Reference: 
+**TODO: Insert Image of new plot**
 
 ___
 ## 4. TOTAL SCORES DEP. ON LEAD-TIME RANGES
