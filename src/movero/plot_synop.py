@@ -11,6 +11,7 @@ import click
 # local
 from station_scores import _station_scores_pipeline
 from time_scores import _time_scores_pipeline
+from daytime_scores import _daytime_scores_pipeline
 
 """
 Status of merging the former plot_synop command with IDL here. 
@@ -227,7 +228,20 @@ def main(
         grid=grid,
         debug=debug
     )
-##### 3. ???????????????????????????????????????????########################################################################################################################################
+##### 3. INITIALISE DYURNAL CYCLE PLOTTING PIPELINE#########################################################################################################################################
+    _daytime_scores_pipeline(
+        params_dict=params_dict,
+        lt_ranges=lt_ranges,
+        file_prefix="daytime_scores",
+        file_postfix=".dat",
+        input_dir=input_dir,
+        output_dir=output_dir,
+        season=season,
+        model_version=model_version,
+        grid=grid,
+        debug=debug
+    )
+
 ##### 4. ???????????????????????????????????????????########################################################################################################################################
 
     return

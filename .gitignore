@@ -1,0 +1,5 @@
+# remove images
+*.png
+
+# remove scratch files
+scratch.py
