@@ -101,13 +101,13 @@ def _time_scores_pipeline(
             df = df.replace(float(header["Missing value code"][0]), np.NaN)
 
             # > if there are columns (= scores), that only conaint np.NaN, remove them
-            df = df.dropna(axis=1, how="all")
+            # df = df.dropna(axis=1, how="all")
 
             # > check which relevant scores are available; extract those from df
             all_scores = df.columns.tolist()
-            available_scores = ["timestamp"]
+            available_scores = ["timestamp"] # this list is the columns, that should be kept
             multiplot_scores = {}
-            for score in scores:
+            for score in scores: # scores = [[score1], [score2/score3], [score4],...]
                 if len(score) == 1:
                     if score[0] in all_scores:
                         available_scores.append(score[0])
@@ -118,6 +118,7 @@ def _time_scores_pipeline(
                 if (
                     len(score) > 1
                 ):  # if TWO scores are plotted on one plot# currently only 2-in-1 plots are possible
+                    # MMOD/MOBS --> MMOD:MOBS
                     multiplot_scores[score[0]] = score[1]
                     for sc in score:
                         if sc in all_scores:
@@ -129,7 +130,7 @@ def _time_scores_pipeline(
 
             df = df[available_scores]
 
-            if debug:
+            if False:
                 print("\nFile header:")
                 pprint(header)
                 print("\nData:")
@@ -142,7 +143,7 @@ def _time_scores_pipeline(
             # for each score in df, create one map
             _generate_timeseries_plot(
                 data=df,
-                multiplots=multiplot_scores,
+                multiplots=multiplot_scores, # { MMOD : MOBS }
                 lt_range=lt_range,
                 variable=parameter,
                 file=file,
@@ -172,7 +173,7 @@ def _generate_timeseries_plot(
     debug,
 ):
     """Generate Timeseries Plot."""
-    output_dir = f"{output_dir}/time_scores"
+    # output_dir = f"{output_dir}/time_scores"
     if not Path(output_dir).exists():
         Path(output_dir).mkdir(parents=True, exist_ok=True)
     # print(f"creating plots for file: {file}")
@@ -191,23 +192,24 @@ def _generate_timeseries_plot(
     )
     unit = header_dict["Unit"][0]
 
-    # define further plot properties
-    grid = True
 
-    # TODO: implement correct limits here!
+    # this variable, remembers if a score has been added to another plot.
+    # for example in the multiplots dict, when plotting MMOD, MOBS will also be added to the plot
+    # and does not need to be plotted again.
     score_to_skip = None
     for score in scores:
         if score == score_to_skip:
             continue
 
-        
         param = header_dict["Parameter"][0]
-        param = check_params(param=param, verbose=debug)
+        # param = TD_2M_KAL
+        param = check_params(param=param, verbose=debug) # TODO: replace param w/ variable
+        # param = TD_2M*
         print(f"plotting:\t{param}/{score}")
         
 
         multiplt = False
-        title = f"{variable}: {score}"
+        title = f"{variable}: {score}" # the variable 'variable' is the full parameter name.
         footer = f"Model: {header_dict['Model version'][0]} | Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]} ({lt_range}) | © MeteoSwiss"
         # intialise figure/axes instance
         fig, ax = plt.subplots(
@@ -217,8 +219,6 @@ def _generate_timeseries_plot(
         ax.set_xlim(start, end)
         ax.set_ylabel(f"{score.upper()} ({unit})")
 
-        # TODO: retrieve ymin/ymax from correct tables in plot_synop & ax.set_ylim(ymin,ymax)
-
         if grid:
             ax.grid(visible=True)
 
@@ -226,9 +226,9 @@ def _generate_timeseries_plot(
             print(f"Extract dataframe for score: {score}")
             pprint(data)
 
-        # x = pd.to_datetime(df_tmp["datetime"], format="%d.%m.%Y %H:%M")
         x = data["timestamp"].values
         y = data[score].values
+
         if score in multiplots.keys():
             y2 = data[multiplots[score]].values
             multiplt = True

@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pprint
 import sys
+from pprint import pprint
 
 # relevant imports for plotting pipeline
 import matplotlib.pyplot as plt
@@ -22,7 +23,6 @@ from utils.parse_plot_synop_ch import cat_station_score_colortable
 # class to add relief to map
 # > taken from: https://stackoverflow.com/questions/37423997/cartopy-shaded-relief
 from cartopy.io.img_tiles import GoogleTiles
-
 
 class ShadedReliefESRI(GoogleTiles):
     # TODO: download image, place in resource directory and link to it (not sure if possible, tried for like 30' and it didnt work)
@@ -101,13 +101,28 @@ def _station_scores_pipeline(
                 "Unit": header["Unit"][0],
             }
             # pprint.pprint(relevant_header_information) # dbg
+
+            # TODO: longitude gets parsed ugly --> check separator in atab.py
+            # looks like this: ['7.56100', '', '', '', '', '', '', '8.60800',....]
+            # should look like this: ['7.56100', '8.60800', ..]
             longitudes = list(filter(None, header["Longitude"]))
-            latitudes = list(filter(None, header["Latitude"]))
+            latitudes =  list(filter(None, header["Latitude"]))
 
             # extract dataframe
             df = Atab(file=path, sep=" ").data
+            
+            print(path)
+            pprint(df)
 
             # > rename the first column
+            # TODO (in ATAB): split the first column based on number of characters and not based 
+            # on separator. get number of characters from header: Width of text label column: 14
+            
+            # alternatively:
+            # get column names
+            # get first column name
+            # remove Score from first column name
+            # keep rest and rename first column
             df.rename(columns={"ScoreABO": "ABO"}, inplace=True)
 
             # > add longitude and latitude to df
@@ -116,14 +131,16 @@ def _station_scores_pipeline(
 
             # > check which relevant scores are available; extract those from df
             all_scores = df.index.tolist()
-            available_scores = ["lon", "lat"]
-            for score in scores:
+            available_scores = ["lon", "lat"] # this list, will be kept
+            for score in scores: # scores = [[score1], [score2],...]
                 if score[0] in all_scores:
                     available_scores.append(score[0])
                 else:  # warn that a relevant score was not available in dataframe
                     print(
                         f"--- WARNING: Score {score[0]} not available for parameter {parameter}."
                     )
+
+            # reduce dataframe, s.t. only relevant scores + lon/lat are kept
             df = df.loc[available_scores]
 
             # > remove/replace missing values in dataframe with np.NaN
@@ -132,7 +149,7 @@ def _station_scores_pipeline(
             )
 
             # > if there are rows (= scores), that only conaint np.NaN, remove them
-            df = df.dropna(how="all")
+            # df = df.dropna(how="all")
 
             # if debug:
             #     print(f"Generating plot for {parameter} for lt_range: {lt_range}. (File: {file})")
@@ -203,7 +220,17 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
     cat_score = False
     print(f"plotting:\t{param}/{score}")
     # check param, before trying to assign cmap to it
+    
+    # i.e. param = TD_2M_KAL
     param = check_params(param, debug)
+    # i.e. param = TD_2M*
+
+    print("Station Score Colortable")
+    pprint(station_score_colortable)
+    print("Note: Index = Scores")
+
+    print("Cat Station Score Colortable")
+    pprint(cat_station_score_colortable)
 
     # RESOLVE CORRECT PARAMETER
     try:  # try to get the cmap from the regular station_score_colortable
@@ -269,7 +296,7 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
                 transform=ccrs.PlateCarree(),
             )
 
-            if True:  # add the short name of the stations as well
+            if False:  # add the short name of the stations as well
                 ax.text(
                     x=lon - 0.025,
                     y=lat - 0.007,
@@ -334,7 +361,7 @@ def _generate_map_plot(
     debug,
 ):
     """Generate Map Plot."""
-    output_dir = f"{output_dir}/stations_scores"
+    # output_dir = f"{output_dir}/stations_scores"
     if not Path(output_dir).exists():
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 

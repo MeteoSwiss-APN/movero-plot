@@ -124,62 +124,73 @@ def main(
     
     --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
     """
+##### -1. DEFINE PLOTS #####################################################################################################################################################################
+    station_scores =  False
+    time_scores    =  True
+    daytime_scores =  False
+    total_scores   =  False
 ##### 0. PARSE USER INPUT ##################################################################################################################################################################
     params_dict = _parse_inputs(debug, plot_params, plot_scores, plot_cat_params, plot_cat_thresh, plot_cat_scores, plot_ens_params, plot_ens_thresh, plot_ens_scores)
 ##### 1. INITIALISE STATION SCORES PLOTTING PIPELINE########################################################################################################################################       
-    # _station_scores_pipeline(
-    #         params_dict=params_dict,
-    #         lt_ranges=lt_ranges,
-    #         file_prefix="station_scores", 
-    #         file_postfix = ".dat",
-    #         input_dir=input_dir,
-    #         output_dir=output_dir,
-    #         season=season,
-    #         model_version=model_version,
-    #         relief=relief,
-    #         debug=debug
-    #     )
+    if station_scores:
+        _station_scores_pipeline(
+                params_dict=params_dict,
+                lt_ranges=lt_ranges,
+                file_prefix="station_scores", 
+                file_postfix = ".dat",
+                input_dir=input_dir,
+                output_dir=output_dir,
+                season=season, # 2021s4
+                model_version=model_version, # C-1E-CTR_ch
+                relief=relief,
+                debug=debug
+            )
 ##### 2. INITIALISE TIME SERIES PLOTTING PIPELINE###########################################################################################################################################
-    # _time_scores_pipeline(
-    #         params_dict=params_dict,
-    #         lt_ranges=lt_ranges,
-    #         file_prefix="time_scores",
-    #         file_postfix=".dat",
-    #         input_dir=input_dir,
-    #         output_dir=output_dir,
-    #         season=season,
-    #         model_version=model_version,
-    #         grid=grid,
-    #         debug=debug
-    #     )
+    if time_scores:
+        _time_scores_pipeline(
+                params_dict=params_dict,
+                lt_ranges=lt_ranges,
+                file_prefix="time_scores",
+                file_postfix=".dat",
+                input_dir=input_dir,
+                output_dir=output_dir,
+                season=season,
+                model_version=model_version,
+                grid=grid,
+                debug=debug
+            )
 ##### 3. INITIALISE DYURNAL CYCLE PLOTTING PIPELINE#########################################################################################################################################
-    # _daytime_scores_pipeline(
-    #         params_dict=params_dict,
-    #         lt_ranges=lt_ranges,
-    #         file_prefix="daytime_scores",
-    #         file_postfix=".dat",
-    #         input_dir=input_dir,
-    #         output_dir=output_dir,
-    #         season=season,
-    #         model_version=model_version,
-    #         grid=grid,
-    #         debug=debug
-    #     )
+    if daytime_scores:
+        _daytime_scores_pipeline(
+                params_dict=params_dict,
+                lt_ranges=lt_ranges,
+                file_prefix="daytime_scores",
+                file_postfix=".dat",
+                input_dir=input_dir,
+                output_dir=output_dir,
+                season=season,
+                model_version=model_version,
+                grid=grid,
+                debug=debug
+            )
 ##### 4. INITIALIS TOTAL SCORES PLOTTING PIPELINE###########################################################################################################################################
-    _total_scores_pipeline(
-        params_dict=params_dict,
-        plot_scores=plot_scores,
-        plot_cat_scores=plot_cat_scores,
-        # TODO: also add ens scores of course...
-        file_prefix="total_scores",
-        file_postfix=".dat",
-        input_dir=input_dir,
-        output_dir=output_dir,
-        season=season,
-        model_version=model_version,
-        grid=grid,
-        debug=debug
-    )
+    if total_scores:
+        _total_scores_pipeline(
+            params_dict=params_dict,
+            plot_scores=plot_scores,
+            plot_params=plot_params,
+            plot_cat_scores=plot_cat_scores,
+            plot_cat_params=plot_cat_params,
+            plot_cat_thresh=plot_cat_thresh,
+            file_prefix="total_scores",
+            file_postfix=".dat",
+            input_dir=input_dir,
+            output_dir=output_dir,
+            season=season,
+            model_version=model_version,
+            grid=grid,
+            debug=debug
+        )
 ############################################################################################################################################################################################
     print(f"\n--- Done.")
     return

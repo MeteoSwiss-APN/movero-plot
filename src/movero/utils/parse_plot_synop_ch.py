@@ -147,7 +147,7 @@ if True:
     # the mapping of the gradient indeces happens here; I just picked the
     # colormaps, that seemed the most suitable. '_r' reverses the direction
     # of the gradient. 
-    # TODO: cmap 67 still needs to be replaced
+    # TODO: cmap 66, 67 need to be checked and replaced to be replaced. just included those not to have missing values
     station_score_colortable = station_score_colortable.replace({'34':mpl.cm.jet})
     station_score_colortable = station_score_colortable.replace({'48':mpl.cm.cubehelix})
     station_score_colortable = station_score_colortable.replace({'52':mpl.cm.bwr})
@@ -159,6 +159,7 @@ if True:
     station_score_colortable = station_score_colortable.replace({'60':mpl.cm.BrBG})
     station_score_colortable = station_score_colortable.replace({'63':mpl.cm.Spectral})
     station_score_colortable = station_score_colortable.replace({'64':mpl.cm.Spectral})
+    station_score_colortable = station_score_colortable.replace({'66':mpl.cm.Spectral})
     station_score_colortable = station_score_colortable.replace({'67':mpl.cm.Spectral})
 ###############################################################################################
 ############## CATEGORICAL SCORES; DATAFRAMES FOR SCORE RANGES AND COLOUR TABLE ###############
