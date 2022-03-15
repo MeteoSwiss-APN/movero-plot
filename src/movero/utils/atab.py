@@ -22,7 +22,7 @@ class Atab:
             sep (optional): Separator for data.
         """
         # Check consistency
-        supported_seps = [" ", ";"]
+        supported_seps = [" ", ";"] # TODO: perhaps add r"\s+" to support multiple spaces. There was a problem w/ parsing the header for the station scores files. (lon, lat rows)
         if sep not in supported_seps:
             raise RuntimeError(
                 f"Separator {sep} not supported. Must be one of "
