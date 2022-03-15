@@ -3,3 +3,6 @@
 
 # remove scratch files
 scratch.py
+
+# remove pycache files/directories
+__pycache__/
