@@ -93,8 +93,6 @@ The spatial verification plots feature a map, where all stations have are marked
 ![](https://i.imgur.com/FGSW1My.png)
 ![](https://i.imgur.com/pSNKEF4.png)
 
-##### Old Plot for Reference:
-**TODO: Insert Image of new plot**
 
 ___
 ## 4. TOTAL SCORES DEP. ON LEAD-TIME RANGES
@@ -103,11 +101,7 @@ ___
 >  
 > die Reihenfolge in --plot_scores ist entscheidend. Es kommen immer 4 plots auf eine Seite für die normalen Scores. Die --plot_cat_scores beginnen auf jeden Fall auf einer neuen Seite, und jeder Threshold beginnt wieder auf einer neuen Seite.
 
-##### Old Plot for Reference: 
-![](https://i.imgur.com/b1xsDmI.png)
+###### Example: Old vs. New Station Scores Plot
+![](https://i.imgur.com/RViAUU4.png)
+![](https://i.imgur.com/2d69BoT.png)
 
-___
-### Overview which plots should be created:
-![](https://i.imgur.com/xXSLJ4l.png)
-![](https://i.imgur.com/swlWBA2.png)
-![](https://i.imgur.com/ZLYzobQ.png)
