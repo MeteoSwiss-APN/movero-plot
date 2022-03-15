@@ -22,7 +22,6 @@ from utils.parse_plot_synop_ch import total_score_range, cat_total_score_range
 from utils.check_params import check_params
 
 
-
 def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parameter):
     """Collect all files corresponding to current parameter in 'corresponding_files_dict'.
 
@@ -39,10 +38,15 @@ def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parame
     # collect the files, corresponding to this parameter in the corresponding files dict.
     # the keys in this dict are the available lead time ranges for the current parameter.
     corresponding_files_dict = {}
+
+    # for dbg purposes: 
+    files_list = []
+
     for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
         if file_path.is_file(): # check, that the corresponding path belongs to a file and not to a sub-directory
 
             # lt_range = key for corresponding_files_dict
+            # TODO: change here, if ltr is longer than 5 chars
             lt_range = file_path.name[len(file_prefix):len(file_prefix)+5]
 
             # extract header & dataframe
@@ -60,10 +64,14 @@ def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parame
                                                     'header':header,
                                                     'df':df
                                                 }
+            
+            # add path of file to list of relevant files
+            files_list.append(file_path)
     if debug:
-        print(f"\nFor parameter: {parameter} these files are relevant:")
-        pprint(corresponding_files_dict)
-
+        print(f"\nFor parameter: {parameter} these files are relevant:\n")
+        pprint(files_list)
+        print(f"\nThese files have been parsed & combined in the 'corresponding_files_dict'. Each key (lt-range) has a subdict with two keys: {corresponding_files_dict['19-24'].keys()}\n")
+    
     return corresponding_files_dict
 
 
@@ -101,26 +109,28 @@ def _total_scores_pipeline(
         debug (bool): print further comments & debug statements
     """
     print(f"\n--- initialising total scores pipeline")
-    print(f"--- initialising total scores parsing pipeline")
+    
+    # tmp; define debug = True, to show debug statements for total_scores only
+    debug = True
+
     source_path = Path(f"{input_dir}/{season}/{model_version}")
     for parameter in params_dict:
         corresponding_files_dict = collect_relevant_files(file_prefix, file_postfix, debug, source_path, parameter)
+        
         # pass dict to plotting pipeline
         _generate_total_scores_plot(
             data=corresponding_files_dict,
-            params_dict=params_dict,
             parameter=parameter,
             plot_scores=plot_scores,
             plot_params=plot_params,
             plot_cat_scores=plot_cat_scores,
             plot_cat_params=plot_cat_params,
             plot_cat_thresh=plot_cat_thresh,
+            # TODO: add ens params/thresh/scores
             output_dir=output_dir,
             grid=grid,
             debug=debug,
-        )
-
-    
+        )    
     return
     
 
@@ -137,12 +147,14 @@ def _set_ylim(param, score, ax, debug):
     if regular_param and regular_score:
         lower_bound = total_score_range[param]["min"].loc[score]
         upper_bound = total_score_range[param]["max"].loc[score]
-        if debug:
-            print(
-                f"found limits for {param}/{score} --> {lower_bound}/{upper_bound}"
-        )
+        # if debug:
+        #     print(
+        #         f"found limits for {param}/{score} --> {lower_bound}/{upper_bound}"
+        # )
         if lower_bound != upper_bound:
             ax.set_ylim(lower_bound, upper_bound)
+
+    # TODO: add computation of y-lims for cat & ens scores
 
     return
 
@@ -179,14 +191,13 @@ def _clear_empty_axes(subplot_axes, idx):
     return
 
 def _save_figure(output_dir, filename):
-    print(f"saving: {output_dir}/{filename[:-1]}.png")
+    print(f"---\t\tsaving: {output_dir}/{filename[:-1]}.png")
     plt.savefig(f"{output_dir}/{filename[:-1]}.png")
     plt.clf()
     return
 
 def _generate_total_scores_plot(
     data,
-    params_dict,
     parameter,
     plot_params,
     plot_scores,
@@ -198,27 +209,28 @@ def _generate_total_scores_plot(
     debug,
 ):
     """Generate Total Scores Plot."""
-    print(f"--- initialising total scores plotting pipeline for parameter:\t{parameter}")
-    
-    # if parameter == "T_2M_KAL":
-    #     pprint(data)
-
+    if debug:
+        print(f"--- starting plotting pipeline")
+        print(f"---\t1) map parameter (i.e. TD_2M_KAL --> TD_2M*)")
     # get correct parameter, i.e. if parameter=T_2M_KAL --> param=T_2M*
-    param = check_params(param=parameter, verbose=debug)
+    param = check_params(param=parameter, verbose=False) # TODO: change False back to debug
 
-
+    if debug:
+        print(f"---\t2) check if output_dir exists (& create it if necessary)")
     # check (&create) output directory for total scores plots
-    output_dir = f"{output_dir}/total_scores"
+    # output_dir = f"{output_dir}/total_scores"
     if not Path(output_dir).exists():
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
+    if debug:
+        print(f"---\t3) initialise figure with a 2x2 subplots grid")
     # create 2x2 subplot grid
     fig, ((ax0, ax1),(ax2, ax3)) = plt.subplots(nrows=2, ncols=2, tight_layout=True, figsize=(10, 10), dpi=200)
-    subplot_axes = {0:ax0, 1:ax1, 2:ax2, 3:ax3}
-
+    
+    subplot_axes = {0:ax0, 1:ax1, 2:ax2, 3:ax3} # hash map to access correct axes later on
+    
     # ltr_unsorted  ->  unsorted lead time ranges 
     # ltr_sorted    ->  sorted lead time ranges (used for x-tick-labels later on )
-    
     ltr_unsorted, ltr_sorted = list(data.keys()), []
     ltr_start_times_sorted = sorted([int(lt.split('-')[0]) for lt in ltr_unsorted])
     for idx, ltr_start in enumerate(ltr_start_times_sorted):
@@ -229,6 +241,13 @@ def _generate_total_scores_plot(
     # re-name & create x_int list, s.t. np.arrays are plottet against each other
     x_ticks = ltr_sorted
     x_int = list(range(len(ltr_sorted)))
+
+    if debug:
+        print(f"---\t4) create x-axis")
+        print(f"---\t\tUnsorted ltr list:\t\t{ltr_unsorted}")
+        print(f"---\t\tSorted ltr start times list:\t{ltr_start_times_sorted}")
+        print(f"---\t\tSorted ltr list (= x-ticks):\t{ltr_sorted}")
+        print(f"---\t\tx_int =\t\t\t\t{x_int}")
 
 
     # extract header from data & create title
@@ -245,12 +264,15 @@ def _generate_total_scores_plot(
     ############################################################################
     ##################### REGULAR SCORES PLOTTING PIPELINE #####################
     ############################################################################
+    if debug:
+        print(f"---\t5) plot REGULAR parameter/scores (Because, regular & categorical scores should not be mixed on the same figure.)")
+
     if plot_scores and plot_params:
         regular_scores = plot_scores.split(',')
-        regular_params = plot_scores.split(',')
+        # the idx of a score, maps the score to the corresponding subplot axes instance
         for idx, score in enumerate(regular_scores):
-            if debug: 
-                print(f"--- plotting:\t{param}/{score}")
+            # if debug: 
+            #     print(f"--- plotting:\t{param}/{score}")
         
             multiplt=False
 
@@ -278,7 +300,9 @@ def _generate_total_scores_plot(
 
             # get ax, to add plot to
             ax = subplot_axes[idx%4]
+            ax.set_xlim(x_int[0], x_int[-1])
             ax.set_ylabel(f"{score.upper()} ({unit})")
+            
             # plot two scores on one sub-plot
             if '/' in score:
                 multiplt = True
@@ -287,6 +311,9 @@ def _generate_total_scores_plot(
                 _set_ylim(param=param, score=scores[0], ax=ax, debug=debug)
                 
                 # get y0, y1 from dfs
+                if debug and idx==0:
+                    print(f"---\t6) collect the data corresponding to {score} from all dataframes in the data dict in y-list")
+                    print(f"---\t7) plot y-list against x_int")
                 y0, y1 = [], []
                 for ltr in ltr_sorted:
                     y0.append(data[ltr]['df']['Total'].loc[scores[0]])
@@ -308,6 +335,7 @@ def _generate_total_scores_plot(
                     y.append(ltr_score)
 
                 ax.plot(x_int, y, color="k", linestyle="-", marker='D', fillstyle='none', label=f"{score.upper()}")
+            
             
             # customise grid, title, xticks, legend of current ax
             _customise_ax(parameter=parameter, score=score, x_ticks=x_ticks, grid=True, ax=ax)
@@ -334,9 +362,18 @@ def _generate_total_scores_plot(
                 _save_figure(output_dir=output_dir, filename=filename)
     ############################################################################
     ################### CATEGORICAL SCORES PLOTTING PIPELINE ###################
+    ############################################################################
     # remark: include thresholds for categorical scores
+    if debug:
+        print(f"---\t10) repeat plotting pipeline for categorical params/scores/thresh combinations")
+    
+    print(plot_cat_params)
+    print(plot_cat_scores)
+    print(plot_cat_thresh)
+    print(plot_cat_params and plot_cat_scores and plot_cat_thresh)
+    
     if plot_cat_params and plot_cat_scores and plot_cat_thresh:
-        print(f"--- should now create total scores plots forall cat params/scores")
+        print(f"--- should now create total scores plots for all cat params/scores")
         cat_params = plot_cat_params.split(',')  # categorical parameters: TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
         cat_scores = plot_cat_scores.split(',')  # categorical scores: FBI,MF,POD,FAR,THS,ETS
         cat_threshs = plot_cat_thresh.split(':') # categorical thresholds: 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
@@ -359,108 +396,19 @@ def _generate_total_scores_plot(
                     else: 
                         cat_params_dict[param].append([f"{score}({threshold})"])
         
-        if False:
+        if True:
             print("Categorical Parameter Dict: ")
             pprint(cat_params_dict)
+
+    # TODO: implement the total scores pipeline for categorical scores as well
+    
+    ############################################################################
+    #################### ENSEMBLE SCORES PLOTTING PIPELINE #####################
+    ############################################################################
+    # remark: include thresholds for categorical scores
+    print(f"---\t11) repeat plotting pipeline for ensemble params/scores/thresh combinations")
+    # TODO: implement the total scores pipeline for categorical scores as well
     
     ############################################################################
 
-
-
-
-
-
     return
-
-
-
-'''
-    # new plotting pipeline
-    for idx, score in enumerate(scores):
-        if True: # TODO: change back to debug 
-            print(f"--- plotting:\t{parameter}/{score[0]}")
-
-        if len(score) == 1:
-            multiplt=False
-        else:
-            multiplt=True
-
-        # save filled figure & re-set necessary for next iteration
-        if idx > 0 and idx%4==0:
-            # add title to figure
-            plt.suptitle(
-                footer,
-                horizontalalignment="center",
-                verticalalignment="top",
-                fontdict={
-                    "size": 6,
-                    "color": "k",
-                },
-                bbox= dict(
-                    facecolor='none', 
-                    edgecolor='grey', 
-                ),
-            )
-            _save_figure(output_dir=output_dir, filename=filename)
-            fig, ((ax0, ax1),(ax2, ax3)) = plt.subplots(nrows=2, ncols=2, tight_layout=True, figsize=(10, 10), dpi=200)
-            subplot_axes = {0:ax0, 1:ax1, 2:ax2, 3:ax3}
-            # reset filename
-            filename = 'total_scores_'
-
-        # get ax, to add plot to
-        ax = subplot_axes[idx%4]
-        # plot two scores on one sub-plot
-        if multiplt:
-            filename += f"{scores[0]}_{scores[1]}_"
-            _set_ylim(param=parameter, score=score[0], ax=ax, debug=debug)
-            ax.set_ylabel(f"{score[0].upper()}/{score[1].upper()} ({unit})")
-            
-            # get y0, y1 from dfs
-            y0, y1 = [], []
-            for ltr in ltr_sorted:
-                y0.append(data[ltr]['df']['Total'].loc[score[0]])
-                y1.append(data[ltr]['df']['Total'].loc[score[1]])
-            
-            # plot y0, y1
-            ax.plot(x_int, y0, color="red", linestyle="-", marker='^', fillstyle='none', label=f"{score[0].upper()}")
-            ax.plot(x_int, y1, color="k", linestyle="-", marker='D', fillstyle='none', label=f"{score[1].upper()}")
-            
-        # plot single score on sub-plot
-        if not multiplt:
-            score = score[0] # retrieve score from single-element list [score]
-            ax.set_ylabel(f"{score.upper()} ({unit})")
-            filename += f"{score[0]}_"
-            _set_ylim(param=param, score=score, ax=ax, debug=debug)
-            
-            y = []
-            # extract y from different dfs
-            for ltr in ltr_sorted:
-                ltr_score = data[ltr]['df']['Total'].loc[score]
-                y.append(ltr_score)
-
-            ax.plot(x_int, y, color="k", linestyle="-", marker='D', fillstyle='none', label=f"{score.upper()}")
-        
-        # customise grid, title, xticks, legend of current ax
-        _customise_ax(parameter=param, score=score, x_ticks=x_ticks, grid=True, ax=ax)
-
-        # save figure, if this is the last score
-        if idx == len(scores)-1:
-            # add title to figure
-            plt.suptitle(
-                footer,
-                horizontalalignment="center",
-                verticalalignment="top",
-                fontdict={
-                    "size": 6,
-                    "color": "k",
-                },
-                bbox= dict(
-                    facecolor='none', 
-                    edgecolor='grey', 
-                ),
-            )
-            # clear empty subplots
-            _clear_empty_axes(subplot_axes=subplot_axes, idx=idx)
-            # save & clear figure
-            _save_figure(output_dir=output_dir, filename=filename)
-        '''

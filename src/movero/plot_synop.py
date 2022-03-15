@@ -126,9 +126,9 @@ def main(
     """
 ##### -1. DEFINE PLOTS #####################################################################################################################################################################
     station_scores =  False
-    time_scores    =  True
+    time_scores    =  False
     daytime_scores =  False
-    total_scores   =  False
+    total_scores   =  True
 ##### 0. PARSE USER INPUT ##################################################################################################################################################################
     params_dict = _parse_inputs(debug, plot_params, plot_scores, plot_cat_params, plot_cat_thresh, plot_cat_scores, plot_ens_params, plot_ens_thresh, plot_ens_scores)
 ##### 1. INITIALISE STATION SCORES PLOTTING PIPELINE########################################################################################################################################       
@@ -182,6 +182,7 @@ def main(
             plot_cat_scores=plot_cat_scores,
             plot_cat_params=plot_cat_params,
             plot_cat_thresh=plot_cat_thresh,
+            # TODO: add plot_ens params/scores/threshs
             file_prefix="total_scores",
             file_postfix=".dat",
             input_dir=input_dir,

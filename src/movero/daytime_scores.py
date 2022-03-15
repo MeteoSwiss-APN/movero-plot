@@ -2,21 +2,12 @@
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
-
-import matplotlib.units as munits
 import matplotlib.dates as md
-import datetime
-
-# converter = mdates.ConciseDateConverter()
-# munits.registry[np.datetime64] = converter
-# munits.registry[datetime.date] = converter
-# munits.registry[datetime.datetime] = converter
 
 # import datetime
 from utils.atab import Atab
 
 from pprint import pprint
-import pandas as pd
 from ipdb import set_trace as dbg
 
 
@@ -81,7 +72,7 @@ def _daytime_scores_pipeline(
             df = df.replace(float(header["Missing value code"][0]), np.NaN)
 
             # > if there are columns (= scores), that only conaint np.NaN, remove them
-            df = df.dropna(axis=1, how="all")
+            # df = df.dropna(axis=1, how="all")
 
             # > check which relevant scores are available; extract those from df
             all_scores = df.columns.tolist()
@@ -164,7 +155,6 @@ def get_xaxis():
     x = datetimes
     return x
 
-
 def _generate_daytime_plot(
     data,
     multiplots,
@@ -178,7 +168,7 @@ def _generate_daytime_plot(
     debug,
 ):
     """Generate Daytime Plot."""
-    output_dir = f"{output_dir}/daytime_scores"
+    # output_dir = f"{output_dir}/daytime_scores"
     if not Path(output_dir).exists():
         Path(output_dir).mkdir(parents=True, exist_ok=True)
     print(f"creating plots for file: {file}")
@@ -224,6 +214,7 @@ def _generate_daytime_plot(
         multiplt = False
         title = f"{variable}: {score}"
         footer = f"Model: {header_dict['Model version'][0]} | Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]} ({lt_range}) | © MeteoSwiss"
+        
         # intialise figure/axes instance
         fig, ax = plt.subplots(
             1, 1, figsize=(1660 / 100, 1100 / 100), dpi=150, tight_layout=True
@@ -236,7 +227,9 @@ def _generate_daytime_plot(
         # TODO: retrieve ymin/ymax from correct tables in plot_synop & ax.set_ylim(ymin,ymax)
 
         if grid:
-            ax.grid(visible=True)
+            ax.grid(which='major', color='#DDDDDD', linewidth=0.8)
+            ax.grid(which='minor', color='#EEEEEE', linestyle=':', linewidth=0.5)
+            ax.minorticks_on()
 
         if debug:
             print(f"Extract dataframe for score: {score}")
