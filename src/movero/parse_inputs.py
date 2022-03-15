@@ -1,6 +1,23 @@
 from pprint import pprint
 
 def _parse_inputs(debug, plot_params, plot_scores, plot_cat_params, plot_cat_thresh, plot_cat_scores, plot_ens_params, plot_ens_thresh, plot_ens_scores):
+    """Parse the user input flags.
+
+    Args:
+        debug (bool): Add debug statements to command prompt.
+        plot_params (str): Long string w/ regular plot parameters. Separated by comma. I.e. "TOT_PREC12,TOT_PREC6,TOT_PREC1"
+        plot_scores (str): Long strint w/ regular plot scores. Separated by comma. I.e. "ME,MMOD/MOBS,MAE". (Scores separated by '/' belong on the same plot.)
+        plot_cat_params (str): Long string w/ categorical plot parameters. Separated by comma.
+        plot_cat_thresh (str): Long string w/ categorical scores. Separated by comma. I.e. "FBI,MF,POD"
+        plot_cat_scores (str): Long string w/ categorical scores thresholds. For each cat_score, there is a list of thresholds. 
+                               These 'sublists' are separated from one another w/ ':'. I.e. "0.1,1,10:0.2,1,5:0.2,0.5,2"
+        plot_ens_params (str): Long string w/ ens plot parameters. Separated by comma.
+        plot_ens_thresh (str): Long string w/ ens scores. Separated by comma.
+        plot_ens_scores (str): Long string w/ ens scores thresholds. Separated by coma.
+
+    Returns:
+        dict: Dictionary w/ all relevant parameters as keys. Each key is assigned a list of lists containing the corresponding scores (&thresholds).
+    """
     print(f"\n--- debugging user inputs")
     if debug:
         print('---------------------------------------------------------------------------------------------------------------------------')
