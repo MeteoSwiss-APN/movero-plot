@@ -53,7 +53,6 @@ def _parse_inputs(debug, plot_params, plot_scores, plot_cat_params, plot_cat_thr
             print("Categorical Parameter Dict: ")
             pprint(cat_params_dict)
         
-
     # ENV PARAMATERS (TODO)
     if plot_ens_params and plot_ens_scores and plot_ens_thresh:
         ens_params_dict = {}
@@ -68,6 +67,9 @@ def _parse_inputs(debug, plot_params, plot_scores, plot_cat_params, plot_cat_thr
     # only regular parameters
     elif regular_params_dict and not cat_params_dict and not ens_params_dict:
         params_dict = regular_params_dict
+
+    elif cat_params_dict and not regular_params_dict and not ens_params_dict:
+        params_dict = cat_params_dict
 
     if debug:
         print(f"Finally, the following parameter x score pairs will get plotted:")
