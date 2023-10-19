@@ -1,99 +1,64 @@
 """Command line interface of moveroplot."""
 # Third-party
 import click
+from click import Context
+from pathlib import Path
 
 # Local
 from . import __version__
 from .mutable_number import MutableNumber
+from .main import main
+import sys
 
-
-# pylint: disable=W0613  # unused-argument (param)
-def print_version(ctx, param, value: bool) -> None:
-    """Print the version number and exit."""
-    if value:
-        click.echo(__version__)
-        ctx.exit(0)
-
-
-# pylint: disable=W0613  # unused-argument (args, kwargs)
-@click.pass_context
-def print_number(ctx, *args, **kwargs) -> None:
-    """Print the current number."""
-    number = ctx.obj["number"].get()
-    click.echo(f"{number:g}")
-
-
-@click.group(
-    context_settings={"help_option_names": ["-h", "--help"]},
-    no_args_is_help=True,
-    invoke_without_command=True,
-    chain=True,
-    result_callback=print_number,
-)
-@click.argument(
-    "number",
-    type=float,
-    nargs=1,
-)
-@click.option(
-    "--version",
-    "-V",
-    help="Print version and exit.",
-    is_flag=True,
-    expose_value=False,
-    callback=print_version,
-)
 @click.option(
     "--verbose",
     "-v",
+    "verbose",
+    help="Increase verbosity; specify multiple times for more.",
     count=True,
-    help="Increase verbosity (specify multiple times for more).",
+    is_eager=True,
+    expose_value=False,
 )
+@click.version_option(__version__, "--version", "-V", message="%(version)s")
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
+@click.argument("model_version", type=str) # help="Specify the correct run. I.e. C-1E-CTR_ch"
+@click.option("--debug", type=bool, is_flag=True, help='Add debug comments to command prompt.')
+@click.option("--lt_ranges", type=str, multiple=True, default=("19-24",), help='Specify the lead time ranges of interest. Def: 19-24')
+@click.option("--plot_params", type=str, help='Specify parameters to plot.')
+# TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL 
+@click.option("--plot_scores", type=str, help='Specify scores to plot.')
+# ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS 
+@click.option("--plot_cat_params", type=str, help='Specify categorical parameters to plot.')
+# TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1 
+@click.option("--plot_cat_thresh", type=str, help='Specify categorical scores thresholds to plot.')
+# 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20  
+@click.option("--plot_cat_scores", type=str, help='Specify categorical scores to plot.')
+# FBI,MF,POD,FAR,THS,ETS
+@click.option("--plot_ens_params", type=str, help='Specify ens parameters to plot.')        # TODO: figure out what ens params are
+@click.option("--plot_ens_thresh", type=str, help='Specify ens scores thresholds to plot.') # TODO: figure out what ens thresh are
+@click.option("--plot_ens_scores", type=str, help='Specify ens scores thresholds to plot.') # TODO: figure out what ens scores are
+# C-1E-CTR_ch
+# 🔰 new options for plot_synop call
+@click.option("--input_dir", type=click.Path(exists=True), default=Path('/scratch/osm/movero/wd'), help='Specify input directory.')
+@click.option("--output_dir", type=str, default=Path('plots'), help='Specify output directory. Def: plots')
+@click.option("--relief", type=bool, is_flag=True, help='Add relief to maps.')
+@click.option("--grid", type=bool, is_flag=True, help='Add grid to plots.')
+@click.option("--season", type=click.Choice([
+    "2020s4",
+    "2021s1",
+    "2021s2", 
+    "2021s3", 
+    "2021s4",
+]
+), multiple=False, default="2021s4", help='Specify the season of interest. Def: 2021s4')
+
 @click.pass_context
-def main(ctx, number: float, **kwargs) -> None:
+def cli(ctx: Context, **kwargs) -> None:
     """Console script for test_cli_project."""
-    if ctx.obj is None:
-        ctx.obj = {}
-    ctx.obj["number"] = MutableNumber(number)
-    ctx.obj.update(kwargs)
+    modules_before = set(sys.modules.keys())
+    main(None, **kwargs)
+    modules_after = set(sys.modules.keys())
+    newly_imported_modules = modules_after - modules_before
+    print(newly_imported_modules)
 
 
-def print_operation(ctx, operator: str, value: float) -> None:
-    if ctx.obj["verbose"]:
-        number = ctx.obj["number"]
-        click.echo(f"{number.get(-2):g} {operator} {value:g} = {number.get():g}")
-
-
-@main.command("plus", help="addition")
-@click.argument("addend", type=float, nargs=1)
-@click.pass_context
-def plus(ctx, addend: float) -> None:
-    ctx.obj["number"].add(addend)
-    print_operation(ctx, "+", addend)
-
-
-@main.command("minus", help="subtraction")
-@click.argument("subtrahend", type=float, nargs=1)
-@click.pass_context
-def minus(ctx, subtrahend: float) -> None:
-    ctx.obj["number"].subtract(subtrahend)
-    print_operation(ctx, "-", subtrahend)
-
-
-@main.command("times", help="multiplication")
-@click.argument("factor", type=float, nargs=1)
-@click.pass_context
-def times(ctx, factor: float) -> None:
-    ctx.obj["number"].multiply(factor)
-    print_operation(ctx, "*", factor)
-
-
-@main.command("by", help="division")
-@click.argument("divisor", type=float, nargs=1)
-@click.pass_context
-def by(ctx, divisor: float) -> None:
-    ctx.obj["number"].divide(divisor)
-    print_operation(ctx, "/", divisor)
-
-def main(**kwargs):
-    print("MAIN FUNCTION CALLED IN MOVEROPLOT CLI")

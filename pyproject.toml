@@ -31,7 +31,7 @@ documentation = "https://github.io/MeteoSwiss-APN/movero-plot"
 
 [project.scripts]
 # Format: <command> = "<package>.<module>:<function>"
-# moveroplot = "moveroplot.cli:main"
+moveroplot = "moveroplot.cli:cli"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
