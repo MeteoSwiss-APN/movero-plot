@@ -94,3 +94,6 @@ def times(ctx, factor: float) -> None:
 def by(ctx, divisor: float) -> None:
     ctx.obj["number"].divide(divisor)
     print_operation(ctx, "/", divisor)
+
+def main(**kwargs):
+    print("MAIN FUNCTION CALLED IN MOVEROPLOT CLI")

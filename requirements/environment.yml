@@ -1,4 +1,4 @@
-name: movero-plot
+name: moveroplot
 channels:
   - atmcirc
   - conda-forge

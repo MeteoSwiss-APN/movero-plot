@@ -6,12 +6,12 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "movero-plot"
+name = "moveroplot"
 version = "0.1.0"
 description = "Movero-plot"
 readme = "README.md"
 keywords = [
-    "movero-plot",
+    "moveroplot",
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -20,7 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 authors = [
     {name="Marco Ketzel", email="marco.ketzel@hotmail.com"},
 ]
@@ -31,7 +31,7 @@ documentation = "https://github.io/MeteoSwiss-APN/movero-plot"
 
 [project.scripts]
 # Format: <command> = "<package>.<module>:<function>"
-# movero-plot = "moveroplot.cli:main"
+# moveroplot = "moveroplot.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
