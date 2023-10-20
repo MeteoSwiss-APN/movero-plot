@@ -14,6 +14,7 @@ from ipdb import set_trace as dbg
 from .utils.parse_plot_synop_ch import time_score_range, cat_time_score_range
 from .utils.check_params import check_params
 
+
 # enter directory / read station_scores files / call plotting pipeline
 def _time_scores_pipeline(
     params_dict,
@@ -105,9 +106,11 @@ def _time_scores_pipeline(
 
             # > check which relevant scores are available; extract those from df
             all_scores = df.columns.tolist()
-            available_scores = ["timestamp"] # this list is the columns, that should be kept
+            available_scores = [
+                "timestamp"
+            ]  # this list is the columns, that should be kept
             multiplot_scores = {}
-            for score in scores: # scores = [[score1], [score2/score3], [score4],...]
+            for score in scores:  # scores = [[score1], [score2/score3], [score4],...]
                 if len(score) == 1:
                     if score[0] in all_scores:
                         available_scores.append(score[0])
@@ -143,7 +146,7 @@ def _time_scores_pipeline(
             # for each score in df, create one map
             _generate_timeseries_plot(
                 data=df,
-                multiplots=multiplot_scores, # { MMOD : MOBS }
+                multiplots=multiplot_scores,  # { MMOD : MOBS }
                 lt_range=lt_range,
                 variable=parameter,
                 file=file,
@@ -192,7 +195,6 @@ def _generate_timeseries_plot(
     )
     unit = header_dict["Unit"][0]
 
-
     # this variable, remembers if a score has been added to another plot.
     # for example in the multiplots dict, when plotting MMOD, MOBS will also be added to the plot
     # and does not need to be plotted again.
@@ -203,13 +205,14 @@ def _generate_timeseries_plot(
 
         param = header_dict["Parameter"][0]
         # param = TD_2M_KAL
-        param = check_params(param=param, verbose=debug) # TODO: replace param w/ variable
+        param = check_params(
+            param=param, verbose=debug
+        )  # TODO: replace param w/ variable
         # param = TD_2M*
         print(f"plotting:\t{param}/{score}")
-        
 
         multiplt = False
-        title = f"{variable}: {score}" # the variable 'variable' is the full parameter name.
+        title = f"{variable}: {score}"  # the variable 'variable' is the full parameter name.
         footer = f"Model: {header_dict['Model version'][0]} | Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]} ({lt_range}) | © MeteoSwiss"
         # intialise figure/axes instance
         fig, ax = plt.subplots(
@@ -310,8 +313,6 @@ def _generate_timeseries_plot(
             },
         )
         ax.set_title(label=title)
-
-
 
         print(f"saving:\t\t{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
         plt.savefig(f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")

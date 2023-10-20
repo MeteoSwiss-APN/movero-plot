@@ -14,6 +14,7 @@ from ipdb import set_trace as dbg
 from .utils.parse_plot_synop_ch import daytime_score_range, cat_daytime_score_range
 from .utils.check_params import check_params
 
+
 # enter directory / read station_scores files / call plotting pipeline
 def _daytime_scores_pipeline(
     params_dict,
@@ -99,7 +100,7 @@ def _daytime_scores_pipeline(
                             )
 
             df = df[available_scores]
-            df = df.set_index('hh')
+            df = df.set_index("hh")
 
             if debug:
                 print("\nFile header:")
@@ -109,7 +110,7 @@ def _daytime_scores_pipeline(
                 print(
                     f"Generating plot for {parameter} for lt_range: {lt_range}. (File: {file})"
                 )
-            
+
             # for each score in df, create one map
             _generate_daytime_plot(
                 data=df,
@@ -130,7 +131,7 @@ def _daytime_scores_pipeline(
 ############################################################################################################################
 
 
-# generator that gives time between start and end times with delta intervals 
+# generator that gives time between start and end times with delta intervals
 # inspired by: https://stackoverflow.com/questions/61733727/how-to-set-minutes-time-as-x-axis-of-a-matplotlib-plot-in-python
 def deltatime(start, end, delta):
     current = start
@@ -138,22 +139,33 @@ def deltatime(start, end, delta):
         yield current
         current += delta
 
-def get_xaxis():    
+
+def get_xaxis():
     from datetime import datetime, timedelta
+
     # two random consecutive dates [date1, date2]
-    dates = [('01/02/1991', '02/02/1991')] #, '01/03/1991', '01/04/1991']
+    dates = [("01/02/1991", "02/02/1991")]  # , '01/03/1991', '01/04/1991']
 
     # generate the list for each date between 00:00 on date1 to 00:00 on date2 with 60 minute intervals
-    datetimes=[]
+    datetimes = []
     for start, end in dates:
-        startime=datetime.combine(datetime.strptime(start, "%d/%m/%Y"), datetime.strptime('0:00:00',"%H:%M:%S").time())
-        endtime=datetime.combine(datetime.strptime(end, "%d/%m/%Y"), datetime.strptime('01:00:00',"%H:%M:%S").time())
-        datetimes.append([j for j in deltatime(startime,endtime, timedelta(minutes=60))])
+        startime = datetime.combine(
+            datetime.strptime(start, "%d/%m/%Y"),
+            datetime.strptime("0:00:00", "%H:%M:%S").time(),
+        )
+        endtime = datetime.combine(
+            datetime.strptime(end, "%d/%m/%Y"),
+            datetime.strptime("01:00:00", "%H:%M:%S").time(),
+        )
+        datetimes.append(
+            [j for j in deltatime(startime, endtime, timedelta(minutes=60))]
+        )
 
     # #flatten datetimes list
-    datetimes=[datetime for day in datetimes for datetime in day]
+    datetimes = [datetime for day in datetimes for datetime in day]
     x = datetimes
     return x
+
 
 def _generate_daytime_plot(
     data,
@@ -177,10 +189,16 @@ def _generate_daytime_plot(
     scores = data.columns.tolist()
 
     from datetime import datetime, timedelta
-    # two random consecutive dates [date1, date2]
-    start_time=datetime.combine(datetime.strptime('01/02/1991', "%d/%m/%Y"), datetime.strptime('00:00:00',"%H:%M:%S").time())
-    end_time=datetime.combine(datetime.strptime('02/02/1991', "%d/%m/%Y"), datetime.strptime('00:00:00',"%H:%M:%S").time())
 
+    # two random consecutive dates [date1, date2]
+    start_time = datetime.combine(
+        datetime.strptime("01/02/1991", "%d/%m/%Y"),
+        datetime.strptime("00:00:00", "%H:%M:%S").time(),
+    )
+    end_time = datetime.combine(
+        datetime.strptime("02/02/1991", "%d/%m/%Y"),
+        datetime.strptime("00:00:00", "%H:%M:%S").time(),
+    )
 
     # define x-axis only once. list of datetimes from date1 00:00 - date2 00:00
     x = get_xaxis()
@@ -189,12 +207,12 @@ def _generate_daytime_plot(
     available_times = data.index.tolist()
     available_x = []
     for available_time in available_times:
-        available_x.append(x[available_time])   
+        available_x.append(x[available_time])
     first_point = available_x[0]
     last_point = available_x[-1]
-    available_x.insert(0, last_point-timedelta(hours=24))
-    available_x.append(first_point+timedelta(hours=24))    
- 
+    available_x.insert(0, last_point - timedelta(hours=24))
+    available_x.append(first_point + timedelta(hours=24))
+
     unit = header_dict["Unit"][0]
 
     # define further plot properties
@@ -205,21 +223,18 @@ def _generate_daytime_plot(
         if score == score_to_skip:
             continue
 
-        
         param = header_dict["Parameter"][0]
         param = check_params(param=param, verbose=debug)
         print(f"plotting:\t{param}/{score}")
-        
 
         multiplt = False
         title = f"{variable}: {score}"
         footer = f"Model: {header_dict['Model version'][0]} | Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]} ({lt_range}) | © MeteoSwiss"
-        
+
         # intialise figure/axes instance
         fig, ax = plt.subplots(
             1, 1, figsize=(1660 / 100, 1100 / 100), dpi=150, tight_layout=True
         )
-
 
         ax.set_xlim(start_time, end_time)
         ax.set_ylabel(f"{score.upper()} ({unit})")
@@ -227,8 +242,8 @@ def _generate_daytime_plot(
         # TODO: retrieve ymin/ymax from correct tables in plot_synop & ax.set_ylim(ymin,ymax)
 
         if grid:
-            ax.grid(which='major', color='#DDDDDD', linewidth=0.8)
-            ax.grid(which='minor', color='#EEEEEE', linestyle=':', linewidth=0.5)
+            ax.grid(which="major", color="#DDDDDD", linewidth=0.8)
+            ax.grid(which="minor", color="#EEEEEE", linestyle=":", linewidth=0.5)
             ax.minorticks_on()
 
         if debug:
@@ -237,9 +252,8 @@ def _generate_daytime_plot(
 
         y = data[score].values.tolist()
 
-    
         if score in multiplots.keys():
-            y2 = data[multiplots[score]].values.tolist()          
+            y2 = data[multiplots[score]].values.tolist()
             multiplt = True
             score_to_skip = multiplots[score]
             title = f"{variable}: {score}/{multiplots[score]}"
@@ -289,7 +303,7 @@ def _generate_daytime_plot(
                 available_x,
                 y,
                 color="k",
-                marker='o',
+                marker="o",
                 linestyle="-",
                 label=label,
             )
@@ -297,7 +311,7 @@ def _generate_daytime_plot(
             # pre-/append first and last values to the scores lists
             first_y, last_y = y[0], y[-1]
             y.insert(0, last_y)
-            y.append(first_y)    
+            y.append(first_y)
             first_y2, last_y2 = y2[0], y2[-1]
             y2.insert(0, last_y2)
             y2.append(first_y2)
@@ -308,7 +322,7 @@ def _generate_daytime_plot(
                 y,
                 color="red",
                 linestyle="-",
-                marker='o',
+                marker="o",
                 label=label,
             )
             label = f"{multiplots[score].upper()}"
@@ -317,14 +331,14 @@ def _generate_daytime_plot(
                 y2,
                 color="k",
                 linestyle="-",
-                marker='o',
+                marker="o",
                 label=label,
             )
 
         # From the SO:https://stackoverflow.com/questions/42398264/matplotlib-xticks-every-15-minutes-starting-on-the-hour
         ## Set time format and the interval of ticks (every n minutes)
-        xformatter = md.DateFormatter('%H:%M')
-        xlocator = md.MinuteLocator(interval = 360)
+        xformatter = md.DateFormatter("%H:%M")
+        xlocator = md.MinuteLocator(interval=360)
         ## Set xtick labels to appear every n minutes
         ax.xaxis.set_major_locator(xlocator)
         ## Format xtick labels as HH:MM
@@ -344,8 +358,6 @@ def _generate_daytime_plot(
             },
         )
         ax.set_title(label=title)
-
-
 
         print(f"saving:\t\t{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
         plt.savefig(f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")

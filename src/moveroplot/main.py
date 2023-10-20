@@ -52,98 +52,109 @@ python plot_synop.py C-1E_ch --plot_params CLCT --plot_scores MMOD/MOBS
 
 from click import Context
 
+
 def main(
     ctx: Context,
     *,
     # legacy inputs
     model_version: str,
     debug: bool,
-    lt_ranges:tuple,
+    lt_ranges: tuple,
     # Parameters / Scores / Thresholds
-    plot_params:str,
-    plot_scores:str,
-    plot_cat_params:str,
-    plot_cat_thresh:str,
-    plot_cat_scores:str,
-    plot_ens_params:str,
-    plot_ens_thresh:str,
-    plot_ens_scores:str,
+    plot_params: str,
+    plot_scores: str,
+    plot_cat_params: str,
+    plot_cat_thresh: str,
+    plot_cat_scores: str,
+    plot_ens_params: str,
+    plot_ens_thresh: str,
+    plot_ens_scores: str,
     # new inputs
     input_dir: Path,
-    output_dir:str,
-    relief:bool,
-    grid:bool,
-    season:str,
+    output_dir: str,
+    relief: bool,
+    grid: bool,
+    season: str,
 ):
-    """Entry Point for the MOVERO Plotting Pipeline. 
-    
-    The only input argument is the RUN argument. Pass this along with any number of 
+    """Entry Point for the MOVERO Plotting Pipeline.
+
+    The only input argument is the RUN argument. Pass this along with any number of
     options. These usually have a default value or are not necessary.
 
     Example Command: (to generate all plots for C-1E-CTR_ch)
 
-    python plot_synop.py C-1E-CTR_ch 
+    python plot_synop.py C-1E-CTR_ch
 
-    --plot_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL 
-    
-    --plot_scores ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS 
-    
-    --plot_cat_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1 
-    
-    --plot_cat_thresh 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20 
-    
+    --plot_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL
+
+    --plot_scores ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS
+
+    --plot_cat_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
+
+    --plot_cat_thresh 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
+
     --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
     """
-##### -1. DEFINE PLOTS #####################################################################################################################################################################
-    station_scores =  False
-    time_scores    =  False
-    daytime_scores =  False
-    total_scores   =  True
-##### 0. PARSE USER INPUT ##################################################################################################################################################################
-    params_dict = _parse_inputs(debug, plot_params, plot_scores, plot_cat_params, plot_cat_thresh, plot_cat_scores, plot_ens_params, plot_ens_thresh, plot_ens_scores)
-##### 1. INITIALISE STATION SCORES PLOTTING PIPELINE########################################################################################################################################       
+    ##### -1. DEFINE PLOTS #####################################################################################################################################################################
+    station_scores = False
+    time_scores = False
+    daytime_scores = False
+    total_scores = True
+    ##### 0. PARSE USER INPUT ##################################################################################################################################################################
+    params_dict = _parse_inputs(
+        debug,
+        plot_params,
+        plot_scores,
+        plot_cat_params,
+        plot_cat_thresh,
+        plot_cat_scores,
+        plot_ens_params,
+        plot_ens_thresh,
+        plot_ens_scores,
+    )
+    ##### 1. INITIALISE STATION SCORES PLOTTING PIPELINE########################################################################################################################################
     if station_scores:
         _station_scores_pipeline(
-                params_dict=params_dict,
-                lt_ranges=lt_ranges,
-                file_prefix="station_scores", 
-                file_postfix = ".dat",
-                input_dir=input_dir,
-                output_dir=output_dir,
-                season=season, # 2021s4
-                model_version=model_version, # C-1E-CTR_ch
-                relief=relief,
-                debug=debug
-            )
-##### 2. INITIALISE TIME SERIES PLOTTING PIPELINE###########################################################################################################################################
+            params_dict=params_dict,
+            lt_ranges=lt_ranges,
+            file_prefix="station_scores",
+            file_postfix=".dat",
+            input_dir=input_dir,
+            output_dir=output_dir,
+            season=season,  # 2021s4
+            model_version=model_version,  # C-1E-CTR_ch
+            relief=relief,
+            debug=debug,
+        )
+    ##### 2. INITIALISE TIME SERIES PLOTTING PIPELINE###########################################################################################################################################
     if time_scores:
         _time_scores_pipeline(
-                params_dict=params_dict,
-                lt_ranges=lt_ranges,
-                file_prefix="time_scores",
-                file_postfix=".dat",
-                input_dir=input_dir,
-                output_dir=output_dir,
-                season=season,
-                model_version=model_version,
-                grid=grid,
-                debug=debug
-            )
-##### 3. INITIALISE DYURNAL CYCLE PLOTTING PIPELINE#########################################################################################################################################
+            params_dict=params_dict,
+            lt_ranges=lt_ranges,
+            file_prefix="time_scores",
+            file_postfix=".dat",
+            input_dir=input_dir,
+            output_dir=output_dir,
+            season=season,
+            model_version=model_version,
+            grid=grid,
+            debug=debug,
+        )
+    ##### 3. INITIALISE DYURNAL CYCLE PLOTTING PIPELINE#########################################################################################################################################
     if daytime_scores:
         _daytime_scores_pipeline(
-                params_dict=params_dict,
-                lt_ranges=lt_ranges,
-                file_prefix="daytime_scores",
-                file_postfix=".dat",
-                input_dir=input_dir,
-                output_dir=output_dir,
-                season=season,
-                model_version=model_version,
-                grid=grid,
-                debug=debug
-            )
-##### 4. INITIALIS TOTAL SCORES PLOTTING PIPELINE###########################################################################################################################################
+            params_dict=params_dict,
+            lt_ranges=lt_ranges,
+            file_prefix="daytime_scores",
+            file_postfix=".dat",
+            input_dir=input_dir,
+            output_dir=output_dir,
+            season=season,
+            model_version=model_version,
+            grid=grid,
+            debug=debug,
+        )
+    ##### 4. INITIALIS TOTAL SCORES PLOTTING PIPELINE###########################################################################################################################################
     if total_scores:
         _total_scores_pipeline(
             params_dict=params_dict,
@@ -160,8 +171,8 @@ def main(
             season=season,
             model_version=model_version,
             grid=grid,
-            debug=debug
+            debug=debug,
         )
-############################################################################################################################################################################################
+    ############################################################################################################################################################################################
     print(f"\n--- Done.")
     return

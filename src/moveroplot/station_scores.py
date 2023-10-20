@@ -24,6 +24,7 @@ from .utils.parse_plot_synop_ch import cat_station_score_colortable
 # > taken from: https://stackoverflow.com/questions/37423997/cartopy-shaded-relief
 from cartopy.io.img_tiles import GoogleTiles
 
+
 class ShadedReliefESRI(GoogleTiles):
     # TODO: download image, place in resource directory and link to it (not sure if possible, tried for like 30' and it didnt work)
     # shaded relief
@@ -106,18 +107,18 @@ def _station_scores_pipeline(
             # looks like this: ['7.56100', '', '', '', '', '', '', '8.60800',....]
             # should look like this: ['7.56100', '8.60800', ..]
             longitudes = list(filter(None, header["Longitude"]))
-            latitudes =  list(filter(None, header["Latitude"]))
+            latitudes = list(filter(None, header["Latitude"]))
 
             # extract dataframe
             df = Atab(file=path, sep=" ").data
-            
+
             print(path)
             pprint(df)
 
             # > rename the first column
-            # TODO (in ATAB): split the first column based on number of characters and not based 
+            # TODO (in ATAB): split the first column based on number of characters and not based
             # on separator. get number of characters from header: Width of text label column: 14
-            
+
             # alternatively:
             # get column names
             # get first column name
@@ -131,8 +132,8 @@ def _station_scores_pipeline(
 
             # > check which relevant scores are available; extract those from df
             all_scores = df.index.tolist()
-            available_scores = ["lon", "lat"] # this list, will be kept
-            for score in scores: # scores = [[score1], [score2],...]
+            available_scores = ["lon", "lat"]  # this list, will be kept
+            for score in scores:  # scores = [[score1], [score2],...]
                 if score[0] in all_scores:
                     available_scores.append(score[0])
                 else:  # warn that a relevant score was not available in dataframe
@@ -220,7 +221,7 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
     cat_score = False
     print(f"plotting:\t{param}/{score}")
     # check param, before trying to assign cmap to it
-    
+
     # i.e. param = TD_2M_KAL
     param = check_params(param, debug)
     # i.e. param = TD_2M*
@@ -279,7 +280,7 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
 
     # print(param, score, lower_bound, upper_bound) # dbg
     tmp = False
-    for (name, info) in data.iteritems():
+    for name, info in data.iteritems():
         lon, lat, value = float(info.lon), float(info.lat), float(info[score])
         # add available datapoints
         if not np.isnan(value):
