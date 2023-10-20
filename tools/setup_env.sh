@@ -7,7 +7,7 @@
 #
 
 # Default env names
-DEFAULT_ENV_NAME="movero-plot"
+DEFAULT_ENV_NAME="moveroplot"
 
 # Default options
 ENV_NAME="${DEFAULT_ENV_NAME}"

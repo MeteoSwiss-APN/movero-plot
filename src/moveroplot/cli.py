@@ -55,10 +55,6 @@ import sys
 @click.pass_context
 def cli(ctx: Context, **kwargs) -> None:
     """Console script for test_cli_project."""
-    modules_before = set(sys.modules.keys())
     main(None, **kwargs)
-    modules_after = set(sys.modules.keys())
-    newly_imported_modules = modules_after - modules_before
-    print(newly_imported_modules)
 
 

@@ -1,6 +1,4 @@
 channels:
-  - anaconda
-  - defaults
   - conda-forge
 dependencies:
   - _libgcc_mutex=0.1
@@ -135,9 +133,9 @@ dependencies:
   - python-dateutil=2.8.2
   - python-tzdata=2023.3
   - pytz=2023.3.post1
-  - qt-main=5.15.2
-  - qt-webengine=5.15.9
-  - qtwebkit=5.212
+  - qt-main
+  - qt-webengine
+  - qtwebkit
   - readline=8.2
   - reproc=14.2.4
   - reproc-cpp=14.2.4
