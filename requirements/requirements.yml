@@ -7,9 +7,9 @@ dependencies:
   - cartopy >= 0.18
   - click >= 6.0
   - matplotlib>=3.7
-  - pandas
+  - pandas=2.1
   # development
-  - anaconda-client>=1.11
+  - anaconda-client
   - black>=22.10
   - boa>=0.14
   - codespell>=2.2
