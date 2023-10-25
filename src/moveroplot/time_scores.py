@@ -1,18 +1,20 @@
 # IMPORTS
+# Standard library
+import datetime as dt
 from pathlib import Path
-import matplotlib.pyplot as plt
+from pprint import pprint
 
+# Third-party
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# Local
 # import datetime
 from .utils.atab import Atab
-import numpy as np
-from pprint import pprint
-import pandas as pd
-import datetime as dt
-from ipdb import set_trace as dbg
-
-
-from .utils.parse_plot_synop_ch import time_score_range, cat_time_score_range
 from .utils.check_params import check_params
+from .utils.parse_plot_synop_ch import cat_time_score_range
+from .utils.parse_plot_synop_ch import time_score_range
 
 
 # enter directory / read station_scores files / call plotting pipeline
@@ -44,23 +46,24 @@ def _time_scores_pipeline(
         model_version (str): model_version of interest (i.e. C-1E_ch)
         scores (list): list of scores, for which plots should be generated
         debug (bool): print further comments & debug statements
-    """
-    print(f"\n--- initialising time score pipeline")
+    """  # noqa: E501
+    print("---initialising time score pipeline")
     for lt_range in lt_ranges:
         for parameter in params_dict:
             # retrieve list of scores, relevant for current parameter
             scores = params_dict[parameter]  # this scores is a list of lists
 
-            # define file path to the file correpsonding to the current parameter (station_score atab file)
+            # define path to the file of current parameter (station_score atab file)
             file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
             path = Path(f"{input_dir}/{season}/{model_version}/{file}")
 
             # check if the file exists
             if not path.exists():
                 print(
-                    f"--- WARNING: No data file for parameter {parameter} could be found. {path} does not exist."
+                    f"""WARNING: No data file for parameter
+                    {parameter} could be found. {path} does not exist."""
                 )
-                continue  # go the the next parameter, since for the current parameter no file could be retrieved
+                continue  # for the current parameter no file could be retrieved
 
             if debug:
                 print(f"\nFilepath:\t{path}")
@@ -69,30 +72,31 @@ def _time_scores_pipeline(
             header = Atab(file=path, sep=" ").header
             df = Atab(file=path, sep=" ").data
 
-            # change type of time columns to str, s.t. they can be combined to one datetime column afterwards
+            # cast time columns as str, so they can be combined to one datetime column
             data_types_dict = {"YYYY": str, "MM": str, "DD": str, "hh": str, "mm": str}
             df = df.astype(data_types_dict)
 
             # TODO: optimise this - it is inefficient and ugly.
             # create datetime column (just called time) & drop unnecessary columns
             df["timestamp"] = pd.to_datetime(
-                df["YYYY"]
-                + "-"
-                + df["MM"]
-                + "-"
-                + df["DD"]
-                + " "
-                + df["hh"]
-                + ":"
-                + df["mm"]
+                df["YYYY"]  # noqa: W503
+                + "-"  # noqa: W503
+                + df["MM"]  # noqa: W503
+                + "-"  # noqa: W503
+                + df["DD"]  # noqa: W503
+                + " "  # noqa: W503
+                + df["hh"]  # noqa: W503
+                + ":"  # noqa: W503
+                + df["mm"]  # noqa: W503
             )
-
+            """
             # dbg()
             # df['timestamp_new'] = [' '.join([x + '-' + y + '-' + z + ' ' + q + ':' + r]) for x, y, z, q, r in zip(df['YYYY'], df['MM'], df['DD'], df['hh'], df['mm'])]
             # df['timestamp_new'] = pd.to_datetime(df['timestamp_new'])
             # df['timestamp_new_2'] = pd.to_datetime([' '.join([x + '-' + y + '-' + z + ' ' + q + ':' + r]) for x, y, z, q, r in zip(df['YYYY'], df['MM'], df['DD'], df['hh'], df['mm'])])
             # df['timestamp'] = pd.to_datetime([' '.join([x + '-' + y + '-' + z + ' ' + q + ':' + r]) for x, y, z, q, r in zip(df['YYYY'], df['MM'], df['DD'], df['hh'], df['mm'])])
             # dbg()
+            """  # noqa: E501
 
             df.drop(
                 ["YYYY", "MM", "DD", "hh", "mm", "lt_hh", "lt_mm"], axis=1, inplace=True
@@ -101,7 +105,7 @@ def _time_scores_pipeline(
             # > remove/replace missing values in dataframe with np.NaN
             df = df.replace(float(header["Missing value code"][0]), np.NaN)
 
-            # > if there are columns (= scores), that only conaint np.NaN, remove them
+            # > if there are columns (= scores), that only contain np.NaN, remove them
             # df = df.dropna(axis=1, how="all")
 
             # > check which relevant scores are available; extract those from df
@@ -116,11 +120,10 @@ def _time_scores_pipeline(
                         available_scores.append(score[0])
                     else:  # warn that a relevant score was not available in dataframe
                         print(
-                            f"--- WARNING: Score {score[0]} not available for parameter {parameter}."
+                            f"""WARNING: Score {score[0]} not available
+                            for parameter {parameter}."""
                         )
-                if (
-                    len(score) > 1
-                ):  # if TWO scores are plotted on one plot# currently only 2-in-1 plots are possible
+                if len(score) > 1:  # currently only 2-in-1 plots are possible
                     # MMOD/MOBS --> MMOD:MOBS
                     multiplot_scores[score[0]] = score[1]
                     for sc in score:
@@ -128,7 +131,8 @@ def _time_scores_pipeline(
                             available_scores.append(sc)
                         else:
                             print(
-                                f"--- WARNING: Score {sc} not available for parameter {parameter}."
+                                f"""WARNING: Score {sc} not available
+                                for parameter {parameter}."""
                             )
 
             df = df[available_scores]
@@ -141,7 +145,8 @@ def _time_scores_pipeline(
 
             if debug:
                 print(
-                    f"Generating plot for {parameter} for lt_range: {lt_range}. (File: {file})"
+                    f"""Generating plot for {parameter} for
+                    lt_range: {lt_range}. (File: {file})"""
                 )
             # for each score in df, create one map
             _generate_timeseries_plot(
@@ -158,9 +163,7 @@ def _time_scores_pipeline(
             )
 
 
-############################################################################################################################
-######################################### PLOTTING PIPELINE FOR TIME SCORES PLOTS ##########################################
-############################################################################################################################
+# PLOTTING PIPELINE FOR TIME SCORES PLOTS
 
 
 def _generate_timeseries_plot(
@@ -196,7 +199,8 @@ def _generate_timeseries_plot(
     unit = header_dict["Unit"][0]
 
     # this variable, remembers if a score has been added to another plot.
-    # for example in the multiplots dict, when plotting MMOD, MOBS will also be added to the plot
+    # for example in the multiplots dict
+    # when plotting MMOD, MOBS will also be added to the plot
     # and does not need to be plotted again.
     score_to_skip = None
     for score in scores:
@@ -212,9 +216,11 @@ def _generate_timeseries_plot(
         print(f"plotting:\t{param}/{score}")
 
         multiplt = False
-        title = f"{variable}: {score}"  # the variable 'variable' is the full parameter name.
-        footer = f"Model: {header_dict['Model version'][0]} | Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]} ({lt_range}) | © MeteoSwiss"
-        # intialise figure/axes instance
+        title = f"{variable}: {score}"  # 'variable' is the full parameter name.
+        footer = f"""Model: {header_dict['Model version'][0]} |
+        Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]}
+        ({lt_range}) | © MeteoSwiss"""
+        # initialise figure/axes instance
         fig, ax = plt.subplots(
             1, 1, figsize=(245 / 10, 51 / 10), dpi=150, tight_layout=True
         )

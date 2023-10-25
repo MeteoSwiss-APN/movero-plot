@@ -1,14 +1,15 @@
 """Command line interface of moveroplot."""
+# Standard library
+from pathlib import Path
+from typing import Optional
+
 # Third-party
 import click
 from click import Context
-from pathlib import Path
 
 # Local
 from . import __version__
-from .mutable_number import MutableNumber
 from .main import main
-import sys
 
 
 @click.option(
@@ -92,4 +93,4 @@ import sys
 @click.pass_context
 def cli(ctx: Context, **kwargs) -> None:
     """Console script for test_cli_project."""
-    main(None, **kwargs)
+    main(ctx, **kwargs)

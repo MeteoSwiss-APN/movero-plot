@@ -1,8 +1,15 @@
 # IMPORTS
+# Standard library
 from pathlib import Path
-from isort import file
-import numpy as np
+
+# Third-party
 import matplotlib.pyplot as plt
+import numpy as np
+
+# Local
+from .utils.atab import Atab
+from .utils.check_params import check_params
+from .utils.parse_plot_synop_ch import total_score_range
 
 plt.rcParams.update(
     {
@@ -11,22 +18,12 @@ plt.rcParams.update(
         "legend.title_fontsize": "small",
     }
 )
-
-# import datetime
-from .utils.atab import Atab
-
-from pprint import pprint
-import pandas as pd
-from ipdb import set_trace as dbg
-
-
-from .utils.parse_plot_synop_ch import total_score_range, cat_total_score_range
-from .utils.check_params import check_params
+# Standard library
+from pprint import pprint  # noqa: E402
 
 
 def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parameter):
-    """Collect all files corresponding to current parameter in 'corresponding_files_dict'.
-
+    """Collect all files corresponding to current parameter in 'corresponding_files_dict'.  # noqa: E501
     Args:
         file_prefix (str): prefix of files we're looking for (i.e. total_scores)
         file_postfix (str): postfix of files we're looking for (i.e. .dat)
@@ -35,23 +32,23 @@ def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parame
         parameter (str): parameter of interest
 
     Returns:
-        dict: dictionary containig all available lead time range (ltr) dataframes for parameter
-    """
-    # collect the files, corresponding to this parameter in the corresponding files dict.
+        dict: dictionary containing all available lead time range (ltr) dataframes for parameter
+    # collect the files to this parameter in the corresponding files dict.
     # the keys in this dict are the available lead time ranges for the current parameter.
+    """  # noqa: E501
     corresponding_files_dict = {}
 
     # for dbg purposes:
     files_list = []
-
     for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
-        if (
-            file_path.is_file()
-        ):  # check, that the corresponding path belongs to a file and not to a sub-directory
+        if file_path.is_file():
+            # check, that the corresponding path belongs to a file
+            # and not to a sub-directory
             # lt_range = key for corresponding_files_dict
-            # TODO: change here, if ltr is longer than 5 chars
-            lt_range = file_path.name[len(file_prefix) : len(file_prefix) + 5]
-
+            # TODO:change here, if ltr is longer than 5 chars
+            lt_range = file_path.name[
+                len(file_prefix) : len(file_prefix) + 5  # noqa: E203
+            ]
             # extract header & dataframe
             header = Atab(file=file_path, sep=" ").header
             df = Atab(file=file_path, sep=" ").data
@@ -74,7 +71,8 @@ def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parame
         print(f"\nFor parameter: {parameter} these files are relevant:\n")
         pprint(files_list)
         print(
-            f"\nThese files have been parsed & combined in the 'corresponding_files_dict'. Each key (lt-range) has a subdict with two keys: {corresponding_files_dict['19-24'].keys()}\n"
+            f"""\nThese files have been parsed & combined in the 'corresponding_files_dict'.
+            Each key (lt-range) has a subdict with two keys: {corresponding_files_dict['19-24'].keys()}\n"""  # noqa: E501
         )
 
     return corresponding_files_dict
@@ -112,9 +110,8 @@ def _total_scores_pipeline(
         model_version (str): model_version of interest (i.e. C-1E_ch)
         scores (list): list of scores, for which plots should be generated
         debug (bool): print further comments & debug statements
-    """
-    print(f"\n--- initialising total scores pipeline")
-
+    """  # noqa: E501
+    print("\n--- initialising total scores pipeline")
     # tmp; define debug = True, to show debug statements for total_scores only
     debug = True
 
@@ -141,9 +138,7 @@ def _total_scores_pipeline(
     return
 
 
-############################################################################################################################
-######################################### PLOTTING PIPELINE FOR TOTAL SCORES PLOTS #########################################
-############################################################################################################################
+# PLOTTING PIPELINE FOR TOTAL SCORES PLOTS
 
 
 def _set_ylim(param, score, ax, debug):
@@ -184,7 +179,7 @@ def _customise_ax(parameter, score, x_ticks, grid, ax):
     ax.tick_params(axis="both", which="major", labelsize=8)
     ax.tick_params(axis="both", which="minor", labelsize=6)
     ax.set_title(f"{parameter}: {score}")
-    ax.set_xlabel(f"Lead-Time Range (h)")
+    ax.set_xlabel("Lead-Time Range (h)")
     ax.legend(fontsize=6)
     ax.set_xticks(range(len(x_ticks)), x_ticks)
     return
@@ -221,22 +216,23 @@ def _generate_total_scores_plot(
 ):
     """Generate Total Scores Plot."""
     if debug:
-        print(f"--- starting plotting pipeline")
-        print(f"---\t1) map parameter (i.e. TD_2M_KAL --> TD_2M*)")
+        print("--- starting plotting pipeline")
+        print("---\t1) map parameter (i.e. TD_2M_KAL --> TD_2M*)")
+
     # get correct parameter, i.e. if parameter=T_2M_KAL --> param=T_2M*
     param = check_params(
         param=parameter, verbose=False
     )  # TODO: change False back to debug
 
     if debug:
-        print(f"---\t2) check if output_dir exists (& create it if necessary)")
+        print("---\t2) check if output_dir exists (& create it if necessary)")
     # check (&create) output directory for total scores plots
     # output_dir = f"{output_dir}/total_scores"
     if not Path(output_dir).exists():
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     if debug:
-        print(f"---\t3) initialise figure with a 2x2 subplots grid")
+        print("---\t3) initialise figure with a 2x2 subplots grid")
     # create 2x2 subplot grid
     fig, ((ax0, ax1), (ax2, ax3)) = plt.subplots(
         nrows=2, ncols=2, tight_layout=True, figsize=(10, 10), dpi=200
@@ -263,15 +259,16 @@ def _generate_total_scores_plot(
     x_int = list(range(len(ltr_sorted)))
 
     if debug:
-        print(f"---\t4) create x-axis")
-        print(f"---\t\tUnsorted ltr list:\t\t{ltr_unsorted}")
-        print(f"---\t\tSorted ltr start times list:\t{ltr_start_times_sorted}")
-        print(f"---\t\tSorted ltr list (= x-ticks):\t{ltr_sorted}")
-        print(f"---\t\tx_int =\t\t\t\t{x_int}")
+        print("---\t4) create x-axis")
+        print("---\t\tUnsorted ltr list:\t\t{ltr_unsorted}")
+        print("---\t\tSorted ltr start times list:\t{ltr_start_times_sorted}")
+        print("---\t\tSorted ltr list (= x-ticks):\t{ltr_sorted}")
+        print("---\t\tx_int =\t\t\t\t{x_int}")
 
     # extract header from data & create title
     header = data[ltr_sorted[-1]]["header"]
-    footer = f"Model: {header['Model version'][0]} | Period: {header['Start time'][0]} - {header['End time'][0]} | © MeteoSwiss"
+    footer = f"""Model: {header['Model version'][0]} |
+    Period: {header['Start time'][0]} - {header['End time'][0]} | © MeteoSwiss"""
     unit = header["Unit"][0]
 
     # initialise filename
@@ -279,12 +276,12 @@ def _generate_total_scores_plot(
 
     # scores = params_dict[parameter] # this is a list of lists
 
-    ############################################################################
-    ##################### REGULAR SCORES PLOTTING PIPELINE #####################
-    ############################################################################
+    # REGULAR SCORES PLOTTING PIPELINE
     if debug:
         print(
-            f"---\t5) plot REGULAR parameter/scores (Because, regular & categorical scores should not be mixed on the same figure.)"
+            """---\t5) plot REGULAR parameter/scores
+            (Because, regular & categorical scores
+            should not be mixed on the same figure.)"""
         )
 
     if plot_scores and plot_params:
@@ -335,9 +332,10 @@ def _generate_total_scores_plot(
                 # get y0, y1 from dfs
                 if debug and idx == 0:
                     print(
-                        f"---\t6) collect the data corresponding to {score} from all dataframes in the data dict in y-list"
+                        f"""---\t6) collect the data corresponding to {score}
+                        from all dataframes in the data dict in y-list"""
                     )
-                    print(f"---\t7) plot y-list against x_int")
+                    print("---\t7) plot y-list against x_int")
                 y0, y1 = [], []
                 for ltr in ltr_sorted:
                     y0.append(data[ltr]["df"]["Total"].loc[scores[0]])
@@ -409,13 +407,13 @@ def _generate_total_scores_plot(
                 _clear_empty_axes(subplot_axes=subplot_axes, idx=idx)
                 # save & clear figure
                 _save_figure(output_dir=output_dir, filename=filename)
-    ############################################################################
-    ################### CATEGORICAL SCORES PLOTTING PIPELINE ###################
-    ############################################################################
+
+    # CATEGORICAL SCORES PLOTTING PIPELINE
     # remark: include thresholds for categorical scores
     if debug:
         print(
-            f"---\t10) repeat plotting pipeline for categorical params/scores/thresh combinations"
+            """---\t10) repeat plotting pipeline for categorical
+            params/scores/thresh combinations"""
         )
 
     print(plot_cat_params)
@@ -424,16 +422,19 @@ def _generate_total_scores_plot(
     print(plot_cat_params and plot_cat_scores and plot_cat_thresh)
 
     if plot_cat_params and plot_cat_scores and plot_cat_thresh:
-        print(f"--- should now create total scores plots for all cat params/scores")
-        cat_params = plot_cat_params.split(
-            ","
-        )  # categorical parameters: TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
+        print("--- should now create total scores plots for all cat params/scores")
+        cat_params = plot_cat_params.split(",")
+        """
+        categorical parameters:
+        # TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,
+        # T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,
+        # FF_10M_KAL,VMAX_10M6,VMAX_10M1
+        """
         cat_scores = plot_cat_scores.split(
             ","
         )  # categorical scores: FBI,MF,POD,FAR,THS,ETS
-        cat_threshs = plot_cat_thresh.split(
-            ":"
-        )  # categorical thresholds: 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
+        cat_threshs = plot_cat_thresh.split(":")  # categorical thresholds:
+        # 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20  # noqa: E501
         cat_params_dict = {cat_param: [] for cat_param in cat_params}
         for param, threshs in zip(cat_params, cat_threshs):
             # first append all scores w/o thresholds to parameter
@@ -442,8 +443,7 @@ def _generate_total_scores_plot(
                     cat_params_dict[param].append(score.split("/"))
                 else:
                     cat_params_dict[param].append([score])
-
-            # afterwards append all scores that have a threshold in their name to current to parameter
+            # append all scores that have a threshold in their name to current to parameter  # noqa: E501
             thresholds = threshs.split(",")
             for threshold in thresholds:
                 for score in cat_scores:
@@ -461,15 +461,12 @@ def _generate_total_scores_plot(
 
     # TODO: implement the total scores pipeline for categorical scores as well
 
-    ############################################################################
-    #################### ENSEMBLE SCORES PLOTTING PIPELINE #####################
-    ############################################################################
+    # ENSEMBLE SCORES PLOTTING PIPELINE
     # remark: include thresholds for categorical scores
     print(
-        f"---\t11) repeat plotting pipeline for ensemble params/scores/thresh combinations"
+        """---\t11) repeat plotting pipeline for ensemble
+        params/scores/thresh combinations"""
     )
     # TODO: implement the total scores pipeline for categorical scores as well
-
-    ############################################################################
 
     return

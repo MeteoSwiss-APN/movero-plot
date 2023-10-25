@@ -1,18 +1,19 @@
 # IMPORTS
+# Standard library
 from pathlib import Path
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates as md
+from pprint import pprint
 
+# Third-party
+import matplotlib.dates as md
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Local
 # import datetime
 from .utils.atab import Atab
-
-from pprint import pprint
-from ipdb import set_trace as dbg
-
-
-from .utils.parse_plot_synop_ch import daytime_score_range, cat_daytime_score_range
 from .utils.check_params import check_params
+from .utils.parse_plot_synop_ch import cat_daytime_score_range
+from .utils.parse_plot_synop_ch import daytime_score_range
 
 
 # enter directory / read station_scores files / call plotting pipeline
@@ -32,7 +33,6 @@ def _daytime_scores_pipeline(
         Extract relevant information (parameters/scores) from these files into a dataframe.
         Rows --> Scores | Columns --> Stations | For each parameter, a separate station_scores File exists.
 
-
     Args:
         lt_ranges (list): lead time ranges, for which plots should be generated (i.e. 01-06, 07-12,...). part of the file name
         parameters (list): parameters, for which plots should be generated (i.e. CLCT, DD_10M, FF_10M, PMSL,...). part of file name
@@ -44,23 +44,24 @@ def _daytime_scores_pipeline(
         model_version (str): model_version of interest (i.e. C-1E_ch)
         scores (list): list of scores, for which plots should be generated
         debug (bool): print further comments & debug statements
-    """
-    print(f"\n--- initialising daytime score pipeline")
+    """  # noqa: E501
+    print("\n--- initialising daytime score pipeline")
     for lt_range in lt_ranges:
         for parameter in params_dict:
             # retrieve list of scores, relevant for current parameter
             scores = params_dict[parameter]  # this scores is a list of lists
 
-            # define file path to the file correpsonding to the current parameter (station_score atab file)
+            # define file path to the current parameter (station_score atab file)
             file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
             path = Path(f"{input_dir}/{season}/{model_version}/{file}")
 
             # check if the file exists
             if not path.exists():
                 print(
-                    f"--- WARNING: No data file for parameter {parameter} could be found. {path} does not exist."
+                    f"""WARNING: No data file for parameter {parameter} could be found.
+                    {path} does not exist."""
                 )
-                continue  # go the the next parameter, since for the current parameter no file could be retrieved
+                continue  # for the current parameter no file could be retrieved
 
             if debug:
                 print(f"\nFilepath:\t{path}")
@@ -72,7 +73,7 @@ def _daytime_scores_pipeline(
             # > remove/replace missing values in dataframe with np.NaN
             df = df.replace(float(header["Missing value code"][0]), np.NaN)
 
-            # > if there are columns (= scores), that only conaint np.NaN, remove them
+            # > if there are columns (= scores), that only contain np.NaN, remove them
             # df = df.dropna(axis=1, how="all")
 
             # > check which relevant scores are available; extract those from df
@@ -85,18 +86,20 @@ def _daytime_scores_pipeline(
                         available_scores.append(score[0])
                     else:  # warn that a relevant score was not available in dataframe
                         print(
-                            f"--- WARNING: Score {score[0]} not available for parameter {parameter}."
+                            f"""WARNING: Score {score[0]} not
+                            available for parameter {parameter}."""
                         )
                 if (
                     len(score) > 1
-                ):  # if TWO scores are plotted on one plot# currently only 2-in-1 plots are possible
+                ):  # # currently only 2-in-1 plots are currently possible
                     multiplot_scores[score[0]] = score[1]
                     for sc in score:
                         if sc in all_scores:
                             available_scores.append(sc)
                         else:
                             print(
-                                f"--- WARNING: Score {sc} not available for parameter {parameter}."
+                                f"""WARNING: Score {sc} not available
+                                for parameter {parameter}."""
                             )
 
             df = df[available_scores]
@@ -108,7 +111,8 @@ def _daytime_scores_pipeline(
                 print("\nData:")
                 pprint(df)
                 print(
-                    f"Generating plot for {parameter} for lt_range: {lt_range}. (File: {file})"
+                    f"""Generating plot for {parameter} for
+                    lt_range: {lt_range}. (File: {file})"""
                 )
 
             # for each score in df, create one map
@@ -126,13 +130,9 @@ def _daytime_scores_pipeline(
             )
 
 
-############################################################################################################################
-######################################## PLOTTING PIPELINE FOR DAYTIME SCORES PLOTS ########################################
-############################################################################################################################
-
-
+# PLOTTING PIPELINE FOR DAYTIME SCORES PLOTS
 # generator that gives time between start and end times with delta intervals
-# inspired by: https://stackoverflow.com/questions/61733727/how-to-set-minutes-time-as-x-axis-of-a-matplotlib-plot-in-python
+# inspired by: https://stackoverflow.com/questions/61733727/how-to-set-minutes-time-as-x-axis-of-a-matplotlib-plot-in-python  # noqa: E501
 def deltatime(start, end, delta):
     current = start
     while current < end:
@@ -141,12 +141,14 @@ def deltatime(start, end, delta):
 
 
 def get_xaxis():
-    from datetime import datetime, timedelta
+    # Standard library
+    from datetime import datetime
+    from datetime import timedelta
 
     # two random consecutive dates [date1, date2]
     dates = [("01/02/1991", "02/02/1991")]  # , '01/03/1991', '01/04/1991']
 
-    # generate the list for each date between 00:00 on date1 to 00:00 on date2 with 60 minute intervals
+    # generate the list for each date between 00:00 on date1 to 00:00 on date2 hourly intervals  # noqa: E501
     datetimes = []
     for start, end in dates:
         startime = datetime.combine(
@@ -188,7 +190,9 @@ def _generate_daytime_plot(
     # extract scores, which are available in the dataframe (data)
     scores = data.columns.tolist()
 
-    from datetime import datetime, timedelta
+    # Standard library
+    from datetime import datetime
+    from datetime import timedelta
 
     # two random consecutive dates [date1, date2]
     start_time = datetime.combine(
@@ -229,9 +233,11 @@ def _generate_daytime_plot(
 
         multiplt = False
         title = f"{variable}: {score}"
-        footer = f"Model: {header_dict['Model version'][0]} | Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]} ({lt_range}) | © MeteoSwiss"
+        footer = f"""Model: {header_dict['Model version'][0]} |
+                    Period: {header_dict['Start time'][0]} -
+                    {header_dict['End time'][0]} ({lt_range}) | © MeteoSwiss"""
 
-        # intialise figure/axes instance
+        # initialise figure/axes instance
         fig, ax = plt.subplots(
             1, 1, figsize=(1660 / 100, 1100 / 100), dpi=150, tight_layout=True
         )
@@ -239,7 +245,8 @@ def _generate_daytime_plot(
         ax.set_xlim(start_time, end_time)
         ax.set_ylabel(f"{score.upper()} ({unit})")
 
-        # TODO: retrieve ymin/ymax from correct tables in plot_synop & ax.set_ylim(ymin,ymax)
+        # TODO: retrieve ymin/ymax from correct tables in plot_synop
+        # and set ax.set_ylim(ymin,ymax)
 
         if grid:
             ax.grid(which="major", color="#DDDDDD", linewidth=0.8)
@@ -335,13 +342,13 @@ def _generate_daytime_plot(
                 label=label,
             )
 
-        # From the SO:https://stackoverflow.com/questions/42398264/matplotlib-xticks-every-15-minutes-starting-on-the-hour
-        ## Set time format and the interval of ticks (every n minutes)
+        # From the SO:https://stackoverflow.com/questions/42398264/matplotlib-xticks-every-15-minutes-starting-on-the-hour  # noqa: E501
+        # Set time format and the interval of ticks (every n minutes)
         xformatter = md.DateFormatter("%H:%M")
         xlocator = md.MinuteLocator(interval=360)
-        ## Set xtick labels to appear every n minutes
+        # Set xtick labels to appear every n minutes
         ax.xaxis.set_major_locator(xlocator)
-        ## Format xtick labels as HH:MM
+        # Format xtick labels as HH:MM
         plt.gcf().axes[0].xaxis.set_major_formatter(xformatter)
 
         plt.legend()

@@ -9,6 +9,7 @@ import pandas as pd
 
 
 class Atab:
+
     """Support atab files.
     Attributes:
         header: Header information of the atab file.
@@ -25,11 +26,14 @@ class Atab:
         supported_seps = [
             " ",
             ";",
-        ]  # TODO: perhaps add r"\s+" to support multiple spaces. There was a problem w/ parsing the header for the station scores files. (lon, lat rows)
+        ]
+        # TODO: perhaps add r"\s+" to support multiple spaces.
+        # There was a problem w/ parsing the header for
+        # the station scores files. (lon, lat rows)
         if sep not in supported_seps:
             raise RuntimeError(
                 f"Separator {sep} not supported. Must be one of "
-                + ",".join(map("'{}'".format, supported_seps))
+                + ",".join(map("'{}'".format, supported_seps))  # noqa: W503
             )
 
         # Set instance variables
@@ -85,14 +89,12 @@ class Atab:
             line = lines.pop(0)
             elements = line.strip().split(
                 ":", maxsplit=1
-            )  # ADDED maxsplit here, s.t. for example a timestamp doesn't get split into separate parts
+            )  # ADDED maxsplit, so i.e. timestamp doesn't get split into separate parts  # noqa: E501
             # Treat first line separately
             if idx == 0:
                 # Extract format from header (ATAB odr XLS_TABLE)
                 self.header["Format"] = elements[0].strip(self.sep)
                 line = lines.pop(0)
-
-                # NEW - otherwise the 'Start time' key, is not present in the output dict for the header.
                 elements = line.strip().split(":", maxsplit=1)
                 key = elements[0]
                 self.header[key] = "".join(elements[1:]).strip(self.sep).split(self.sep)

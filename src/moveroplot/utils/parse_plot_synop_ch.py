@@ -1,24 +1,24 @@
-import pandas as pd
-import matplotlib as mpl
-from pprint import pprint
+# Standard library
 from pathlib import Path
+from pprint import pprint
 
+# Third-party
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import pandas as pd
 
-###############################################################################################
-######################################## EXPLAINATION #########################################
-#   The plot_synop_ch file contains the following look-up tables which can be imported from   #
-#   this file if necessary.                                                                   #
-#                                                                                             #
-#   VERIFICATION PARAMETERS/SCORES:         CATEGORICAL PARAMETERS/SCORES:                    #
-#   > station_score_range                  > cat_station_score_range                          #
-#   > station_score_colortable             > cat_station_score_colortable                     #
-#   > time_score_range                     > cat_time_score_range                             #
-#   > daytime_score_range                  > cat_daytime_score_range                          #
-#   > total_score_range                    > cat_total_score_range                            #
-#                                                                                             #
-#   Change verbose to True, to check the dataframes and how they look.                        #
-###############################################################################################
-###############################################################################################
+"""
+#   The plot_synop_ch file contains the following look-up tables
+    which can be imported from this file if necessary.
+#   VERIFICATION PARAMETERS/SCORES:         CATEGORICAL PARAMETERS/SCORES:
+#   > station_score_range                  > cat_station_score_range
+#   > station_score_colortable             > cat_station_score_colortable
+#   > time_score_range                     > cat_time_score_range
+#   > daytime_score_range                  > cat_daytime_score_range
+#   > total_score_range                    > cat_total_score_range
+#
+#   Change verbose to True, to check the dataframes and how they look.
+"""
 
 verbose = False
 path = Path(Path.cwd() / "src/moveroplot/utils/plot_synop_ch")
@@ -27,15 +27,12 @@ path = Path(Path.cwd() / "src/moveroplot/utils/plot_synop_ch")
 with open(path, "r") as f:
     lines = [line.strip() for line in f.readlines()]
 
-###############################################################################################
-############## VERIFICATION SCORES; DATAFRAMES FOR SCORE RANGES AND COLOUR TABLE ##############
-###############################################################################################
-
+# VERIFICATION SCORES; DATAFRAMES FOR SCORE RANGES AND COLOUR TABLE
 # define the verification parameters / scores
 verif_param = list(filter(None, lines[1].split(" ")))
 verif_scores = list(
     filter(None, lines[3].split(" "))
-)  #  12 different verification scores
+)  # 12 different verification scores
 
 if verbose:
     print(f"\nverification parameters: (#{len(verif_param)} params)\n", verif_param)
@@ -55,7 +52,7 @@ verif_columns = [verif_params, verif_min_max]
 if True:
     station_score_range = pd.read_csv(
         path,
-        sep="\s+",
+        sep="\s+",  # noqa: W605
         names=verif_param_range_cols,
         dtype=float,
         skiprows=5,
@@ -75,7 +72,7 @@ if True:
 if True:
     time_score_range = pd.read_csv(
         path,
-        sep="\s+",
+        sep="\s+",  # noqa: W605
         names=verif_param_range_cols,
         dtype=float,
         skiprows=18,
@@ -94,7 +91,7 @@ if True:
 if True:
     daytime_score_range = pd.read_csv(
         path,
-        sep="\s+",
+        sep="\s+",  # noqa: W605
         names=verif_param_range_cols,
         dtype=float,
         skiprows=31,
@@ -113,7 +110,7 @@ if True:
 if True:
     total_score_range = pd.read_csv(
         path,
-        sep="\s+",
+        sep="\s+",  # noqa: W605
         names=verif_param_range_cols,
         dtype=float,
         skiprows=44,
@@ -132,7 +129,7 @@ if True:
 if True:
     station_score_colortable = pd.read_csv(
         path,
-        sep="\s+",
+        sep="\s+",  # noqa: W605
         names=verif_param,
         dtype=str,
         skiprows=57,
@@ -146,45 +143,49 @@ if True:
         print("\n Station Score Colour Table")
         pprint(station_score_colortable)
     # https://matplotlib.org/stable/tutorials/colors/colormaps.html
-    # the mapping of the gradient indeces happens here; I just picked the
+    # the mapping of the gradient indices happens here; I just picked the
     # colormaps, that seemed the most suitable. '_r' reverses the direction
     # of the gradient.
-    # TODO: cmap 66, 67 need to be checked and replaced to be replaced. just included those not to have missing values
-    station_score_colortable = station_score_colortable.replace({"34": mpl.cm.jet})
-    station_score_colortable = station_score_colortable.replace(
-        {"48": mpl.cm.cubehelix}
-    )
-    station_score_colortable = station_score_colortable.replace({"52": mpl.cm.bwr})
-    station_score_colortable = station_score_colortable.replace({"53": mpl.cm.bwr_r})
-    station_score_colortable = station_score_colortable.replace({"54": mpl.cm.jet_r})
-    station_score_colortable = station_score_colortable.replace({"57": mpl.cm.jet_r})
-    station_score_colortable = station_score_colortable.replace({"58": mpl.cm.turbo})
-    station_score_colortable = station_score_colortable.replace(
-        {"59": mpl.cm.terrain_r}
-    )
-    station_score_colortable = station_score_colortable.replace({"60": mpl.cm.BrBG})
-    station_score_colortable = station_score_colortable.replace({"63": mpl.cm.Spectral})
-    station_score_colortable = station_score_colortable.replace({"64": mpl.cm.Spectral})
-    station_score_colortable = station_score_colortable.replace({"66": mpl.cm.Spectral})
-    station_score_colortable = station_score_colortable.replace({"67": mpl.cm.Spectral})
-###############################################################################################
-############## CATEGORICAL SCORES; DATAFRAMES FOR SCORE RANGES AND COLOUR TABLE ###############
-###############################################################################################
+    # TODO: cmap 66, 67 need to be checked and replaced to be replaced.
+    #       just included those not to have missing values
+
+    # Create a dictionary to map scores to their respective colormaps
+    color_map_dict = {
+        "34": mpl.cm.jet,
+        "48": mpl.cm.cubehelix,
+        "52": mpl.cm.bwr,
+        "53": mpl.cm.bwr_r,
+        "54": mpl.cm.jet_r,
+        "57": mpl.cm.jet_r,
+        "58": mpl.cm.turbo,
+        "59": mpl.cm.terrain_r,
+        "60": mpl.cm.BrBG,
+        "63": mpl.cm.Spectral,
+        "64": mpl.cm.Spectral,
+        "66": mpl.cm.Spectral,
+        "67": mpl.cm.Spectral,
+    }
+    # Use the dictionary to replace scores with their respective colormaps
+    station_score_colortable = station_score_colortable.replace(color_map_dict)
+
+
+# CATEGORICAL SCORES; DATAFRAMES FOR SCORE RANGES AND COLOUR TABLE
 
 # define the verification parameters / scores
 cat_param = list(filter(None, lines[70].split(" ")))
 
-# --> categorical parameter range columns looks like: [*_min, *_max, CLCT_min  CLCT_max, ...]
+# categorical parameter range columns looks like: [*_min, *_max, CLCT_min  CLCT_max, ...]  # noqa: E501
 # this list is necessary, when reading the min/max tables for the first time.
 cat_param_range_cols = []
 
-# for subolumns in pandas, the columns need to be initialised w/ two sublists: columns_list = [[sublist_1][sublist_2]]
-# i.e. cat_columns = [['*', '*', '*', 'CLCT', ...], ['scores', 'min', 'max', 'scores', ....]]
-# cat_params is the first sublist, where each param is listed 3 times. once for each of its subcolumns
+# for subcolumns in pandas, the columns need to be initialised w/ two sublists: columns_list = [[sublist_1][sublist_2]]  # noqa: E501
+# i.e. cat_columns = [['*', '*', '*', 'CLCT', ...], ['scores', 'min', 'max', 'scores', ....]]  # noqa: E501
+# cat_params is the first sublist, where each param is listed 3 times. once for each of its subcolumns  # noqa: E501
 # cat_scores_min_max is the second sublist, --> ['scores', 'min', 'max']*len(cat_param)
-# cat_columns_tmp is the list of colums for the concatenated dataframe, where there is one separate column for: <param>+['_score', '_min', '_max']
+# cat_columns_tmp is the list of columns for the concatenated dataframe
+#  there is one separate column for: <param>+['_score', '_min', '_max']
 # i.e. cat_columns_tmp = [*_scores, *_min, *_max, CLCT_scores, CLCT_min, CLCT_max,....]
-# based on the concat. df, the final range df w/ three subcolumns (scores, min, max) can be constructed
+# based on the concat. df, the final range df w/ three subcolumns (scores, min, max) can be constructed  # noqa: E501
 
 cat_columns_tmp, cat_params, cat_scores_min_max = (
     [],
@@ -193,18 +194,19 @@ cat_columns_tmp, cat_params, cat_scores_min_max = (
 )
 
 for parameter in cat_param:
-    # the dataframe, which is read from the csv file, only has two columns per parameter (min/max).
+    # the dataframe from the csv file, only has two columns per parameter (min/max).
     # these columns are listed in the cat_param_range_cols
     cat_param_range_cols.append(parameter + "_min")
     cat_param_range_cols.append(parameter + "_max")
 
-    # the tmp df (after reading the csv and concatenating w/ index dataframe; but before creating subcolumns),
-    # has three columns for each parameter: scores, min, max. these are merged in a next step into columns w/ subcolumns
+    # the tmp df (after reading the csv and concatenating w/ index dataframe; but before creating subcolumns),  # noqa: E501
+    # has three columns for each parameter: scores, min, max.
+    # these are merged in a next step into columns w/ subcolumns
     cat_columns_tmp.append(parameter + "_scores")
     cat_columns_tmp.append(parameter + "_min")
     cat_columns_tmp.append(parameter + "_max")
 
-    # for each subcolumn, the corresponding parameter must be repeated once in for sublist 1 (as mentioned above)
+    # for each subcolumn, the corresponding parameter must be repeated once in for sublist 1 (as mentioned above)  # noqa: E501
     cat_params.append(parameter)
     cat_params.append(parameter)
     cat_params.append(parameter)
@@ -212,11 +214,11 @@ for parameter in cat_param:
 # finally, the columns for the categorical scores is:
 cat_columns = [cat_params, cat_scores_min_max]
 
-cat_scores = []  # the cat_scores (indeces in the dfs) are variable (for each cat_param)
+cat_scores = []  # the cat_scores (indices in the dfs) are variable (for each cat_param)
 line = 72  # the first line containing categorical scores
 end = line + len(
     cat_param
-)  # for each categorical parameter, there is one line containing all corresponding scores
+)  # for each categorical parameter, one line containing all corresponding scores
 while line < 85:
     cat_scores.append(list(filter(None, lines[line].split(" "))))
     line += 1
@@ -226,32 +228,36 @@ if verbose:
     print(f"\ncategorical scores: (#{len(cat_scores)} scores)\n", cat_scores)
 
 
-# create a parameter-scores mapping dataframe. for each parameter, we have a different set of scores
-param_score_indeces_mapping = {}
+# create a parameter-scores mapping dataframe. for each parameter, we have a different set of scores  # noqa: E501
+param_score_indices_mapping = {}
 for i, param in enumerate(cat_param):
-    param_score_indeces_mapping[param + "_scores"] = cat_scores[i]
-cat_param_score_mapping_df = pd.DataFrame(data=param_score_indeces_mapping)
+    param_score_indices_mapping[param + "_scores"] = cat_scores[i]
+cat_param_score_mapping_df = pd.DataFrame(data=param_score_indices_mapping)
 
 # create dataframe for categorical station score ranges
 if True:
     cat_station_score_range = pd.read_csv(
         path,
-        sep="\s+",
+        sep="\s+",  # noqa: W605
         names=cat_param_range_cols,
         dtype=float,
         skiprows=86,
         nrows=len(cat_scores[0]),
     )
 
-    # concatenate the df, with all max/min values for each param; and the df with the indeces for each param
+    # concatenate the df, with all max/min values for each param.
+    # and the df with the indices for each param
     cat_station_score_range = pd.concat(
         [cat_station_score_range, cat_param_score_mapping_df], axis=1
     )
 
-    # order the columns, s.t. they are: ['param1_scores', 'param1_min', 'param1_max', 'param2_scores', 'param2_min', 'param2_max',...]
+    # order the columns:
+    # ['param1_scores', 'param1_min', 'param1_max',
+    # 'param2_scores', 'param2_min', 'param2_max',...]
     cat_station_score_range = cat_station_score_range[cat_columns_tmp]
 
-    # now that the columns are in the correct order, create subcolumns (scores, min, max) for each parameter
+    # now that the columns are in the correct order,
+    # create subcolumns (scores, min, max) for each parameter
     cat_station_score_range.columns = cat_columns
 
     if verbose:
@@ -263,22 +269,26 @@ if True:
 if True:
     cat_time_score_range = pd.read_csv(
         path,
-        sep="\s+",
+        sep="\s+",  # noqa: W605
         names=cat_param_range_cols,
         dtype=float,
         skiprows=105,
         nrows=len(cat_scores[0]),
     )
 
-    # concatenate the df, with all max/min values for each param; and the df with the indeces for each param
+    # concatenate the df, with all max/min values for each param;
+    # and the df with the indices for each param
     cat_time_score_range = pd.concat(
         [cat_time_score_range, cat_param_score_mapping_df], axis=1
     )
-
-    # order the columns, s.t. they are: ['param1_scores', 'param1_min', 'param1_max', 'param2_scores', 'param2_min', 'param2_max',...]
+    """
+    order the columns, s.t. they are:
+    ['param1_scores', 'param1_min', 'param1_max', 'param2_scores',
+    'param2_min', 'param2_max',...]
+    """
     cat_time_score_range = cat_time_score_range[cat_columns_tmp]
 
-    # now that the columns are in the correct order, create subcolumns (scores, min, max) for each parameter
+    # now that the columns are in the correct order, create subcolumns (scores, min, max) for each parameter  # noqa: E501
     cat_time_score_range.columns = cat_columns
 
     if verbose:
@@ -290,22 +300,25 @@ if True:
 if True:
     cat_daytime_score_range = pd.read_csv(
         path,
-        sep="\s+",
+        sep="\s+",  # noqa: W605
         names=cat_param_range_cols,
         dtype=float,
         skiprows=124,
         nrows=len(cat_scores[0]),
     )
 
-    # concatenate the df, with all max/min values for each param; and the df with the indeces for each param
+    # concatenate the df, with all max/min values for each param
+    # and the df with the indices for each param
     cat_daytime_score_range = pd.concat(
         [cat_daytime_score_range, cat_param_score_mapping_df], axis=1
     )
 
-    # order the columns, s.t. they are: ['param1_scores', 'param1_min', 'param1_max', 'param2_scores', 'param2_min', 'param2_max',...]
+    # order the columns, s.t. they are: ['param1_scores', 'param1_min',
+    # 'param1_max', 'param2_scores', 'param2_min', 'param2_max',...]
     cat_daytime_score_range = cat_daytime_score_range[cat_columns_tmp]
 
-    # now that the columns are in the correct order, create subcolumns (scores, min, max) for each parameter
+    # now that the columns are in the correct order and
+    # create subcolumns (scores, min, max) for each parameter
     cat_daytime_score_range.columns = cat_columns
 
     if verbose:
@@ -317,22 +330,25 @@ if True:
 if True:
     cat_total_score_range = pd.read_csv(
         path,
-        sep="\s+",
+        sep="\s+",  # noqa: W605
         names=cat_param_range_cols,
         dtype=float,
         skiprows=124,
         nrows=len(cat_scores[0]),
     )
 
-    # concatenate the df, with all max/min values for each param; and the df with the indeces for each param
+    # concatenate the df, with all max/min values for each param;
+    # and the df with the indices for each param
     cat_total_score_range = pd.concat(
         [cat_total_score_range, cat_param_score_mapping_df], axis=1
     )
 
-    # order the columns, s.t. they are: ['param1_scores', 'param1_min', 'param1_max', 'param2_scores', 'param2_min', 'param2_max',...]
+    # order the columns, s.t. they are: ['param1_scores', 'param1_min', 'param1_max', $
+    # 'param2_scores', 'param2_min', 'param2_max',...]
     cat_total_score_range = cat_total_score_range[cat_columns_tmp]
 
-    # now that the columns are in the correct order, create subcolumns (scores, min, max) for each parameter
+    # columns are in the correct order,
+    # create subcolumns (scores, min, max) for each parameter
     cat_total_score_range.columns = cat_columns
 
     if verbose:
@@ -340,7 +356,7 @@ if True:
         pprint(cat_total_score_range)
 
 
-# create colour-table dataframe for the categorical station scores (colour bar gradients)
+# create colour-table dataframe for the categorical station scores
 if True:
     sublist_1, sublist_2 = [], ["scores", "cmap"] * len(cat_param)
     tmp_colortable_columns = []
@@ -355,7 +371,7 @@ if True:
 
     cat_station_score_colortable = pd.read_csv(
         path,
-        sep="\s+",
+        sep="\s+",  # noqa: W605
         names=tmp_colortable_columns,
         dtype=int,
         skiprows=162,
@@ -365,7 +381,8 @@ if True:
     # make df is of type str, s.t. the replacement works w/ strings.
     cat_station_score_colortable = cat_station_score_colortable.astype(str)
 
-    # cat_statoin_score_colortable still has some 0, which should be mapped to either NaN or their appropriate cmap
+    # cat_statoin_score_colortable still has some 0
+    # --> map either NaN or their appropriate cmap
     cat_station_score_colortable = cat_station_score_colortable.replace(
         {"34": mpl.cm.jet}
     )
@@ -400,7 +417,7 @@ if True:
         {"64": mpl.cm.Spectral}
     )
 
-    # concat dataframes (colortable; parameter-score-indeces)
+    # concat dataframes (colortable; parameter-score-indices)
     cat_station_score_colortable = pd.concat(
         [cat_station_score_colortable, cat_param_score_mapping_df], axis=1
     )

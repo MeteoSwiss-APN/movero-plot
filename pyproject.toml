@@ -97,12 +97,16 @@ ignore = [
 ]
 per-file-ignores = [
     "__init__.py: F401",  # Allow unused imports
+    "./build/lib/moveroplot/utils/parse_plot_synop_ch.py : E501",
+    "./build/lib/moveroplot/daytime_scores.py : E501",
+    "./build/lib/moveroplot/daytime_scores.py : E302",
+    "./build/lib/moveroplot/daytime_scores.py : BLK100",
 ]
 
 [tool.pylint]
 recursive = true
 ignore-imports = true
-max-line-length = 88
+max-line-length = 90
 # Tweak valid name formats
 # Defaults (http://pylint-messages.wikidot.com/messages:c0103):
 #  argument-rgx  = "^[a-z_][a-z0-9_]{2,30}$"
@@ -163,5 +167,5 @@ ignore_directives = [
 ]
 
 [tool.codespell]
-ignore-words-list = "inout"
-skip = "requirements/*"
+ignore-words-list = "ths,inout,ist"
+skip = "./requirements/*,./src/moveroplot/utils/plot_synop_ch,./build/*,requirements/environment.yml"

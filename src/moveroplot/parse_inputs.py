@@ -1,3 +1,4 @@
+# Standard library
 from pprint import pprint
 
 
@@ -28,12 +29,10 @@ def _parse_inputs(
 
     Returns:
         dict: Dictionary w/ all relevant parameters as keys. Each key is assigned a list of lists containing the corresponding scores (&thresholds).
-    """
-    print(f"\n--- debugging user inputs")
+    """  # noqa: E501
+    print("--- debugging user inputs")
     if debug:
-        print(
-            "---------------------------------------------------------------------------------------------------------------------------"
-        )
+        print("-------------------------------------------------------------")
     # initialise empty dictionaries
     regular_params_dict = None
     cat_params_dict = None
@@ -43,7 +42,7 @@ def _parse_inputs(
     if plot_params and plot_scores:
         params = plot_params.split(
             ","
-        )  # TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL
+        )  # TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL  # noqa: E501
         scores = plot_scores.split(",")  # ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS
         regular_params_dict = {param: [] for param in params}
         for param in params:
@@ -61,13 +60,13 @@ def _parse_inputs(
     if plot_cat_params and plot_cat_scores and plot_cat_thresh:
         cat_params = plot_cat_params.split(
             ","
-        )  # categorical parameters: TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
+        )  # categorical parameters: TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1  # noqa: E501
         cat_scores = plot_cat_scores.split(
             ","
         )  # categorical scores: FBI,MF,POD,FAR,THS,ETS
         cat_threshs = plot_cat_thresh.split(
             ":"
-        )  # categorical thresholds: 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
+        )  # categorical thresholds: 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20  # noqa: E501
         cat_params_dict = {cat_param: [] for cat_param in cat_params}
         for param, threshs in zip(cat_params, cat_threshs):
             # first append all scores w/o thresholds to parameter
@@ -77,7 +76,7 @@ def _parse_inputs(
                 else:
                     cat_params_dict[param].append([score])
 
-            # afterwards append all scores that have a threshold in their name to current to parameter
+            # append all scores with a threshold in their name to current to parameter
             thresholds = threshs.split(",")
             for threshold in thresholds:
                 for score in cat_scores:
@@ -93,7 +92,7 @@ def _parse_inputs(
             print("Categorical Parameter Dict: ")
             pprint(cat_params_dict)
 
-    # ENV PARAMATERS (TODO)
+    # ENV PARAMETERS (TODO)
     if plot_ens_params and plot_ens_scores and plot_ens_thresh:
         ens_params_dict = {}
         print("extend code here to create a end-dict.")
@@ -114,9 +113,6 @@ def _parse_inputs(
         params_dict = cat_params_dict
 
     if debug:
-        print(f"Finally, the following parameter x score pairs will get plotted:")
+        print("Finally, the following parameter x score pairs will get plotted:")
         pprint(params_dict)
-        print(
-            "---------------------------------------------------------------------------------------------------------------------------"
-        )
     return params_dict

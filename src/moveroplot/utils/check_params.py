@@ -1,8 +1,9 @@
 def check_params(param, verbose=False):
-    # this list is compiled of all possible, generalised parameters, presend in the plot_synop_ch file.
-    # this function compares a given input parameter (param) agains this list, and tries to map it to the
-    # corresponding parameter.
+    """List is compiled of all possible, generalised parameters.
 
+    It compares a given input parameter (param) against this list, and tries to map it to the
+    corresponding parameter.
+    """  # noqa: E501
     possible_params = [
         "*",
         "PMSL",
@@ -22,7 +23,7 @@ def check_params(param, verbose=False):
         "DURSUN1",
     ]
 
-    # if current param is not already a 'possible' parameter, iterate through the possible
+    # if current param is not already a 'possible' parameter, iterate through the possible  # noqa: E501
     # parameters and find the correct match
     if param not in possible_params:
         # iterate through the list of 'possible' parameters and see if one of them
@@ -50,11 +51,12 @@ def check_params(param, verbose=False):
                     return possible_param
 
             else:
-                # it might occur, that there are two separators in an actual param, but the matching
-                # parameter in the possible params list only matches the first part. this is a special
-                # case. i.e. FF_10M_KAL --> FF*; unlike T(D)_2M_KAL --> T(D)_2M.
-                # thus split the tmp_param again and only proceed with the first part for the
-                # matching procedure
+                # it might occur that there are two separators in an actual param
+                # but the matching parameter in the possible params list only matches the first part.  # noqa: E501
+                # This is a special case.
+                # i.e. FF_10M_KAL --> FF*; unlike T(D)_2M_KAL --> T(D)_2M.
+                # thus split the tmp_param again and only proceed with the first part
+                # for the matching procedure
                 tmp_param = tmp_param.split("_")[0]
                 for possible_param in possible_params:
                     if possible_param.startswith(tmp_param):

@@ -1,32 +1,34 @@
 # relevant imports for parsing pipeline
-from pathlib import Path
-import numpy as np
+# Standard library
 import pprint
 import sys
-from pprint import pprint
+from pathlib import Path
 
-# relevant imports for plotting pipeline
-import matplotlib.pyplot as plt
-import numpy as np
+# Third-party
 import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
-# local
-from .utils.atab import Atab
-from .utils.check_params import check_params
-from .utils.parse_plot_synop_ch import station_score_range
-from .utils.parse_plot_synop_ch import cat_station_score_range
-from .utils.parse_plot_synop_ch import station_score_colortable
-from .utils.parse_plot_synop_ch import cat_station_score_colortable
+# relevant imports for plotting pipeline
+import matplotlib.pyplot as plt
+import numpy as np
 
 # class to add relief to map
 # > taken from: https://stackoverflow.com/questions/37423997/cartopy-shaded-relief
 from cartopy.io.img_tiles import GoogleTiles
 
+# Local
+# local
+from .utils.atab import Atab
+from .utils.check_params import check_params
+from .utils.parse_plot_synop_ch import cat_station_score_colortable
+from .utils.parse_plot_synop_ch import cat_station_score_range
+from .utils.parse_plot_synop_ch import station_score_colortable
+from .utils.parse_plot_synop_ch import station_score_range
+
 
 class ShadedReliefESRI(GoogleTiles):
-    # TODO: download image, place in resource directory and link to it (not sure if possible, tried for like 30' and it didnt work)
+    # TODO: download image, place in resource directory and link to it
     # shaded relief
     def _image_url(self, tile):
         x, y, z = tile
@@ -67,23 +69,24 @@ def _station_scores_pipeline(
         scores (list): list of scores, for which plots should be generated
         relief (bool): passed on to plotting pipeline - add relief to map if True
         debug (bool): print further comments
-    """
-    print(f"\n--- initialising station score pipeline")
+    """  # noqa: E501
+    print("--- initialising station score pipeline")
     for lt_range in lt_ranges:
         for parameter in params_dict:
             # retrieve list of scores, relevant for current parameter
             scores = params_dict[parameter]  # this scores is a list of lists
 
-            # define file path to the file correpsonding to the current parameter (station_score atab file)
+            # define path to the file of the current parameter (station_score atab file)
             file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
             path = Path(f"{input_dir}/{season}/{model_version}/{file}")
 
             # check if the file exists
             if not path.exists():
                 print(
-                    f"--- WARNING: No data file for parameter {parameter} could be found. {path} does not exist."
+                    f"""WARNING: No data file for parameter {parameter} could be found.
+                    {path} does not exist."""
                 )
-                continue  # go the the next parameter, since for the current parameter no file could be retrieved
+                continue  # no file could be retrieved for the current parameter
 
             if debug:
                 print(f"\nFilepath:\t{path}")
@@ -114,7 +117,7 @@ def _station_scores_pipeline(
 
             print(path)
             pprint(df)
-
+            """
             # > rename the first column
             # TODO (in ATAB): split the first column based on number of characters and not based
             # on separator. get number of characters from header: Width of text label column: 14
@@ -124,6 +127,7 @@ def _station_scores_pipeline(
             # get first column name
             # remove Score from first column name
             # keep rest and rename first column
+            """  # noqa: E501
             df.rename(columns={"ScoreABO": "ABO"}, inplace=True)
 
             # > add longitude and latitude to df
@@ -138,7 +142,8 @@ def _station_scores_pipeline(
                     available_scores.append(score[0])
                 else:  # warn that a relevant score was not available in dataframe
                     print(
-                        f"--- WARNING: Score {score[0]} not available for parameter {parameter}."
+                        f"""WARNING: Score {score[0]}
+                        not available for parameter {parameter}."""
                     )
 
             # reduce dataframe, s.t. only relevant scores + lon/lat are kept
@@ -148,13 +153,14 @@ def _station_scores_pipeline(
             df = df.replace(
                 float(relevant_header_information["Missing value code"]), np.NaN
             )
-
-            # > if there are rows (= scores), that only conaint np.NaN, remove them
+            """
+            # > if there are rows (= scores), that only contain np.NaN, remove them
             # df = df.dropna(how="all")
 
             # if debug:
             #     print(f"Generating plot for {parameter} for lt_range: {lt_range}. (File: {file})")
             # for each score in df, create one map
+            """  # noqa: E501
             _generate_map_plot(
                 data=df,
                 lt_range=lt_range,
@@ -169,11 +175,9 @@ def _station_scores_pipeline(
             )
 
 
-############################################################################################################################
-######################################## PLOTTING PIPELINE FOR STATION SCORES PLOTS ########################################
-############################################################################################################################
+# PLOTTING PIPELINE FOR STATION SCORES PLOTS
 def _add_features(ax):
-    """Add features to map."""
+    """Add features to map.
     # # point cartopy to the folder containing the shapefiles for the features on the map
     # earth_data_path = Path("src/pytrajplot/resources/")
     # assert (
@@ -184,6 +188,7 @@ def _add_features(ax):
     # cartopy.config["data_dir"] = earth_data_path
 
     # add grid & labels to map
+    """  # noqa: E501
     gl = ax.gridlines(
         crs=ccrs.PlateCarree(),
         draw_labels=True,
@@ -237,15 +242,17 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
     try:  # try to get the cmap from the regular station_score_colortable
         cmap = station_score_colortable[param][score]
 
-    # if a KeyError occurs, the current parameter doesn't match the columns of the station_score_colourtable df AND/OR
-    # because the score is not present in the station_score_colourtable df. check both cases
+    # if a KeyError occurs, the current parameter
+    # doesn't match the columns of the station_score_colourtable df AND/OR
+    # because the score is not present in the station_score_colourtable df.
     except KeyError:
         if score not in station_score_colortable.index.tolist():
             if score in cat_station_score_colortable[param]["scores"].values:
                 cat_score = True
                 if debug:
                     print(
-                        f"{score} ∉  station score colortable. {score} ∈  categorical station score colortable."
+                        f"""{score} ∉  station score colortable.
+                        {score} ∈  categorical station score colortable."""
                     )
                 index = cat_station_score_colortable[
                     cat_station_score_colortable[param]["scores"] == score
@@ -259,7 +266,7 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
             try:
                 cmap = station_score_colortable[param][score]
             except KeyError:
-                print(f"Dont know this parameter and score combination.")
+                print("Dont know this parameter and score combination.")
 
     # define limits for colour bar
     if not cat_score:
@@ -329,7 +336,11 @@ def _add_text(
     max_station,
 ):
     """Add footer and title to plot."""
-    footer = f"Model: {header_dict['Model version']} | Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]} ({lt_range}) | Min: {min_value} {header_dict['Unit']} @ {min_station} | Max: {max_value} {header_dict['Unit']} @ {max_station} | © MeteoSwiss"
+    footer = f"""Model: {header_dict['Model version']} |
+    Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]}
+     ({lt_range}) | Min: {min_value} {header_dict['Unit']}
+     @ {min_station} | Max: {max_value} {header_dict['Unit']} @ {max_station}
+     | © MeteoSwiss"""
 
     plt.suptitle(
         footer,
