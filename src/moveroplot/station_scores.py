@@ -1,3 +1,4 @@
+# pylint: skip-file
 # relevant imports for parsing pipeline
 # Standard library
 import pprint

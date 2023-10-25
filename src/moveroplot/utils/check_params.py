@@ -1,8 +1,9 @@
+# pylint: skip-file
 """Helper function to check if the parameter are legit."""
 
 
-def check_params(param, verbose=False):
-    """List is compiled of all possible, generalised parameters.
+def check_params(param: str, verbose: bool = False):
+    """List is compiled strossible, generalised parameters.
 
     It compares a given input parameter (param) against this list, and tries to map it to the
     corresponding parameter.

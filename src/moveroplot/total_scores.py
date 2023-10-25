@@ -1,19 +1,19 @@
+"""Calculate Total score from parsed data."""
 # Standard library
 from pathlib import Path
+from pprint import pprint  # noqa: E402¨
 
 # Third-party
 import matplotlib.pyplot as plt
 import numpy as np
 
 # Local
+# pylint: disable=no-name-in-module
 from .utils.atab import Atab
 from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import total_score_range
 
-"""
-This module provides functionalities for handling and plotting data from `ATAB` formatted files
-specifically designed for total scores.
-"""
+# pylint: enable=no-name-in-module
 
 plt.rcParams.update(
     {
@@ -22,13 +22,6 @@ plt.rcParams.update(
         "legend.title_fontsize": "small",
     }
 )
-# Standard library
-from pprint import pprint  # noqa: E402
-
-"""
-This module provides functionalities for handling and plotting data from `ATAB` formatted files
-specifically designed for station scores.
-"""
 
 
 def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parameter):
@@ -42,7 +35,7 @@ def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parame
         parameter (str): parameter of interest
 
     Returns:
-        dict: dictionary containing all available lead time range (ltr) dataframes for parameter
+        dict: dictionary conrains all available lead time range dataframes for parameter
     # collect the files to this parameter in the corresponding files dict.
     # the keys in this dict are the available lead time ranges for the current parameter.
 
@@ -82,14 +75,16 @@ def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parame
         print(f"\nFor parameter: {parameter} these files are relevant:\n")
         pprint(files_list)
         print(
-            f"""\nThese files have been parsed & combined in the 'corresponding_files_dict'.
-            Each key (lt-range) has a subdict with two keys: {corresponding_files_dict['19-24'].keys()}\n"""  # noqa: E501
+            f"""\nFiles have been parsed & combined in the 'corresponding_files_dict'.
+            Each key (lt-range) has a subdict with two keys:
+            {corresponding_files_dict['19-24'].keys()}\n"""  # noqa: E501
         )
 
     return corresponding_files_dict
 
 
 # enter directory / read total_scores files / call plotting pipeline
+# pylint: disable=pointless-string-statement,too-many-arguments,too-many-locals
 def _total_scores_pipeline(
     params_dict,
     plot_scores,
@@ -106,6 +101,7 @@ def _total_scores_pipeline(
     grid,
     debug,
 ) -> None:
+    # pylint: disable=line-too-long
     """Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>.
 
         Extract relevant information (parameters/scores) from these files into a dataframe.
@@ -124,6 +120,7 @@ def _total_scores_pipeline(
         debug (bool): print further comments & debug statements
 
     """  # noqa: E501
+    # pylint: enable=line-too-long
     print("\n--- initialising total scores pipeline")
     # tmp; define debug = True, to show debug statements for total_scores only
     debug = True
@@ -148,11 +145,12 @@ def _total_scores_pipeline(
             grid=grid,
             debug=debug,
         )
-    return
 
 
 # PLOTTING PIPELINE FOR TOTAL SCORES PLOTS
-def _set_ylim(param, score, ax, debug):
+
+
+def _set_ylim(param, score, ax, debug):  # pylint: disable=unused-argument
     # define limits for yaxis if available
     regular_param = (param, "min") in total_score_range.columns
     regular_score = score in total_score_range.index
@@ -168,8 +166,6 @@ def _set_ylim(param, score, ax, debug):
             ax.set_ylim(lower_bound, upper_bound)
 
     # TODO: add computation of y-lims for cat & ens scores
-
-    return
 
 
 def _customise_ax(parameter, score, x_ticks, grid, ax):
@@ -194,7 +190,6 @@ def _customise_ax(parameter, score, x_ticks, grid, ax):
     ax.set_xlabel("Lead-Time Range (h)")
     ax.legend(fontsize=6)
     ax.set_xticks(range(len(x_ticks)), x_ticks)
-    return
 
 
 def _clear_empty_axes(subplot_axes, idx):
@@ -204,16 +199,16 @@ def _clear_empty_axes(subplot_axes, idx):
         ax = subplot_axes[idx % 4 + i]
         ax.axis("off")
         i += 1
-    return
 
 
 def _save_figure(output_dir, filename):
     print(f"---\t\tsaving: {output_dir}/{filename[:-1]}.png")
     plt.savefig(f"{output_dir}/{filename[:-1]}.png")
     plt.clf()
-    return
 
 
+# pylint: disable=too-many-branches,too-many-statements
+# pylint: disable=too-many-arguments,too-many-locals
 def _generate_total_scores_plot(
     data,
     parameter,
@@ -223,7 +218,7 @@ def _generate_total_scores_plot(
     plot_cat_params,
     plot_cat_thresh,
     output_dir,
-    grid,
+    grid,  # pylint: disable=unused-argument
     debug,
 ):
     """Generate Total Scores Plot."""
@@ -246,7 +241,7 @@ def _generate_total_scores_plot(
     if debug:
         print("---\t3) initialise figure with a 2x2 subplots grid")
     # create 2x2 subplot grid
-    fig, ((ax0, ax1), (ax2, ax3)) = plt.subplots(
+    _, ((ax0, ax1), (ax2, ax3)) = plt.subplots(
         nrows=2, ncols=2, tight_layout=True, figsize=(10, 10), dpi=200
     )
 
@@ -316,13 +311,10 @@ def _generate_total_scores_plot(
                         "size": 6,
                         "color": "k",
                     },
-                    bbox=dict(
-                        facecolor="none",
-                        edgecolor="grey",
-                    ),
+                    bbox={"facecolor": "none", "edgecolor": "grey"},
                 )
                 _save_figure(output_dir=output_dir, filename=filename)
-                fig, ((ax0, ax1), (ax2, ax3)) = plt.subplots(
+                _, ((ax0, ax1), (ax2, ax3)) = plt.subplots(
                     nrows=2, ncols=2, tight_layout=True, figsize=(10, 10), dpi=200
                 )
                 subplot_axes = {0: ax0, 1: ax1, 2: ax2, 3: ax3}
@@ -410,10 +402,7 @@ def _generate_total_scores_plot(
                         "size": 6,
                         "color": "k",
                     },
-                    bbox=dict(
-                        facecolor="none",
-                        edgecolor="grey",
-                    ),
+                    bbox={"facecolor": "none", "edgecolor": "grey"},
                 )
                 # clear empty subplots
                 _clear_empty_axes(subplot_axes=subplot_axes, idx=idx)
@@ -435,7 +424,9 @@ def _generate_total_scores_plot(
 
     if plot_cat_params and plot_cat_scores and plot_cat_thresh:
         print("--- should now create total scores plots for all cat params/scores")
-        cat_params = plot_cat_params.split(",")
+        cat_params = plot_cat_params.split(
+            ","
+        )  # pylint: disable=pointless-string-statement
         """
         categorical parameters:
         # TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,
@@ -446,7 +437,8 @@ def _generate_total_scores_plot(
             ","
         )  # categorical scores: FBI,MF,POD,FAR,THS,ETS
         cat_threshs = plot_cat_thresh.split(":")  # categorical thresholds:
-        # 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20  # noqa: E501
+        # 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,
+        # 25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20  # noqa: E501
         cat_params_dict = {cat_param: [] for cat_param in cat_params}
         for param, threshs in zip(cat_params, cat_threshs):
             # first append all scores w/o thresholds to parameter
@@ -455,7 +447,7 @@ def _generate_total_scores_plot(
                     cat_params_dict[param].append(score.split("/"))
                 else:
                     cat_params_dict[param].append([score])
-            # append all scores that have a threshold in their name to current to parameter  # noqa: E501
+            # append all scores with threshold in their name  # noqa: E501
             thresholds = threshs.split(",")
             for threshold in thresholds:
                 for score in cat_scores:
@@ -467,7 +459,7 @@ def _generate_total_scores_plot(
                     else:
                         cat_params_dict[param].append([f"{score}({threshold})"])
 
-        if True:
+        if True:  # pylint: disable=using-constant-test
             print("Categorical Parameter Dict: ")
             pprint(cat_params_dict)
 
@@ -480,5 +472,3 @@ def _generate_total_scores_plot(
         params/scores/thresh combinations"""
     )
     # TODO: implement the total scores pipeline for categorical scores as well
-
-    return

@@ -1,3 +1,4 @@
+# pylint: skip-file
 """Test module ``moveroplot/utils.py``."""
 # Standard library
 import logging

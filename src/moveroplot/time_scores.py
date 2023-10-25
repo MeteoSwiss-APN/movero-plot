@@ -1,4 +1,4 @@
-# IMPORTS
+# pylint: skip-file
 # Standard library
 import datetime as dt
 from pathlib import Path

@@ -1,7 +1,6 @@
 """Command line interface of moveroplot."""
 # Standard library
 from pathlib import Path
-from typing import Optional
 
 # Third-party
 import click
@@ -37,17 +36,20 @@ from .main import main
     help="Specify the lead time ranges of interest. Def: 19-24",
 )
 @click.option("--plot_params", type=str, help="Specify parameters to plot.")
-# TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL
+# TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,TD_2M,
+# TD_2M_KAL,RELHUM_2M,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL
 @click.option("--plot_scores", type=str, help="Specify scores to plot.")
 # ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS
 @click.option(
     "--plot_cat_params", type=str, help="Specify categorical parameters to plot."
 )
-# TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
+# TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,
+# TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
 @click.option(
     "--plot_cat_thresh", type=str, help="Specify categorical scores thresholds to plot."
 )
-# 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
+# 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,
+# 15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
 @click.option("--plot_cat_scores", type=str, help="Specify categorical scores to plot.")
 # FBI,MF,POD,FAR,THS,ETS
 @click.option(

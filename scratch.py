@@ -1,3 +1,4 @@
+"This is just a test file."
 # Third-party
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,7 +26,8 @@ plt.savefig("asdf.png")
 
 
 # x = [0,1,2,3,4,5,6,7,8]
-# y = ['Stairs',np.nan, 'Sitting', np.nan, 'Stairs','Falling','Falling','Standing',np.nan]  # noqa: E501
+# y = ['Stairs',np.nan, 'Sitting', np.nan, 'Stairs',
+# 'Falling','Falling','Standing',np.nan]  # noqa: E501
 # y_ticks = ['Stairs', 'Sitting', 'Falling', 'Standing']
 # y_int = [np.nan if elem is np.nan else y_ticks.index(elem) for elem in y]
 # plt.plot(x, y_int, '.-')

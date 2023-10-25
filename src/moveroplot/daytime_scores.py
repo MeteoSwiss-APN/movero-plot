@@ -1,4 +1,4 @@
-# IMPORTS
+# pylint: skip-file
 # Standard library
 from pathlib import Path
 from pprint import pprint
@@ -31,8 +31,10 @@ def _daytime_scores_pipeline(
 ) -> None:
     """Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>.
 
-        Extract relevant information (parameters/scores) from these files into a dataframe.
-        Rows --> Scores | Columns --> Stations | For each parameter, a separate station_scores File exists.
+        Extract relevant information (parameters/scores)
+        from these files into a dataframe.
+        Rows --> Scores | Columns --> Stations |
+        For each parameter, a separate station_scores File exists.
 
     Args:
         lt_ranges (list): lead time ranges, for which plots should be generated (i.e. 01-06, 07-12,...). part of the file name

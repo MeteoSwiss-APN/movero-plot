@@ -1,13 +1,6 @@
-# Standard library
-from pathlib import Path
-from pprint import pprint
+# pylint: disable=pointless-string-statement
+"""Parse raw data from ATAB files.
 
-# Third-party
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import pandas as pd
-
-"""
 #   The plot_synop_ch file contains the following look-up tables
     which can be imported from this file if necessary.
 #   VERIFICATION PARAMETERS/SCORES:         CATEGORICAL PARAMETERS/SCORES:
@@ -19,12 +12,20 @@ import pandas as pd
 #
 #   Change verbose to True, to check the dataframes and how they look.
 """
+# pylint: enable=pointless-string-statement
+# pylint: disable=using-constant-test
+# Standard library
+from pathlib import Path
+from pprint import pprint
+
+# Third-party
+import pandas as pd
 
 verbose = False
 path = Path(Path.cwd() / "src/moveroplot/utils/plot_synop_ch")
 
 # open plot_synop_ch file
-with open(path, "r") as f:
+with open(path, "r") as f:  # pylint: disable=unspecified-encoding
     lines = [line.strip() for line in f.readlines()]
 
 # VERIFICATION SCORES; DATAFRAMES FOR SCORE RANGES AND COLOUR TABLE
@@ -52,7 +53,7 @@ verif_columns = [verif_params, verif_min_max]
 if True:
     station_score_range = pd.read_csv(
         path,
-        sep="\s+",  # noqa: W605
+        sep=r"\s+",  # noqa: W605
         names=verif_param_range_cols,
         dtype=float,
         skiprows=5,
@@ -72,7 +73,7 @@ if True:
 if True:
     time_score_range = pd.read_csv(
         path,
-        sep="\s+",  # noqa: W605
+        sep=r"\s+",  # noqa: W605
         names=verif_param_range_cols,
         dtype=float,
         skiprows=18,
@@ -91,7 +92,7 @@ if True:
 if True:
     daytime_score_range = pd.read_csv(
         path,
-        sep="\s+",  # noqa: W605
+        sep=r"\s+",  # noqa: W605
         names=verif_param_range_cols,
         dtype=float,
         skiprows=31,
@@ -110,7 +111,7 @@ if True:
 if True:
     total_score_range = pd.read_csv(
         path,
-        sep="\s+",  # noqa: W605
+        sep=r"\s+",  # noqa: W605
         names=verif_param_range_cols,
         dtype=float,
         skiprows=44,
@@ -129,7 +130,7 @@ if True:
 if True:
     station_score_colortable = pd.read_csv(
         path,
-        sep="\s+",  # noqa: W605
+        sep=r"\s+",  # noqa: W605
         names=verif_param,
         dtype=str,
         skiprows=57,
@@ -174,18 +175,23 @@ if True:
 # define the verification parameters / scores
 cat_param = list(filter(None, lines[70].split(" ")))
 
-# categorical parameter range columns looks like: [*_min, *_max, CLCT_min  CLCT_max, ...]  # noqa: E501
+# categorical parameter range columns looks like:
+# [*_min, *_max, CLCT_min  CLCT_max, ...]
 # this list is necessary, when reading the min/max tables for the first time.
 cat_param_range_cols = []
 
-# for subcolumns in pandas, the columns need to be initialised w/ two sublists: columns_list = [[sublist_1][sublist_2]]  # noqa: E501
+# pylint: disable=line-too-long
+# for subcolumns in pandas, the columns need to be initialised
+# w/ two sublists: columns_list = [[sublist_1][sublist_2]]
 # i.e. cat_columns = [['*', '*', '*', 'CLCT', ...], ['scores', 'min', 'max', 'scores', ....]]  # noqa: E501
 # cat_params is the first sublist, where each param is listed 3 times. once for each of its subcolumns  # noqa: E501
 # cat_scores_min_max is the second sublist, --> ['scores', 'min', 'max']*len(cat_param)
 # cat_columns_tmp is the list of columns for the concatenated dataframe
 #  there is one separate column for: <param>+['_score', '_min', '_max']
 # i.e. cat_columns_tmp = [*_scores, *_min, *_max, CLCT_scores, CLCT_min, CLCT_max,....]
-# based on the concat. df, the final range df w/ three subcolumns (scores, min, max) can be constructed  # noqa: E501
+# based on the concat. df, the final range df w/ three subcolumns
+# (scores, min, max) can be constructed  # noqa: E501
+# pylint: enable=line-too-long
 
 cat_columns_tmp, cat_params, cat_scores_min_max = (
     [],
@@ -199,14 +205,16 @@ for parameter in cat_param:
     cat_param_range_cols.append(parameter + "_min")
     cat_param_range_cols.append(parameter + "_max")
 
-    # the tmp df (after reading the csv and concatenating w/ index dataframe; but before creating subcolumns),  # noqa: E501
+    # the tmp df (after reading the csv and concatenating w/ index dataframe;
+    # before creating subcolumns),
     # has three columns for each parameter: scores, min, max.
     # these are merged in a next step into columns w/ subcolumns
     cat_columns_tmp.append(parameter + "_scores")
     cat_columns_tmp.append(parameter + "_min")
     cat_columns_tmp.append(parameter + "_max")
 
-    # for each subcolumn, the corresponding parameter must be repeated once in for sublist 1 (as mentioned above)  # noqa: E501
+    # for each subcolumn, the corresponding parameter
+    # must be repeated once in for sublist 1 (as mentioned above)  # noqa: E501
     cat_params.append(parameter)
     cat_params.append(parameter)
     cat_params.append(parameter)
@@ -228,7 +236,8 @@ if verbose:
     print(f"\ncategorical scores: (#{len(cat_scores)} scores)\n", cat_scores)
 
 
-# create a parameter-scores mapping dataframe. for each parameter, we have a different set of scores  # noqa: E501
+# create a parameter-scores mapping dataframe.
+# for each parameter, we have a different set of scores
 param_score_indices_mapping = {}
 for i, param in enumerate(cat_param):
     param_score_indices_mapping[param + "_scores"] = cat_scores[i]
@@ -238,7 +247,7 @@ cat_param_score_mapping_df = pd.DataFrame(data=param_score_indices_mapping)
 if True:
     cat_station_score_range = pd.read_csv(
         path,
-        sep="\s+",  # noqa: W605
+        sep=r"\s+",  # noqa: W605
         names=cat_param_range_cols,
         dtype=float,
         skiprows=86,
@@ -269,7 +278,7 @@ if True:
 if True:
     cat_time_score_range = pd.read_csv(
         path,
-        sep="\s+",  # noqa: W605
+        sep=r"\s+",  # noqa: W605
         names=cat_param_range_cols,
         dtype=float,
         skiprows=105,
@@ -288,7 +297,8 @@ if True:
     """
     cat_time_score_range = cat_time_score_range[cat_columns_tmp]
 
-    # now that the columns are in the correct order, create subcolumns (scores, min, max) for each parameter  # noqa: E501
+    # now that the columns are in the correct order
+    # create subcolumns (scores, min, max) for each parameter
     cat_time_score_range.columns = cat_columns  # type: ignore
 
     if verbose:
@@ -300,7 +310,7 @@ if True:
 if True:
     cat_daytime_score_range = pd.read_csv(
         path,
-        sep="\s+",  # noqa: W605
+        sep=r"\s+",  # noqa: W605
         names=cat_param_range_cols,
         dtype=float,
         skiprows=124,
@@ -330,7 +340,7 @@ if True:
 if True:
     cat_total_score_range = pd.read_csv(
         path,
-        sep="\s+",  # noqa: W605
+        sep=r"\s+",  # noqa: W605
         names=cat_param_range_cols,
         dtype=float,
         skiprows=124,
@@ -371,7 +381,7 @@ if True:
 
     cat_station_score_colortable = pd.read_csv(
         path,
-        sep="\s+",  # noqa: W605
+        sep=r"\s+",  # noqa: W605
         names=tmp_colortable_columns,
         dtype=int,
         skiprows=162,

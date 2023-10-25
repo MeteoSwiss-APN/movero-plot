@@ -1,25 +1,11 @@
+# pylint: disable=line-too-long,pointless-string-statement
 """Parse the command which hitherto produced all verification plots.
 
 This ensures, that the change in workflow is minimal.
 Author: Michel Zeller
 Date:   17.02.2022
-"""
-# Standard library
-from pathlib import Path
 
-# Third-party
-from click import Context
 
-# Local
-from .daytime_scores import _daytime_scores_pipeline
-
-# local
-from .parse_inputs import _parse_inputs
-from .station_scores import _station_scores_pipeline
-from .time_scores import _time_scores_pipeline
-from .total_scores import _total_scores_pipeline
-
-"""
 Status of merging the former plot_synop command with IDL here.
 ❌ --> no longer necessary. IDL specific or resolved otherwise. (see config directory)
 ✅ --> implemented (as closely as possible)
@@ -35,10 +21,14 @@ plot_synop
 ❌ --ct_file=/users/kaufmann/movero/idl/colors1.tbl
 ✅ --lt_ranges=19-24,67-72
 ❌ --linecolors=
-✅ --plot_params=TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL
-✅ --plot_cat_params=TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
+✅ --plot_params=TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,
+      T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,
+      FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL
+✅ --plot_cat_params=TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,
+      T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
 ✅ --plot_ens_params=
-✅ --plot_cat_thresh=0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
+✅ --plot_cat_thresh=0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,
+     25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
 ✅ --plot_ens_thresh=
 ✅ --plot_scores=ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS
 ✅ --plot_cat_scores=FBI,MF/OF,POD,FAR,THS,ETS
@@ -54,8 +44,25 @@ python plot_synop.py C-1E-CTR_ch --plot_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CL
 python plot_synop.py C-1E-CTR_ch --plot_params TOT_PREC12 --plot_scores ME --plot_cat_params VMAX_10M1 --plot_cat_thresh 5,12.5,20 --plot_cat_scores THS,ETS
 python plot_synop.py C-1E_ch --plot_params CLCT --plot_scores MMOD/MOBS
 """  # noqa: E501
+# Standard library
+from pathlib import Path
+
+# Third-party
+from click import Context
+
+# Local
+from .daytime_scores import _daytime_scores_pipeline
+
+# local
+from .parse_inputs import _parse_inputs
+from .station_scores import _station_scores_pipeline
+from .time_scores import _time_scores_pipeline
+from .total_scores import _total_scores_pipeline
 
 
+# pylint: enable=line-too-long
+# pylint: disable=unused-argument,too-many-locals
+# pylint: disable=too-many-arguments,pointless-string-statement
 def main(
     ctx: Context,
     *,
@@ -81,20 +88,30 @@ def main(
 ):
     """Entry Point for the MOVERO Plotting Pipeline.
 
-    The only input argument is the RUN argument. Pass this along with any number of
-    options. These usually have a default value or are not necessary.
+    The only input argument is the RUN argument.
+    Pass this along with any number of options.
+    These usually have a default value or are not necessary.
 
     Example Command: (to generate all plots for C-1E-CTR_ch)
 
     python plot_synop.py C-1E-CTR_ch
 
-    --plot_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL
+    --plot_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,
+                    GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,
+                    TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,
+                    FF_10M_KAL,VMAX_10M6,VMAX_10M1,
+                    DD_10M,PS,PMSL
 
     --plot_scores ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS
 
-    --plot_cat_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
+    --plot_cat_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,
+                    T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,
+                    FF_10M_KAL,VMAX_10M6,VMAX_10M1
 
-    --plot_cat_thresh 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
+    --plot_cat_thresh 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,
+                      6.5:0,15,25:0,15,25:-5,5,15:-5,
+                      5,15:2.5,5,10:2.5,5,10:5,12.5,
+                      20:5,12.5,20
 
     --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
     """  # noqa: E501
@@ -177,4 +194,3 @@ def main(
             debug=debug,
         )
     print("\n--- Done.")
-    return

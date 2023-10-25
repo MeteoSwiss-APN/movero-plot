@@ -3,7 +3,6 @@
 from pathlib import Path
 from typing import Any
 from typing import Dict
-from typing import Optional
 
 # Third-party
 import pandas as pd
@@ -33,7 +32,8 @@ class Atab:
         # the station scores files. (lon, lat rows)
         if sep not in supported_seps:
             raise RuntimeError(
-                f"Separator {sep} not supported. Must be one of {' ,'.join(map(repr, supported_seps))}."
+                f"""Separator {sep} not supported.
+                Must be one of {' ,'.join(map(repr, supported_seps))}."""
             )
         self.file = file
         self.sep = sep
@@ -63,13 +63,16 @@ class Atab:
         if self.data.empty:
             raise OSError("ERROR: Atab file is empty")
 
+        # pylint: disable=pointless-string-statement
         """
-        for col_name, header_key in [("Experiment", "Experiment"), ("Product_Type", "Type_of_product")]:
+        for col_name, header_key in
+        [("Experiment", "Experiment"), ("Product_Type", "Type_of_product")]:
             self._add_column_from_header(col_name, header_key)
 
         if self.data:
             self.data = self.data.dropna(axis=1, how="all")
         """
+        # pylint: enable=pointless-string-statement
         # Add experiment number as new column if available in header
         experiment = self.header.get("Experiment", None)
         if experiment:
@@ -94,15 +97,13 @@ class Atab:
 
     def _parse_header(self):
         """Parse the header of the atab file."""
-        with open(self.file, "r") as f:
+        with open(self.file, "r") as f:  # pylint: disable=unspecified-encoding
             lines = f.readlines()
 
         idx = 0
         while len(lines) > 0:
             line = lines.pop(0)
-            elements = line.strip().split(
-                ":", maxsplit=1
-            )  # ADDED maxsplit, so i.e. timestamp doesn't get split into separate parts  # noqa: E501
+            elements = line.strip().split(":", maxsplit=1)
             # Treat first line separately
             if idx == 0:
                 # Extract format from header (ATAB odr XLS_TABLE)

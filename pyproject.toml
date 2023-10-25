@@ -139,6 +139,7 @@ disable = [
     "R1720", # Unnecessary "elif" after "raise" (no-else-raise)
     "R1724", # Unnecessary "elif" after "continue" (no-else-continue)
     "W1116", # Second argument of isinstance is not a type (isinstance-second-argument-not-valid-type)
+    "W0511", # ignore TODO
 ]
 # Ignore (sub-)modules that trigger errors like E1101 (no-member) or E0611 (no-name-in-module)
 ignored-modules = []
