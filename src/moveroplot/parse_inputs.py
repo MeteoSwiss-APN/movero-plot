@@ -29,6 +29,7 @@ def _parse_inputs(
 
     Returns:
         dict: Dictionary w/ all relevant parameters as keys. Each key is assigned a list of lists containing the corresponding scores (&thresholds).
+
     """  # noqa: E501
     print("--- debugging user inputs")
     if debug:

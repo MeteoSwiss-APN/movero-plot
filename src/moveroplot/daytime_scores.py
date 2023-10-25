@@ -29,7 +29,8 @@ def _daytime_scores_pipeline(
     grid,
     debug,
 ) -> None:
-    """Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>
+    """Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>.
+
         Extract relevant information (parameters/scores) from these files into a dataframe.
         Rows --> Scores | Columns --> Stations | For each parameter, a separate station_scores File exists.
 
@@ -44,6 +45,7 @@ def _daytime_scores_pipeline(
         model_version (str): model_version of interest (i.e. C-1E_ch)
         scores (list): list of scores, for which plots should be generated
         debug (bool): print further comments & debug statements
+
     """  # noqa: E501
     print("\n--- initialising daytime score pipeline")
     for lt_range in lt_ranges:

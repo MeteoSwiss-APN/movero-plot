@@ -1,5 +1,6 @@
 """Atab file support."""
 # Standard library
+from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -9,45 +10,42 @@ import pandas as pd
 
 
 class Atab:
-
     """Support atab files.
+
     Attributes:
         header: Header information of the atab file.
         data: Data part of the atab file.
+
     """
 
-    def __init__(self, file, sep: str = ";") -> None:
+    def __init__(self, file: Path, sep: str = ";") -> None:
         """Create an instance of ``Atab``.
+
         Args:
             file: Input file.
             sep (optional): Separator for data.
+
         """
         # Check consistency
-        supported_seps = [
-            " ",
-            ";",
-        ]
+        supported_seps = [" ", ";"]
         # TODO: perhaps add r"\s+" to support multiple spaces.
         # There was a problem w/ parsing the header for
         # the station scores files. (lon, lat rows)
         if sep not in supported_seps:
             raise RuntimeError(
-                f"Separator {sep} not supported. Must be one of "
-                + ",".join(map("'{}'".format, supported_seps))  # noqa: W503
+                f"Separator {sep} not supported. Must be one of {' ,'.join(map(repr, supported_seps))}."
             )
-
-        # Set instance variables
         self.file = file
         self.sep = sep
         self.n_header_lines = 0
-        self.header: Dict[str, Any] = {}
+        self.header: Dict[str, list[str]] = {}
+        self.data: pd.DataFrame = pd.DataFrame()
 
-        # parse file content
-        self.data: Optional[pd.DataFrame] = None
         self._parse()
 
     def _parse(self) -> None:
         """Parse the atab file.
+
         Parse the header first, then the remaining data block using
         ``pandas.read_csv``.
         """
@@ -60,24 +58,39 @@ class Atab:
             args["delim_whitespace"] = True
         else:
             args["sep"] = self.sep
-        self.data = pd.read_csv(self.file, **args)
 
+        self.data = pd.read_csv(self.file, **args)
+        if self.data.empty:
+            raise OSError("ERROR: Atab file is empty")
+
+        """
+        for col_name, header_key in [("Experiment", "Experiment"), ("Product_Type", "Type_of_product")]:
+            self._add_column_from_header(col_name, header_key)
+
+        if self.data:
+            self.data = self.data.dropna(axis=1, how="all")
+        """
         # Add experiment number as new column if available in header
         experiment = self.header.get("Experiment", None)
-        if experiment is not None:
+        if experiment:
             n_rows = len(self.data.index)
             string_array = [experiment[0] for _ in range(n_rows)]
             self.data["Experiment"] = pd.Series(string_array, index=self.data.index)
 
         # Add product type as new column if available in header
         product_type = self.header.get("Type_of_product", None)
-        if product_type is not None:
+        if product_type:
             n_rows = len(self.data.index)
             string_array = [product_type[0] for _ in range(n_rows)]
             self.data["Product_Type"] = pd.Series(string_array, index=self.data.index)
 
         # Remove columns with all NaN
-        self.data = self.data.dropna(axis=1, how="all")
+        self.data = self.data.dropna(axis=1, how="all")  # type: ignore
+
+    def _add_column_from_header(self, col_name: str, header_key: str) -> None:
+        header_value = self.header.get(header_key, None)
+        if header_value and self.data is not None:
+            self.data[col_name] = header_value[0]
 
     def _parse_header(self):
         """Parse the header of the atab file."""

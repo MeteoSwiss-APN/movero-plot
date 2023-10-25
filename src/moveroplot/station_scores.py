@@ -52,7 +52,8 @@ def _station_scores_pipeline(
     relief,
     debug,
 ) -> None:
-    """Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>
+    """Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>.
+
         Extract relevant information (parameters/scores) from these files into a dataframe.
         Rows --> Scores | Columns --> Stations | For each parameter, a separate station_scores File exists.
 
@@ -69,6 +70,7 @@ def _station_scores_pipeline(
         scores (list): list of scores, for which plots should be generated
         relief (bool): passed on to plotting pipeline - add relief to map if True
         debug (bool): print further comments
+
     """  # noqa: E501
     print("--- initialising station score pipeline")
     for lt_range in lt_ranges:
@@ -150,6 +152,7 @@ def _station_scores_pipeline(
             df = df.loc[available_scores]
 
             # > remove/replace missing values in dataframe with np.NaN
+            print("JJJJ ", relevant_header_information["Missing value code"])
             df = df.replace(
                 float(relevant_header_information["Missing value code"]), np.NaN
             )
@@ -178,6 +181,7 @@ def _station_scores_pipeline(
 # PLOTTING PIPELINE FOR STATION SCORES PLOTS
 def _add_features(ax):
     """Add features to map.
+
     # # point cartopy to the folder containing the shapefiles for the features on the map
     # earth_data_path = Path("src/pytrajplot/resources/")
     # assert (

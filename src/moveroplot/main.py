@@ -1,5 +1,5 @@
-"""
-This file intends to parse the command, which hitherto produced all verification plots.
+"""Parse the command which hitherto produced all verification plots.
+
 This ensures, that the change in workflow is minimal.
 Author: Michel Zeller
 Date:   17.02.2022

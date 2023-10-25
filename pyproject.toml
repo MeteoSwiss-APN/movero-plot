@@ -77,12 +77,13 @@ known_first_party = [
 ]
 
 [tool.mypy]
-
+exclude = ["src/moveroplot/station_scores.py", "tests/test_moveroplot/test_utils.py"]
 [[tool.mypy.overrides]]
 # Note: Only globally ignore missing imports as a matter of last resort!
 # See https://blog.wolt.com/engineering/2021/09/30/professional-grade-mypy-configuration/
+# Add external modules w/o type hints here
 module = [
-    # Add external modules w/o type hints here
+    "cartopy","cartopy.crs","cartopy.feature","cartopy.io.img_tiles",
 ]
 ignore_missing_imports = true
 
@@ -145,7 +146,7 @@ ignored-modules = []
 [tool.pydocstyle]
 # All codes: http://www.pydocstyle.org/en/stable/error_codes.html
 ignore = [
-    # "D100", # Missing docstring in public module
+    "D100", # Missing docstring in public module ###
     "D101", # Missing docstring in public class
     "D102", # Missing docstring in public method
     "D103", # Missing docstring in public function
@@ -158,6 +159,7 @@ ignore = [
     # "D405", # Section name should be properly capitalized
     "D406", # Section name should end with a newline
     "D407", # Missing dashed underline after section
+    "D417", # Missing argument descriptions in the docstring
 ]
 
 [tool.rstcheck]

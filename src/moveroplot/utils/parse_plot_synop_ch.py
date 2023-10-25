@@ -62,7 +62,7 @@ if True:
     # add scores as column; use this column as index; rename all columns
     station_score_range["scores"] = verif_scores
     station_score_range = station_score_range.set_index("scores")
-    station_score_range.columns = verif_columns
+    station_score_range.columns = verif_columns  # type: ignore
 
     if verbose:
         print("\n Station Score Ranges")
@@ -81,7 +81,7 @@ if True:
 
     time_score_range["scores"] = verif_scores
     time_score_range = time_score_range.set_index("scores")
-    time_score_range.columns = verif_columns
+    time_score_range.columns = verif_columns  # type: ignore
 
     if verbose:
         print("\n Time Score Ranges")
@@ -100,7 +100,7 @@ if True:
 
     daytime_score_range["scores"] = verif_scores
     daytime_score_range = daytime_score_range.set_index("scores")
-    daytime_score_range.columns = verif_columns
+    daytime_score_range.columns = verif_columns  # type: ignore
 
     if verbose:
         print("\n Daytime Score Ranges")
@@ -119,7 +119,7 @@ if True:
 
     total_score_range["scores"] = verif_scores
     total_score_range = total_score_range.set_index("scores")
-    total_score_range.columns = verif_columns
+    total_score_range.columns = verif_columns  # type: ignore
 
     if verbose:
         print("\n Total Score Ranges")
@@ -151,19 +151,19 @@ if True:
 
     # Create a dictionary to map scores to their respective colormaps
     color_map_dict = {
-        "34": mpl.cm.jet,
-        "48": mpl.cm.cubehelix,
-        "52": mpl.cm.bwr,
-        "53": mpl.cm.bwr_r,
-        "54": mpl.cm.jet_r,
-        "57": mpl.cm.jet_r,
-        "58": mpl.cm.turbo,
-        "59": mpl.cm.terrain_r,
-        "60": mpl.cm.BrBG,
-        "63": mpl.cm.Spectral,
-        "64": mpl.cm.Spectral,
-        "66": mpl.cm.Spectral,
-        "67": mpl.cm.Spectral,
+        "34": "jet",
+        "48": "cubehelix",
+        "52": "bwr",
+        "53": "bwr_r",
+        "54": "jet_r",
+        "57": "jet_r",
+        "58": "turbo",
+        "59": "terrain",
+        "60": "BrBG",
+        "63": "Spectral",
+        "64": "Spectral",
+        "66": "Spectral",
+        "67": "Spectral",
     }
     # Use the dictionary to replace scores with their respective colormaps
     station_score_colortable = station_score_colortable.replace(color_map_dict)
@@ -258,7 +258,7 @@ if True:
 
     # now that the columns are in the correct order,
     # create subcolumns (scores, min, max) for each parameter
-    cat_station_score_range.columns = cat_columns
+    cat_station_score_range.columns = cat_columns  # type: ignore
 
     if verbose:
         print("\n Categorical Station Score Ranges")
@@ -289,7 +289,7 @@ if True:
     cat_time_score_range = cat_time_score_range[cat_columns_tmp]
 
     # now that the columns are in the correct order, create subcolumns (scores, min, max) for each parameter  # noqa: E501
-    cat_time_score_range.columns = cat_columns
+    cat_time_score_range.columns = cat_columns  # type: ignore
 
     if verbose:
         print("\n Categorical Time Score Ranges")
@@ -319,7 +319,7 @@ if True:
 
     # now that the columns are in the correct order and
     # create subcolumns (scores, min, max) for each parameter
-    cat_daytime_score_range.columns = cat_columns
+    cat_daytime_score_range.columns = cat_columns  # type: ignore
 
     if verbose:
         print("\n Categorical Dayime Score Ranges")
@@ -349,7 +349,7 @@ if True:
 
     # columns are in the correct order,
     # create subcolumns (scores, min, max) for each parameter
-    cat_total_score_range.columns = cat_columns
+    cat_total_score_range.columns = cat_columns  # type: ignore
 
     if verbose:
         print("\n Categorical Total Score Ranges")
@@ -381,41 +381,22 @@ if True:
     # make df is of type str, s.t. the replacement works w/ strings.
     cat_station_score_colortable = cat_station_score_colortable.astype(str)
 
-    # cat_statoin_score_colortable still has some 0
+    # cat_station_score_colortable still has some 0
     # --> map either NaN or their appropriate cmap
-    cat_station_score_colortable = cat_station_score_colortable.replace(
-        {"34": mpl.cm.jet}
-    )
-    cat_station_score_colortable = cat_station_score_colortable.replace(
-        {"48": mpl.cm.cubehelix}
-    )
-    cat_station_score_colortable = cat_station_score_colortable.replace(
-        {"52": mpl.cm.bwr}
-    )
-    cat_station_score_colortable = cat_station_score_colortable.replace(
-        {"53": mpl.cm.bwr_r}
-    )
-    cat_station_score_colortable = cat_station_score_colortable.replace(
-        {"54": mpl.cm.jet_r}
-    )
-    cat_station_score_colortable = cat_station_score_colortable.replace(
-        {"57": mpl.cm.jet_r}
-    )
-    cat_station_score_colortable = cat_station_score_colortable.replace(
-        {"58": mpl.cm.turbo}
-    )
-    cat_station_score_colortable = cat_station_score_colortable.replace(
-        {"59": mpl.cm.terrain_r}
-    )
-    cat_station_score_colortable = cat_station_score_colortable.replace(
-        {"60": mpl.cm.BrBG}
-    )
-    cat_station_score_colortable = cat_station_score_colortable.replace(
-        {"63": mpl.cm.Spectral}
-    )
-    cat_station_score_colortable = cat_station_score_colortable.replace(
-        {"64": mpl.cm.Spectral}
-    )
+    color_map_dict = {
+        "34": "jet",
+        "48": "cubehelix",
+        "52": "bwr",
+        "53": "bwr_r",
+        "54": "jet_r",
+        "57": "jet_r",
+        "58": "turbo",
+        "59": "terrain",
+        "60": "BrBG",
+        "63": "Spectral",
+        "64": "Spectral",
+    }
+    cat_station_score_colortable = cat_station_score_colortable.replace(color_map_dict)
 
     # concat dataframes (colortable; parameter-score-indices)
     cat_station_score_colortable = pd.concat(
@@ -424,7 +405,7 @@ if True:
     # order the columns
     cat_station_score_colortable = cat_station_score_colortable[tmp_concat_columns]
     # create subcolumns
-    cat_station_score_colortable.columns = cat_colortable_columns
+    cat_station_score_colortable.columns = cat_colortable_columns  # type: ignore
 
     if verbose:
         print("\n Categorical Station Score Colourtable")

@@ -1,4 +1,3 @@
-# IMPORTS
 # Standard library
 from pathlib import Path
 
@@ -11,6 +10,11 @@ from .utils.atab import Atab
 from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import total_score_range
 
+"""
+This module provides functionalities for handling and plotting data from `ATAB` formatted files
+specifically designed for total scores.
+"""
+
 plt.rcParams.update(
     {
         "axes.titlesize": "medium",
@@ -21,9 +25,15 @@ plt.rcParams.update(
 # Standard library
 from pprint import pprint  # noqa: E402
 
+"""
+This module provides functionalities for handling and plotting data from `ATAB` formatted files
+specifically designed for station scores.
+"""
+
 
 def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parameter):
-    """Collect all files corresponding to current parameter in 'corresponding_files_dict'.  # noqa: E501
+    """Collect all files corresponding to current parameter in 'corresponding_files_dict'.
+
     Args:
         file_prefix (str): prefix of files we're looking for (i.e. total_scores)
         file_postfix (str): postfix of files we're looking for (i.e. .dat)
@@ -35,6 +45,7 @@ def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parame
         dict: dictionary containing all available lead time range (ltr) dataframes for parameter
     # collect the files to this parameter in the corresponding files dict.
     # the keys in this dict are the available lead time ranges for the current parameter.
+
     """  # noqa: E501
     corresponding_files_dict = {}
 
@@ -95,7 +106,8 @@ def _total_scores_pipeline(
     grid,
     debug,
 ) -> None:
-    """Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>
+    """Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>.
+
         Extract relevant information (parameters/scores) from these files into a dataframe.
         Rows --> Scores | Columns --> Stations | For each parameter, a separate station_scores File exists.
 
@@ -110,6 +122,7 @@ def _total_scores_pipeline(
         model_version (str): model_version of interest (i.e. C-1E_ch)
         scores (list): list of scores, for which plots should be generated
         debug (bool): print further comments & debug statements
+
     """  # noqa: E501
     print("\n--- initialising total scores pipeline")
     # tmp; define debug = True, to show debug statements for total_scores only
@@ -139,8 +152,6 @@ def _total_scores_pipeline(
 
 
 # PLOTTING PIPELINE FOR TOTAL SCORES PLOTS
-
-
 def _set_ylim(param, score, ax, debug):
     # define limits for yaxis if available
     regular_param = (param, "min") in total_score_range.columns
@@ -170,6 +181,7 @@ def _customise_ax(parameter, score, x_ticks, grid, ax):
         x_ticks (list): list of x-ticks labels (lead time ranges, as strings)
         grid (bool): add grid to ax
         ax (Axes): current ax
+
     """
     if grid:
         ax.grid(which="major", color="#DDDDDD", linewidth=0.8)

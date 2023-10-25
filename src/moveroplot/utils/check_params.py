@@ -1,3 +1,6 @@
+"""Helper function to check if the parameter are legit."""
+
+
 def check_params(param, verbose=False):
     """List is compiled of all possible, generalised parameters.
 
