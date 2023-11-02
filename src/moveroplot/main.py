@@ -84,7 +84,6 @@ def main(
     output_dir: str,
     relief: bool,
     grid: bool,
-    season: str,
 ):
     """Entry Point for the MOVERO Plotting Pipeline.
 
@@ -141,7 +140,6 @@ def main(
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            season=season,  # 2021s4
             model_version=model_version,  # C-1E-CTR_ch
             relief=relief,
             debug=debug,
@@ -155,7 +153,6 @@ def main(
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            season=season,
             model_version=model_version,
             grid=grid,
             debug=debug,
@@ -169,13 +166,13 @@ def main(
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            season=season,
             model_version=model_version,
             grid=grid,
             debug=debug,
         )
     # 4. INITIALIS TOTAL SCORES PLOTTING PIPELINE
     if total_scores:
+        print("KKKKKKKK ", params_dict, "\n", input_dir)
         _total_scores_pipeline(
             params_dict=params_dict,
             plot_scores=plot_scores,
@@ -188,7 +185,6 @@ def main(
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            season=season,
             model_version=model_version,
             grid=grid,
             debug=debug,

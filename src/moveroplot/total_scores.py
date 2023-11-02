@@ -96,7 +96,6 @@ def _total_scores_pipeline(
     file_postfix,
     input_dir,
     output_dir,
-    season,
     model_version,
     grid,
     debug,
@@ -125,7 +124,7 @@ def _total_scores_pipeline(
     # tmp; define debug = True, to show debug statements for total_scores only
     debug = True
 
-    source_path = Path(f"{input_dir}/{season}/{model_version}")
+    source_path = Path(f"{input_dir}/{model_version}")
     for parameter in params_dict:
         corresponding_files_dict = collect_relevant_files(
             file_prefix, file_postfix, debug, source_path, parameter

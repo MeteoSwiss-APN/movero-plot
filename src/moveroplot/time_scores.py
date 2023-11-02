@@ -25,7 +25,6 @@ def _time_scores_pipeline(
     file_postfix,
     input_dir,
     output_dir,
-    season,
     model_version,
     grid,
     debug,
@@ -56,7 +55,7 @@ def _time_scores_pipeline(
 
             # define path to the file of current parameter (station_score atab file)
             file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
-            path = Path(f"{input_dir}/{season}/{model_version}/{file}")
+            path = Path(f"{input_dir}/{model_version}/{file}")
 
             # check if the file exists
             if not path.exists():

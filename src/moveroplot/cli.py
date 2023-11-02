@@ -66,7 +66,7 @@ from .main import main
 @click.option(
     "--input_dir",
     type=click.Path(exists=True),
-    default=Path("/scratch/osm/movero/wd"),
+    default=Path("/scratch/osm/movero/wd/2021s4"),
     help="Specify input directory.",
 )
 @click.option(
@@ -77,21 +77,6 @@ from .main import main
 )
 @click.option("--relief", type=bool, is_flag=True, help="Add relief to maps.")
 @click.option("--grid", type=bool, is_flag=True, help="Add grid to plots.")
-@click.option(
-    "--season",
-    type=click.Choice(
-        [
-            "2020s4",
-            "2021s1",
-            "2021s2",
-            "2021s3",
-            "2021s4",
-        ]
-    ),
-    multiple=False,
-    default="2021s4",
-    help="Specify the season of interest. Def: 2021s4",
-)
 @click.pass_context
 def cli(ctx: Context, **kwargs) -> None:
     """Console script for test_cli_project."""

@@ -41,6 +41,7 @@ class ShadedReliefESRI(GoogleTiles):
 
 
 # enter directory / read station_scores files / call plotting pipeline
+# type: ignore
 def _station_scores_pipeline(
     params_dict,
     lt_ranges,
@@ -48,7 +49,6 @@ def _station_scores_pipeline(
     file_postfix,
     input_dir,
     output_dir,
-    season,
     model_version,
     relief,
     debug,
@@ -66,7 +66,6 @@ def _station_scores_pipeline(
         file_postfix (str): postfix of files (i.e. '.dat')
         input_dir (str): directory to seasons (i.e. /scratch/osm/movero/wd)
         output_dir (str): output directory (i.e. plots/)
-        season (str): season of interest (i.e. 2021s4/)
         model_version (str): model_version of interest (i.e. C-1E_ch)
         scores (list): list of scores, for which plots should be generated
         relief (bool): passed on to plotting pipeline - add relief to map if True
@@ -81,7 +80,7 @@ def _station_scores_pipeline(
 
             # define path to the file of the current parameter (station_score atab file)
             file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
-            path = Path(f"{input_dir}/{season}/{model_version}/{file}")
+            path = Path(f"{input_dir}/{model_version}/{file}")
 
             # check if the file exists
             if not path.exists():
@@ -119,7 +118,7 @@ def _station_scores_pipeline(
             df = Atab(file=path, sep=" ").data
 
             print(path)
-            pprint(df)
+            pprint(df)  # type: ignore
             """
             # > rename the first column
             # TODO (in ATAB): split the first column based on number of characters and not based

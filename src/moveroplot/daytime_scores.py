@@ -24,7 +24,6 @@ def _daytime_scores_pipeline(
     file_postfix,
     input_dir,
     output_dir,
-    season,
     model_version,
     grid,
     debug,
@@ -43,7 +42,6 @@ def _daytime_scores_pipeline(
         file_postfix (str): postfix of files (i.e. '.dat')
         input_dir (str): directory to seasons (i.e. /scratch/osm/movero/wd)
         output_dir (str): output directory (i.e. plots/)
-        season (str): season of interest (i.e. 2021s4/)
         model_version (str): model_version of interest (i.e. C-1E_ch)
         scores (list): list of scores, for which plots should be generated
         debug (bool): print further comments & debug statements
@@ -57,7 +55,7 @@ def _daytime_scores_pipeline(
 
             # define file path to the current parameter (station_score atab file)
             file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
-            path = Path(f"{input_dir}/{season}/{model_version}/{file}")
+            path = Path(f"{input_dir}/{model_version}/{file}")
 
             # check if the file exists
             if not path.exists():
