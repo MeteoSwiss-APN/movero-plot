@@ -67,7 +67,7 @@ def main(
     ctx: Context,
     *,
     # legacy inputs
-    model_version: str,
+    model_versions: str,
     debug: bool,
     lt_ranges: tuple,
     # Parameters / Scores / Thresholds
@@ -84,6 +84,7 @@ def main(
     output_dir: str,
     relief: bool,
     grid: bool,
+    merge_models: bool,
 ):
     """Entry Point for the MOVERO Plotting Pipeline.
 
@@ -120,8 +121,12 @@ def main(
     daytime_scores = False
     total_scores = True
     # 0. PARSE USER INPUT
-    params_dict = _parse_inputs(
+    print("in MAIN ", plot_params)
+    plot_setup = _parse_inputs(
         debug,
+        input_dir,
+        model_versions,
+        merge_models,
         plot_params,
         plot_scores,
         plot_cat_params,
@@ -131,50 +136,65 @@ def main(
         plot_ens_thresh,
         plot_ens_scores,
     )
+    plot_models_setup = list()
+    model_versions_inputs = model_versions.split(",")
+
+    if merge_models:
+        plot_models_setup.append(model_versions_inputs)
+    else:
+        plot_models_setup.extend([[model] for model in model_versions_inputs])
+
+    model_directories = set([x.name for x in input_dir.iterdir() if x.is_dir()])
+
+    if not set(model_versions_inputs).issubset(model_directories):
+        not_in_dir = set(model_versions_inputs) - model_directories
+        raise ValueError(
+            f"""The model version {list(not_in_dir)} do not exist in the directory {input_dir}."""
+        )
+
     # 1. INITIALISE STATION SCORES PLOTTING PIPELINE
     if station_scores:
         _station_scores_pipeline(
-            params_dict=params_dict,
+            plot_setup=plot_setup,
             lt_ranges=lt_ranges,
             file_prefix="station_scores",
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            model_version=model_version,  # C-1E-CTR_ch
+            model_versions=model_versions,  # C-1E-CTR_ch
             relief=relief,
             debug=debug,
         )
     # 2. INITIALISE TIME SERIES PLOTTING PIPELINE
     if time_scores:
         _time_scores_pipeline(
-            params_dict=params_dict,
+            plot_setup=plot_setup,
             lt_ranges=lt_ranges,
             file_prefix="time_scores",
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            model_version=model_version,
+            model_versions=model_versions,
             grid=grid,
             debug=debug,
         )
     # 3. INITIALISE DYURNAL CYCLE PLOTTING PIPELINE
     if daytime_scores:
         _daytime_scores_pipeline(
-            params_dict=params_dict,
+            plot_setup=plot_setup,
             lt_ranges=lt_ranges,
             file_prefix="daytime_scores",
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            model_version=model_version,
+            model_versions=model_versions,
             grid=grid,
             debug=debug,
         )
     # 4. INITIALIS TOTAL SCORES PLOTTING PIPELINE
     if total_scores:
-        print("KKKKKKKK ", params_dict, "\n", input_dir)
         _total_scores_pipeline(
-            params_dict=params_dict,
+            plot_setup=plot_setup,
             plot_scores=plot_scores,
             plot_params=plot_params,
             plot_cat_scores=plot_cat_scores,
@@ -185,7 +205,7 @@ def main(
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            model_version=model_version,
+            model_versions=model_versions,
             grid=grid,
             debug=debug,
         )

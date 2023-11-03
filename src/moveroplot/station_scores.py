@@ -43,7 +43,7 @@ class ShadedReliefESRI(GoogleTiles):
 # enter directory / read station_scores files / call plotting pipeline
 # type: ignore
 def _station_scores_pipeline(
-    params_dict,
+    plot_setup,
     lt_ranges,
     file_prefix,
     file_postfix,
@@ -74,9 +74,9 @@ def _station_scores_pipeline(
     """  # noqa: E501
     print("--- initialising station score pipeline")
     for lt_range in lt_ranges:
-        for parameter in params_dict:
+        for parameter in plot_setup:
             # retrieve list of scores, relevant for current parameter
-            scores = params_dict[parameter]  # this scores is a list of lists
+            scores = plot_setup[parameter]  # this scores is a list of lists
 
             # define path to the file of the current parameter (station_score atab file)
             file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
@@ -117,7 +117,7 @@ def _station_scores_pipeline(
             # extract dataframe
             df = Atab(file=path, sep=" ").data
 
-            print(path)
+            print("OIOOOO ", path)
             pprint(df)  # type: ignore
             """
             # > rename the first column

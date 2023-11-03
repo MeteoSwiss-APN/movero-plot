@@ -23,7 +23,7 @@ from .main import main
 @click.version_option(__version__, "--version", "-V", message="%(version)s")
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.argument(
-    "model_version", type=str
+    "model_versions", type=str, default="C-1E-CTR_ch,C-1E_ch"
 )  # help="Specify the correct run. I.e. C-1E-CTR_ch"
 @click.option(
     "--debug", type=bool, is_flag=True, help="Add debug comments to command prompt."
@@ -77,6 +77,13 @@ from .main import main
 )
 @click.option("--relief", type=bool, is_flag=True, help="Add relief to maps.")
 @click.option("--grid", type=bool, is_flag=True, help="Add grid to plots.")
+@click.option(
+    "--merge-models",
+    type=bool,
+    default=True,
+    is_flag=True,
+    help="Merge plots with the same parameter from different models.",
+)
 @click.pass_context
 def cli(ctx: Context, **kwargs) -> None:
     """Console script for test_cli_project."""

@@ -6,6 +6,9 @@ from pprint import pprint
 
 def _parse_inputs(
     debug,
+    input_dir,
+    model_versions,
+    merge_models,
     plot_params,
     plot_scores,
     plot_cat_params,
@@ -19,6 +22,7 @@ def _parse_inputs(
 
     Args:
         debug (bool): Add debug statements to command prompt.
+        model_versions (str): string of models (i.e. "C-1E_ch,C-1E-CTR_ch")
         plot_params (str): string w/ regular plot parameters.
                            i.e. "TOT_PREC12,TOT_PREC6,TOT_PREC1"
         plot_scores (str): strint w/ regular plot scores.
@@ -39,13 +43,35 @@ def _parse_inputs(
         Each key is assigned a list of lists containing the corresponding scores.
 
     """  # noqa: E501
-    print("--- debugging user inputs")
+    print("--- parsing user inputs")
     if debug:
         print("-------------------------------------------------------------")
+
+    plot_setup = dict()
+
+    # Check if the model versions are in the input dir
+    model_versions_inputs = model_versions.split(",")
+    model_directories = set([x.name for x in input_dir.iterdir() if x.is_dir()])
+    if not set(model_versions_inputs).issubset(model_directories):
+        not_in_dir = set(model_versions_inputs) - model_directories
+        raise ValueError(
+            f"""The model version inputs {list(not_in_dir)} do not exist in the directory {input_dir}."""
+        )
+    # parse model version input to the plot setup
+    plot_models_setup = list()
+    if merge_models:
+        plot_models_setup.append(model_versions_inputs)
+    else:
+        plot_models_setup.extend([[model] for model in model_versions_inputs])
+
+    plot_setup["model_versions"] = plot_models_setup
+
     # initialise empty dictionaries
-    regular_params_dict = None
-    cat_params_dict = None
-    ens_params_dict = None
+    regular_params_dict = {}
+    cat_params_dict = {}
+    ens_params_dict = {}
+
+    plot_setup["parameter"] = None
 
     # REGULAR PARAMETERS
     if plot_params and plot_scores:
@@ -61,7 +87,6 @@ def _parse_inputs(
                     regular_params_dict[param].append(score.split("/"))
                 else:
                     regular_params_dict[param].append([score])
-
         if debug:
             print("Regular Parameter Dict: ")
             pprint(regular_params_dict)
@@ -94,7 +119,6 @@ def _parse_inputs(
                         cat_params_dict[param].append(
                             [x + f"({threshold})" for x in score.split("/")]
                         )
-
                     else:
                         cat_params_dict[param].append([f"{score}({threshold})"])
 
@@ -102,27 +126,16 @@ def _parse_inputs(
             print("Categorical Parameter Dict: ")
             pprint(cat_params_dict)
 
-    # ENV PARAMETERS (TODO)
-    if plot_ens_params and plot_ens_scores and plot_ens_thresh:
-        ens_params_dict = {}
-        print("extend code here to create a end-dict.")
-
-    # merge the dictionaries if the exist
-    # regular & categorical parameters together
-    if regular_params_dict and cat_params_dict:
-        params_dict = (
-            regular_params_dict | cat_params_dict
-        )  # merges the right dict into the left and is assigned to new dict
-    # TODO: cover more cases, for the various possible combinations of dictionaries
-
-    # only regular parameters
-    elif regular_params_dict and not cat_params_dict and not ens_params_dict:
-        params_dict = regular_params_dict
-
-    elif cat_params_dict and not regular_params_dict and not ens_params_dict:
-        params_dict = cat_params_dict
+    plot_setup["parameter"] = {
+        **regular_params_dict,
+        **cat_params_dict,
+        **ens_params_dict,
+    }
+    if not plot_setup["parameter"]:
+        raise IOError("Invalid Input: parameter and/or scores are missing.")
 
     if debug:
         print("Finally, the following parameter x score pairs will get plotted:")
-        pprint(params_dict)
-    return params_dict
+        pprint(plot_setup)
+
+    return plot_setup

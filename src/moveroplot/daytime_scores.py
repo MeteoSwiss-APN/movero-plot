@@ -18,7 +18,7 @@ from .utils.parse_plot_synop_ch import daytime_score_range
 
 # enter directory / read station_scores files / call plotting pipeline
 def _daytime_scores_pipeline(
-    params_dict,
+    plot_setup,
     lt_ranges,
     file_prefix,
     file_postfix,
@@ -49,9 +49,9 @@ def _daytime_scores_pipeline(
     """  # noqa: E501
     print("\n--- initialising daytime score pipeline")
     for lt_range in lt_ranges:
-        for parameter in params_dict:
+        for parameter in plot_setup:
             # retrieve list of scores, relevant for current parameter
-            scores = params_dict[parameter]  # this scores is a list of lists
+            scores = plot_setup[parameter]  # this scores is a list of lists
 
             # define file path to the current parameter (station_score atab file)
             file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"

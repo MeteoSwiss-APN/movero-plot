@@ -61,7 +61,7 @@ python plot_synop.py C-1E-CTR_ch
 
 `plot_synop.py` parses these user inputs into a _parameter dictionary_. Each provided parameter is one key in this dictionary. For every key, a list of corresponding scores is assigned.
 ![**Parameters Dictitonary**](https://i.imgur.com/kdQrufu.png)
-Afterwards this `params_dict` is passed to separate plotting pipelines. There, the source files are retrieved, parsed and plotted. Ultimately, all plots are placed in the `<output_dir>/<plot_type>/` directory.
+Afterwards this `plot_setup` is passed to separate plotting pipelines. There, the source files are retrieved, parsed and plotted. Ultimately, all plots are placed in the `<output_dir>/<plot_type>/` directory.
 
 ## 1. SPATIAL VERIFICATION
 <!-- ![alt text](http://i.imgur.com/8o44hib.png) -->
