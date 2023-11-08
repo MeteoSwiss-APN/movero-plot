@@ -4,10 +4,12 @@ from pathlib import Path
 from pprint import pprint
 from datetime import datetime
 from datetime import date
+import re
 
 # Third-party
 import matplotlib.pyplot as plt
 import numpy as np
+from .config.plot_settings import PlotSettings
 
 # Third-party
 from matplotlib.lines import Line2D
@@ -28,68 +30,7 @@ plt.rcParams.update(
     }
 )
 
-
-def collect_relevant_files(file_prefix, file_postfix, debug, source_path, parameter):
-    """Collect all files corresponding to current parameter in 'corresponding_files_dict'.
-
-    Args:
-        file_prefix (str): prefix of files we're looking for (i.e. total_scores)
-        file_postfix (str): postfix of files we're looking for (i.e. .dat)
-        debug (bool): add debug messages command prompt
-        source_path (Path): path to directory, where source files are
-        parameter (str): parameter of interest
-
-    Returns:
-        dict: dictionary conrains all available lead time range dataframes for parameter
-    # collect the files to this parameter in the corresponding files dict.
-    # the keys in this dict are the available lead time ranges for the current parameter.
-
-    """  # noqa: E501
-    corresponding_files_dict = {}
-
-    # for dbg purposes:
-    files_list = []
-    print("LLL ", source_path, type(source_path), file_prefix, file_postfix)
-    for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
-        if file_path.is_file():
-            # check, that the corresponding path belongs to a file
-            # and not to a sub-directory
-            # lt_range = key for corresponding_files_dict
-            # TODO:change here, if ltr is longer than 5 chars
-            lt_range = file_path.name[
-                len(file_prefix) : len(file_prefix) + 5  # noqa: E203
-            ]
-            # extract header & dataframe
-            header = Atab(file=file_path, sep=" ").header
-            df = Atab(file=file_path, sep=" ").data
-
-            # clean df
-            df = df.replace(float(header["Missing value code"][0]), np.NaN)
-
-            df.set_index(keys="Score", inplace=True)
-
-            # add information to dict
-            corresponding_files_dict[lt_range] = {
-                # 'path':file_path,
-                "header": header,
-                "df": df,
-            }
-
-            # add path of file to list of relevant files
-            files_list.append(file_path)
-    if debug:
-        print(f"\nFor parameter: {parameter} these files are relevant:\n")
-        pprint(files_list)
-        print(
-            f"""\nFiles have been parsed & combined in the 'corresponding_files_dict'.
-            Each key (lt-range) has a subdict with two keys:
-            {corresponding_files_dict['19-24'].keys()}\n"""  # noqa: E501
-        )
-
-    return corresponding_files_dict
-
-
-def collect_relevant_files2(
+def collect_relevant_files(
     input_dir, file_prefix, file_postfix, debug, model_plots, parameter
 ):
     """Collect all data from each model.
@@ -117,13 +58,15 @@ def collect_relevant_files2(
         corresponding_files_dict = {}
         for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
             if file_path.is_file():
-                # check, that the corresponding path belongs to a file
-                # and not to a sub-directory
                 # lt_range = key for corresponding_files_dict
-                # TODO:change here, if ltr is longer than 5 chars
-                lt_range = file_path.name[
-                    len(file_prefix) : len(file_prefix) + 5  # noqa: E203
-                ]
+                ltr_match = re.search(r"(\d{2})-(\d{2})", file_path.name)
+                if ltr_match:
+                    lt_range = ltr_match.group()
+                else:
+                    raise IOError(
+                        f"The filename {file_path.name} does not contain a LT range."
+                    )
+
                 # extract header & dataframe
                 loaded_Atab = Atab(file=file_path, sep=" ")
                 header = loaded_Atab.header
@@ -213,16 +156,10 @@ def _total_scores_pipeline(
     for model_plots in model_versions:
         for parameter in plot_setup:
             model_data = {}
-            # model_data = collect_relevant_files(file_prefix, file_postfix, debug, source_path, parameter)
-            model_data = collect_relevant_files2(
+            model_data = collect_relevant_files(
                 input_dir, file_prefix, file_postfix, debug, model_plots, parameter
             )
-            print(
-                "KKKK ",
-                plot_setup,
-                "\n ",
-                len(model_data),
-            )
+            print("KKKK ", plot_params, "n ", parameter)
 
             _generate_total_scores_plots(
                 models_data=model_data,
@@ -286,12 +223,8 @@ def _customise_ax(parameter, score, x_ticks, grid, ax):
 
 def _clear_empty_axes(subplot_axes, idx):
     # remove empty ``axes`` instances
-    i = 1
-    while (idx % 4 + i) < 4:
-        ax = subplot_axes[idx % 4 + i]
-        ax.axis("off")
-        i += 1
-
+    if (idx+1) % 4 != 0:
+        [ax.axis("off") for ax in subplot_axes[(idx+1)% 4:]]
 
 def _save_figure(output_dir, filename):
     print(f"---\t\tsaving: {output_dir}/{filename[:-1]}.png")
@@ -566,9 +499,17 @@ def _generate_total_scores_plot(
     # TODO: implement the total scores pipeline for categorical scores as well
 
 
-def _initialize_plot():
+def _initialize_plots(lines: list[Line2D], labels: list):
     fig, ((ax0, ax1), (ax2, ax3)) = plt.subplots(
         nrows=2, ncols=2, tight_layout=True, figsize=(10, 10), dpi=200
+    )
+
+    fig.legend(
+        lines,
+        labels,
+        loc="upper right",
+        ncol=1,
+        frameon=False,
     )
     plt.tight_layout(w_pad=3, h_pad=3, rect=[0.05, 0.05, 0.90, 0.90])
     return fig, [ax0, ax1, ax2, ax3]
@@ -588,17 +529,8 @@ def _generate_total_scores_plots(
 ):
     print(models_data.keys())
     # data = models_data[list(models_data.keys())[0]]
-    model_plot_colors = ["orange",
-        "black",
-        "red",
-        "blue",
-        "green",
-        "cyan",
-        "yellow",
-        "magenta",
-        "orange",
-    ]
-    multiple_score_linestyles = ["-", ":", "--", "-."]
+    model_plot_colors = PlotSettings.linecolors
+    multiple_score_linestyles = PlotSettings.line_styles
     model_versions = list(models_data.keys())
     custom_lines = [
         Line2D([0], [0], color=model_plot_colors[i], lw=2)
@@ -626,26 +558,7 @@ def _generate_total_scores_plots(
     if debug:
         print("---\t3) initialise figure with a 2x2 subplots grid")
 
-    # create 2x2 subplot grid
-    fig, ((ax0, ax1), (ax2, ax3)) = plt.subplots(
-        nrows=2, ncols=2, tight_layout=True, figsize=(10, 10), dpi=200
-    )
-
-    fig.legend(
-        custom_lines,
-        models_data.keys(),
-        loc="upper right",
-        ncol=1,
-        frameon=False,
-    )
-    plt.tight_layout(w_pad=3, h_pad=3, rect=[0.05, 0.05, 0.90, 0.90])
-
-    subplot_axes = {
-        0: ax0,
-        1: ax1,
-        2: ax2,
-        3: ax3,
-    }  # hash map to access correct axes later on
+    fig, subplot_axes = _initialize_plots(custom_lines,models_data)
 
     if debug:
         print("---\t4) create x-axis")
@@ -654,9 +567,8 @@ def _generate_total_scores_plots(
         print("---\t\tx_int =\t\t\t\t{x_int}")
 
     # initialise filename
-    filename = f"total_scores_{parameter}_"
-
-    # scores = plot_setup[parameter] # this is a list of lists
+    base_filename = f"total_scores_{model_versions[0]}_{parameter}_" if len(model_versions) == 1 else f"total_scores_{parameter}_"
+    filename = base_filename
 
     # REGULAR SCORES PLOTTING PIPELINE
     if debug:
@@ -668,7 +580,7 @@ def _generate_total_scores_plots(
     print("PLOT SCORES and PLOT PARAMS ", plot_scores, plot_params)
     total_start_date = datetime.max
     total_end_date = datetime.min
-
+    footer = ""
     if plot_scores and plot_params:
         regular_scores = plot_scores.split(",")
         # the idx of a score, maps the score to the corresponding subplot axes instance
@@ -677,7 +589,7 @@ def _generate_total_scores_plots(
             # save filled figure & re-set necessary for next iteration
             if idx > 0 and idx % 4 == 0:
                 # add title to figure
-                plt.suptitle(
+                fig.suptitle(
                     footer,
                     horizontalalignment="center",
                     verticalalignment="top",
@@ -687,22 +599,10 @@ def _generate_total_scores_plots(
                     },
                     bbox={"facecolor": "none", "edgecolor": "grey"},
                 )
-                _save_figure(output_dir=output_dir, filename=filename)
-                fig, ((ax0, ax1), (ax2, ax3)) = plt.subplots(
-                    nrows=2, ncols=2, tight_layout=True, figsize=(10, 10), dpi=200
-                )
-
-                fig.legend(
-                    custom_lines,
-                    models_data.keys(),
-                    loc="upper right",
-                    ncol=1,
-                    frameon=False,
-                )
-                plt.tight_layout(w_pad=3, h_pad=3, rect=[0.05, 0.05, 0.90, 0.90])
-                subplot_axes = {0: ax0, 1: ax1, 2: ax2, 3: ax3}
+                fig.savefig(f"{output_dir}/{filename[:-1]}.png")
+                fig, subplot_axes = _initialize_plots(custom_lines,models_data)
                 # reset filename
-                filename = f"total_scores_{parameter}_"
+                filename = base_filename
 
             for model_idx, (model_name, data) in enumerate(models_data.items()):
                 model_plot_color = model_plot_colors[model_idx]
@@ -714,18 +614,18 @@ def _generate_total_scores_plots(
                 # re-name & create x_int list, s.t. np.arrays are plottet against each other
                 x_ticks = ltr_sorted
                 x_int = list(range(len(ltr_sorted)))
-                
+
                 # extract header from data & create title
                 header = data[ltr_sorted[-1]]["header"]
-                start_date = datetime.strptime(header['Start time'][0], "%Y-%m-%d")
-                end_date  = datetime.strptime(header['End time'][0], "%Y-%m-%d")
+                start_date = datetime.strptime(header["Start time"][0], "%Y-%m-%d")
+                end_date = datetime.strptime(header["End time"][0], "%Y-%m-%d")
 
                 if start_date < total_start_date:
-                    total_start_date=start_date
+                    total_start_date = start_date
 
                 if end_date > total_end_date:
-                    total_end_date=end_date
-                
+                    total_end_date = end_date
+
                 unit = header["Unit"][0]
                 # get ax, to add plot to
                 ax = subplot_axes[idx % 4]
@@ -772,13 +672,13 @@ def _generate_total_scores_plots(
                         fillstyle="none",
                         label=f"{scores[1].upper()}",
                     )
-                    sub_plot_legend = ax.legend(scores,loc="best", markerscale = 0.9)
+                    sub_plot_legend = ax.legend(scores, loc="best", markerscale=0.9)
                     # make lines in the legend always black
                     for line in sub_plot_legend.get_lines():
                         line.set_color("black")
 
                 else:
-                    filename_ext= f"{score}_"
+                    filename_ext = f"{score}_"
                     # plot single score on sub-plot
                     _set_ylim(param=param, score=score, ax=ax, debug=debug)
                     y = []
@@ -795,31 +695,28 @@ def _generate_total_scores_plots(
                         fillstyle="none",
                         label=f"{score.upper()}",
                     )
-                
-                if model_idx==0:
-                    filename+= filename_ext
+
+            filename += filename_ext
 
             # customise grid, title, xticks, legend of current ax
             _customise_ax(
                 parameter=parameter, score=score, x_ticks=x_ticks, grid=True, ax=ax
             )
 
-            model_info = (
-                    ""
-                    if len(model_versions) > 1
-                    else f"Model: {header['Model version'][0]} | \n"
-                )
-            footer = (
-                model_info
-                + f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
-            )
-
-        
+        model_info = (
+            ""
+            if len(model_versions) > 1
+            else f"Model: {header['Model version'][0]} | \n"
+        )
+        footer = (
+            model_info
+            + f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
+        )
 
         # save figure, if this is the last score
         if idx == len(regular_scores) - 1:
             # add title to figure
-            plt.suptitle(
+            fig.suptitle(
                 footer,
                 horizontalalignment="center",
                 verticalalignment="top",
@@ -831,5 +728,4 @@ def _generate_total_scores_plots(
             )
             # clear empty subplots
             _clear_empty_axes(subplot_axes=subplot_axes, idx=idx)
-            # save & clear figure
-            _save_figure(output_dir=output_dir, filename=filename)
+            fig.savefig(f"{output_dir}/{filename[:-1]}.png")
