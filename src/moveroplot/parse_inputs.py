@@ -2,6 +2,7 @@
 """Parse raw data from ATAB files into data frame."""
 # Standard library
 from pprint import pprint
+import re
 
 
 def _parse_inputs(
@@ -14,9 +15,6 @@ def _parse_inputs(
     plot_cat_params,
     plot_cat_thresh,
     plot_cat_scores,
-    plot_ens_params,
-    plot_ens_thresh,
-    plot_ens_scores,
 ):
     """Parse the user input flags.
 
@@ -50,10 +48,11 @@ def _parse_inputs(
     plot_setup = dict()
 
     # Check if the model versions are in the input dir
+    all_model_versions = re.split(r'[,/]', model_versions)
     model_versions_inputs = model_versions.split(",")
     model_directories = set([x.name for x in input_dir.iterdir() if x.is_dir()])
-    if not set(model_versions_inputs).issubset(model_directories):
-        not_in_dir = set(model_versions_inputs) - model_directories
+    if not set(all_model_versions).issubset(model_directories):
+        not_in_dir = set(all_model_versions) - model_directories
         raise ValueError(
             f"""The model version inputs {list(not_in_dir)} do not exist in the directory {input_dir}."""
         )
@@ -100,17 +99,11 @@ def _parse_inputs(
             ","
         )  # categorical scores: FBI,MF,POD,FAR,THS,ETS
         cat_threshs = plot_cat_thresh.split(":")
+        print("PPPP ", plot_cat_params, plot_cat_scores, cat_scores)
         # categorical thresholds: 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,
         # 25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
         cat_params_dict = {cat_param: [] for cat_param in cat_params}
         for param, threshs in zip(cat_params, cat_threshs):
-            # first append all scores w/o thresholds to parameter
-            for score in plot_scores.split(","):
-                if "/" in score:
-                    cat_params_dict[param].append(score.split("/"))
-                else:
-                    cat_params_dict[param].append([score])
-
             # append all scores with a threshold in their name to current to parameter
             thresholds = threshs.split(",")
             for threshold in thresholds:
@@ -125,12 +118,15 @@ def _parse_inputs(
         if debug:
             print("Categorical Parameter Dict: ")
             pprint(cat_params_dict)
-
     plot_setup["parameter"] = {
-        **regular_params_dict,
-        **cat_params_dict,
-        **ens_params_dict,
+        key: {
+            "regular_scores": regular_params_dict.get(key, []),
+            "cat_scores": cat_params_dict.get(key, []),
+            "ens_scores": ens_params_dict.get(key, []),
+        }
+        for key in regular_params_dict
     }
+
     if not plot_setup["parameter"]:
         raise IOError("Invalid Input: parameter and/or scores are missing.")
 

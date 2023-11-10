@@ -67,6 +67,8 @@ from .main import main
     "--input_dir",
     type=click.Path(exists=True),
     default=Path("/scratch/osm/movero/wd/2021s4"),
+    #default=Path("/scratch/kaufmann/movero/wd/2023s3_icon"),
+    
     help="Specify input directory.",
 )
 @click.option(
@@ -80,7 +82,7 @@ from .main import main
 @click.option(
     "--merge-models",
     type=bool,
-    default=True,
+    default=False,
     is_flag=True,
     help="Merge plots with the same parameter from different models.",
 )

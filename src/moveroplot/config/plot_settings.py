@@ -11,3 +11,5 @@ class PlotSettings:
     ]
 
     line_styles: list[str] = ["-", ":", "--", "-."]
+
+    marker_styles: list[str] = ["D", "^", "o", "v"]

@@ -120,8 +120,9 @@ def main(
     time_scores = False
     daytime_scores = False
     total_scores = True
+
     # 0. PARSE USER INPUT
-    print("in MAIN ", plot_params)
+    print("in MAIN ", plot_params, plot_ens_params, plot_ens_scores)
     plot_setup = _parse_inputs(
         debug,
         input_dir,
@@ -132,9 +133,6 @@ def main(
         plot_cat_params,
         plot_cat_thresh,
         plot_cat_scores,
-        plot_ens_params,
-        plot_ens_thresh,
-        plot_ens_scores,
     )
     plot_models_setup = list()
     model_versions_inputs = model_versions.split(",")
