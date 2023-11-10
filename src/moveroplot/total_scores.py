@@ -104,8 +104,6 @@ def collect_relevant_files(
 # pylint: disable=pointless-string-statement,too-many-arguments,too-many-locals
 def _total_scores_pipeline(
     plot_setup,
-    plot_scores,
-    plot_params,
     plot_cat_scores,
     plot_cat_params,
     plot_cat_thresh,
@@ -113,8 +111,6 @@ def _total_scores_pipeline(
     file_postfix,
     input_dir,
     output_dir,
-    model_versions,
-    grid,
     debug,
 ) -> None:
     # pylint: disable=line-too-long
@@ -146,7 +142,7 @@ def _total_scores_pipeline(
                 input_dir, file_prefix, file_postfix, debug, model_plots, parameter
             )
             _generate_total_scores_plots(
-                plot_scores2=scores,
+                plot_scores=scores,
                 models_data=model_data,
                 parameter=parameter,
                 plot_cat_scores=plot_cat_scores,
@@ -243,7 +239,7 @@ def _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores_setup,
     fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
     for idx, score_setup in enumerate(plot_scores_setup):
         for model_idx, data in enumerate(models_data.values()):
-            model_plot_color = PlotSettings.linecolors[model_idx]
+            model_plot_color = PlotSettings.modelcolors[model_idx]
             # sorted lead time ranges
             ltr_sorted = sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))
             x_int = list(range(len(ltr_sorted)))
@@ -306,43 +302,27 @@ def _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores_setup,
 
 
 def _generate_total_scores_plots(
-    plot_scores2,
+    plot_scores,
     models_data,
     parameter,
-    plot_cat_scores,
-    plot_cat_params,
-    plot_cat_thresh,
     output_dir,
     debug,
 ):
-    print("OKEFF ", plot_scores2)
-    model_plot_colors = PlotSettings.linecolors
-    score_linestyles = PlotSettings.line_styles
+    """Generate Total Scores Plot."""
+    model_plot_colors = PlotSettings.modelcolors
     model_versions = list(models_data.keys())
     custom_lines = [
         Line2D([0], [0], color=model_plot_colors[i], lw=2)
         for i in range(len(model_versions))
     ]
-
-    """Generate Total Scores Plot."""
-    if debug:
-        print("--- starting plotting pipeline")
-        print("---\t1) map parameter (i.e. TD_2M_KAL --> TD_2M*)")
-
     # get correct parameter, i.e. if parameter=T_2M_KAL --> param=T_2M*
     param = check_params(
         param=parameter, verbose=False
     )
 
-    if debug:
-        print("---\t2) check if output_dir exists (& create it if necessary)")
-
     # check (&create) output directory
     if not Path(output_dir).exists():
         Path(output_dir).mkdir(parents=True, exist_ok=True)
-
-    if debug:
-        print("---\t3) initialise figure with a 2x2 subplots grid")
 
     # initialise filename
     base_filename = (
@@ -350,7 +330,6 @@ def _generate_total_scores_plots(
         if len(model_versions) == 1
         else f"total_scores_{parameter}_"
     )
-    filename = base_filename
 
     headers = [
         data[sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))[-1]][
@@ -376,6 +355,6 @@ def _generate_total_scores_plots(
     )
     
     #plot regular scores
-    _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores2["regular_scores"],sup_title, models_data,custom_lines, debug = False)
+    _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores["regular_scores"],sup_title, models_data,custom_lines, debug = False)
     #plot categorial scores
-    _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores2['cat_scores'],sup_title, models_data,custom_lines, debug = False)
+    _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores['cat_scores'],sup_title, models_data,custom_lines, debug = False)

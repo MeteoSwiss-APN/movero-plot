@@ -52,15 +52,6 @@ from .main import main
 # 15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
 @click.option("--plot_cat_scores", type=str, help="Specify categorical scores to plot.")
 # FBI,MF,POD,FAR,THS,ETS
-@click.option(
-    "--plot_ens_params", type=str, help="Specify ens parameters to plot."
-)  # TODO: figure out what ens params are
-@click.option(
-    "--plot_ens_thresh", type=str, help="Specify ens scores thresholds to plot."
-)  # TODO: figure out what ens thresh are
-@click.option(
-    "--plot_ens_scores", type=str, help="Specify ens scores thresholds to plot."
-)  # TODO: figure out what ens scores are
 # C-1E-CTR_ch
 # 🔰 new options for plot_synop call
 @click.option(
@@ -77,15 +68,11 @@ from .main import main
     default=Path("plots"),
     help="Specify output directory. Def: plots",
 )
+@click.option(
+    "--plotcolors", type=str, help="Specify the plot color for each model version using matploblib's color coding"
+)
 @click.option("--relief", type=bool, is_flag=True, help="Add relief to maps.")
 @click.option("--grid", type=bool, is_flag=True, help="Add grid to plots.")
-@click.option(
-    "--merge-models",
-    type=bool,
-    default=False,
-    is_flag=True,
-    help="Merge plots with the same parameter from different models.",
-)
 @click.pass_context
 def cli(ctx: Context, **kwargs) -> None:
     """Console script for test_cli_project."""

@@ -1,5 +1,5 @@
 class PlotSettings:
-    linecolors: list[str] = [
+    modelcolors: list[str] = [
         "black",
         "red",
         "blue",
