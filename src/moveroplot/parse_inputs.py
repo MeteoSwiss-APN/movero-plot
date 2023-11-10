@@ -3,18 +3,19 @@
 # Standard library
 from pprint import pprint
 import re
+from .config.plot_settings import PlotSettings
 
 
 def _parse_inputs(
     debug,
     input_dir,
     model_versions,
-    merge_models,
     plot_params,
     plot_scores,
     plot_cat_params,
     plot_cat_thresh,
     plot_cat_scores,
+    plotcolors,
 ):
     """Parse the user input flags.
 
@@ -49,26 +50,26 @@ def _parse_inputs(
 
     # Check if the model versions are in the input dir
     all_model_versions = re.split(r'[,/]', model_versions)
-    model_versions_inputs = model_versions.split(",")
     model_directories = set([x.name for x in input_dir.iterdir() if x.is_dir()])
     if not set(all_model_versions).issubset(model_directories):
         not_in_dir = set(all_model_versions) - model_directories
         raise ValueError(
             f"""The model version inputs {list(not_in_dir)} do not exist in the directory {input_dir}."""
         )
-    # parse model version input to the plot setup
-    plot_models_setup = list()
-    if merge_models:
-        plot_models_setup.append(model_versions_inputs)
-    else:
-        plot_models_setup.extend([[model] for model in model_versions_inputs])
-
+    
+    if plotcolors:
+        color_list = plotcolors.split(",")
+        if len(color_list) < len(all_model_versions):
+            raise ValueError(f"""
+            The input length --plotcolor is smaller than the number of models to plot ({len(color_list)} < {len(all_model_versions)})
+            """)
+        PlotSettings.modelcolors = color_list
+    plot_models_setup = [model_combinations.split("/") for model_combinations in model_versions.split(",")]
     plot_setup["model_versions"] = plot_models_setup
 
     # initialise empty dictionaries
     regular_params_dict = {}
     cat_params_dict = {}
-    ens_params_dict = {}
 
     plot_setup["parameter"] = None
 
@@ -122,7 +123,6 @@ def _parse_inputs(
         key: {
             "regular_scores": regular_params_dict.get(key, []),
             "cat_scores": cat_params_dict.get(key, []),
-            "ens_scores": ens_params_dict.get(key, []),
         }
         for key in regular_params_dict
     }
