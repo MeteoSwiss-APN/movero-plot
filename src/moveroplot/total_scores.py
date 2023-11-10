@@ -191,13 +191,13 @@ def _customise_ax(parameter, scores, x_ticks, grid, ax):
     skip_indices = slice(None, None, steps) if steps > 0 else slice(None)
     ax.set_xticks(range(len(x_ticks))[skip_indices], x_ticks[skip_indices])
     ax.autoscale(axis="y")
-    
 
 
 def _clear_empty_axes_if_necessary(subplot_axes, idx):
     # remove empty ``axes`` instances
     if (idx + 1) % 4 != 0:
         [ax.axis("off") for ax in subplot_axes[(idx + 1) % 4 :]]
+
 
 def _initialize_plots(lines: list[Line2D], labels: list):
     fig, ((ax0, ax1), (ax2, ax3)) = plt.subplots(
@@ -213,21 +213,32 @@ def _initialize_plots(lines: list[Line2D], labels: list):
     plt.tight_layout(w_pad=8, h_pad=3, rect=[0.05, 0.05, 0.90, 0.90])
     return fig, [ax0, ax1, ax2, ax3]
 
-def _save_figure(output_dir,filename,title,fig,axes,idx):
+
+def _save_figure(output_dir, filename, title, fig, axes, idx):
     fig.suptitle(
-                title,
-                horizontalalignment="center",
-                verticalalignment="top",
-                fontdict={
-                    "size": 6,
-                    "color": "k",
-                },
-                bbox={"facecolor": "none", "edgecolor": "grey"},
-            )
-    _clear_empty_axes_if_necessary(axes,idx)
+        title,
+        horizontalalignment="center",
+        verticalalignment="top",
+        fontdict={
+            "size": 6,
+            "color": "k",
+        },
+        bbox={"facecolor": "none", "edgecolor": "grey"},
+    )
+    _clear_empty_axes_if_necessary(axes, idx)
     fig.savefig(f"{output_dir}/{filename[:-1]}.png")
 
-def _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores_setup,sup_title, models_data,models_color_lines, debug = False):
+
+def _plot_and_save_scores(
+    output_dir,
+    base_filename,
+    parameter,
+    plot_scores_setup,
+    sup_title,
+    models_data,
+    models_color_lines,
+    debug=False,
+):
     filename = base_filename
     fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
     for idx, score_setup in enumerate(plot_scores_setup):
@@ -242,7 +253,7 @@ def _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores_setup,
             unit = header["Unit"][0]
             # get ax, to add plot to
             ax = subplot_axes[idx % 4]
-            #ax.set_xlim(x_int[0], x_int[-1])
+            # ax.set_xlim(x_int[0], x_int[-1])
             y_label = ",".join(score_setup)
             ax.set_ylabel(f"{y_label.upper()} ({unit})")
 
@@ -251,7 +262,7 @@ def _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores_setup,
                     f"Maximum two scores are allowed in one plot. Got {len(score_setup)}"
                 )
             for score_idx, score in enumerate(score_setup):
-                if model_idx==0:
+                if model_idx == 0:
                     filename += f"{score}_"
                 _set_ylim(param=parameter, score=score_setup[0], ax=ax, debug=debug)
                 y_values = [
@@ -270,11 +281,15 @@ def _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores_setup,
 
             # Generate a legend if two scores in one subplot
             if len(score_setup) > 1:
-                sub_plot_legend = ax.legend(score_setup, loc="upper right", markerscale=0.9, bbox_to_anchor=(1.35, 1.1))
+                sub_plot_legend = ax.legend(
+                    score_setup,
+                    loc="upper right",
+                    markerscale=0.9,
+                    bbox_to_anchor=(1.35, 1.1),
+                )
                 # make lines in the legend always black
                 for line in sub_plot_legend.get_lines():
                     line.set_color("black")
-            
 
         # customise grid, title, xticks, legend of current ax
         _customise_ax(
@@ -286,11 +301,13 @@ def _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores_setup,
         )
 
         # save filled figure & re-set necessary for next iteration
-        full_figure = idx > 0 and (idx+1) % 4 == 0
+        full_figure = idx > 0 and (idx + 1) % 4 == 0
         last_plot = idx == len(plot_scores_setup) - 1
         if full_figure or last_plot:
-            _save_figure(output_dir,filename,sup_title,fig,subplot_axes,idx)
-            fig,subplot_axes =  _initialize_plots(models_color_lines, models_data.keys())
+            _save_figure(output_dir, filename, sup_title, fig, subplot_axes, idx)
+            fig, subplot_axes = _initialize_plots(
+                models_color_lines, models_data.keys()
+            )
             filename = base_filename
 
 
@@ -309,9 +326,7 @@ def _generate_total_scores_plots(
         for i in range(len(model_versions))
     ]
     # get correct parameter, i.e. if parameter=T_2M_KAL --> param=T_2M*
-    param = check_params(
-        param=parameter, verbose=False
-    )
+    param = check_params(param=parameter, verbose=False)
 
     # check (&create) output directory
     if not Path(output_dir).exists():
@@ -346,8 +361,26 @@ def _generate_total_scores_plots(
         model_info
         + f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
     )
-    
-    #plot regular scores
-    _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores["regular_scores"],sup_title, models_data,custom_lines, debug = False)
-    #plot categorial scores
-    _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores['cat_scores'],sup_title, models_data,custom_lines, debug = False)
+
+    # plot regular scores
+    _plot_and_save_scores(
+        output_dir,
+        base_filename,
+        parameter,
+        plot_scores["regular_scores"],
+        sup_title,
+        models_data,
+        custom_lines,
+        debug=False,
+    )
+    # plot categorial scores
+    _plot_and_save_scores(
+        output_dir,
+        base_filename,
+        parameter,
+        plot_scores["cat_scores"],
+        sup_title,
+        models_data,
+        custom_lines,
+        debug=False,
+    )

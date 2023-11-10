@@ -49,22 +49,27 @@ def _parse_inputs(
     plot_setup = dict()
 
     # Check if the model versions are in the input dir
-    all_model_versions = re.split(r'[,/]', model_versions)
+    all_model_versions = re.split(r"[,/]", model_versions)
     model_directories = set([x.name for x in input_dir.iterdir() if x.is_dir()])
     if not set(all_model_versions).issubset(model_directories):
         not_in_dir = set(all_model_versions) - model_directories
         raise ValueError(
             f"""The model version inputs {list(not_in_dir)} do not exist in the directory {input_dir}."""
         )
-    
+
     if plotcolors:
         color_list = plotcolors.split(",")
         if len(color_list) < len(all_model_versions):
-            raise ValueError(f"""
+            raise ValueError(
+                f"""
             The input length --plotcolor is smaller than the number of models to plot ({len(color_list)} < {len(all_model_versions)})
-            """)
+            """
+            )
         PlotSettings.modelcolors = color_list
-    plot_models_setup = [model_combinations.split("/") for model_combinations in model_versions.split(",")]
+    plot_models_setup = [
+        model_combinations.split("/")
+        for model_combinations in model_versions.split(",")
+    ]
     plot_setup["model_versions"] = plot_models_setup
 
     # initialise empty dictionaries

@@ -58,8 +58,7 @@ from .main import main
     "--input_dir",
     type=click.Path(exists=True),
     default=Path("/scratch/osm/movero/wd/2021s4"),
-    #default=Path("/scratch/kaufmann/movero/wd/2023s3_icon"),
-    
+    # default=Path("/scratch/kaufmann/movero/wd/2023s3_icon"),
     help="Specify input directory.",
 )
 @click.option(
@@ -69,7 +68,9 @@ from .main import main
     help="Specify output directory. Def: plots",
 )
 @click.option(
-    "--plotcolors", type=str, help="Specify the plot color for each model version using matploblib's color coding"
+    "--plotcolors",
+    type=str,
+    help="Specify the plot color for each model version using matploblib's color coding",
 )
 @click.option("--relief", type=bool, is_flag=True, help="Add relief to maps.")
 @click.option("--grid", type=bool, is_flag=True, help="Add grid to plots.")
