@@ -1,13 +1,18 @@
 # pylint: skip-file
 # Standard library
-import datetime as dt
+from datetime import datetime
 from pathlib import Path
 from pprint import pprint
+from matplotlib.lines import Line2D
+import matplotlib.dates as mdates
 
 # Third-party
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import re
+
+from moveroplot.config.plot_settings import PlotSettings
 
 # Local
 # import datetime
@@ -15,6 +20,72 @@ from .utils.atab import Atab
 from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import cat_time_score_range
 from .utils.parse_plot_synop_ch import time_score_range
+
+
+def collect_relevant_files(
+    input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
+):
+    corresponding_files_dict = {}
+    extracted_model_data = {}
+    # for dbg purposes:
+    files_list = []
+    for model in model_plots:
+        source_path = Path(f"{input_dir}/{model}")
+        for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
+            if file_path.is_file():
+                ltr_match = re.search(r"(\d{2})-(\d{2})", file_path.name)
+                if ltr_match:
+                    lt_range = ltr_match.group()
+                else:
+                    raise IOError(
+                        f"The filename {file_path.name} does not contain a LT range."
+                    )
+
+                in_lt_ranges = True
+                print("LTR RANGES ", lt_range)
+                if lt_ranges:
+                    in_lt_ranges = lt_range in lt_ranges
+
+                if in_lt_ranges:
+                    print(lt_range, " IN ", lt_ranges)
+                    # extract header & dataframe
+                    loaded_Atab = Atab(file=file_path, sep=" ")
+
+                    header = loaded_Atab.header
+                    df = loaded_Atab.data
+                    # clean df
+                    df = df.replace(float(header["Missing value code"][0]), np.NaN)
+                    df["timestamp"] = pd.to_datetime(
+                        df[["YYYY", "MM", "DD", "hh", "mm"]]
+                        .astype(str)
+                        .agg("-".join, axis=1),
+                        format="%Y-%m-%d-%H-%M",
+                    )
+                    df.drop(
+                        ["YYYY", "MM", "DD", "hh", "mm", "lt_hh", "lt_mm"],
+                        axis=1,
+                        inplace=True,
+                    )
+                    # add information to dict
+                    print("MODELLLLLLL ", model)
+                    if lt_range not in corresponding_files_dict:
+                        corresponding_files_dict[lt_range] = {}
+
+                    corresponding_files_dict[lt_range][model] = {
+                        "header": header,
+                        "df": df,
+                    }
+
+                    # add path of file to list of relevant files
+                    files_list.append(file_path)
+
+    if debug:
+        print(f"\nFor parameter: {parameter} these files are relevant:\n")
+        pprint(files_list)
+
+    extracted_model_data = corresponding_files_dict
+    print("JKSNKD XC ", corresponding_files_dict["19-24"].keys())
+    return extracted_model_data
 
 
 # enter directory / read station_scores files / call plotting pipeline
@@ -25,8 +96,6 @@ def _time_scores_pipeline(
     file_postfix,
     input_dir,
     output_dir,
-    model_version,
-    grid,
     debug,
 ) -> None:
     """Read all ATAB files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>.
@@ -48,14 +117,43 @@ def _time_scores_pipeline(
 
     """  # noqa: E501
     print("---initialising time score pipeline")
+    print("PLOT SETUP IN TIME SCORES ", plot_setup)
+    if not lt_ranges:
+        lt_ranges = "19-24"
+
+    for model_plots in plot_setup["model_versions"]:
+        for parameter, scores in plot_setup["parameter"].items():
+            model_data = collect_relevant_files(
+                input_dir,
+                file_prefix,
+                file_postfix,
+                debug,
+                model_plots,
+                parameter,
+                lt_ranges,
+            )
+            print("MODEL DATA ", model_data.keys())
+
+            _generate_timeseries_plots(
+                plot_scores=scores,
+                models_data=model_data,
+                parameter=parameter,
+                output_dir=output_dir,
+                debug=debug,
+            )
+
+    return
     for lt_range in lt_ranges:
+        return
+
         for parameter in plot_setup:
             # retrieve list of scores, relevant for current parameter
             scores = plot_setup[parameter]  # this scores is a list of lists
 
             # define path to the file of current parameter (station_score atab file)
             file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
-            path = Path(f"{input_dir}/{model_version}/{file}")
+            print("FILE", file)
+            path = Path(f"{input_dir}/{model_versions}/{file}")
 
             # check if the file exists
             if not path.exists():
@@ -148,6 +246,8 @@ def _time_scores_pipeline(
                     f"""Generating plot for {parameter} for
                     lt_range: {lt_range}. (File: {file})"""
                 )
+
+            return
             # for each score in df, create one map
             _generate_timeseries_plot(
                 data=df,
@@ -163,165 +263,231 @@ def _time_scores_pipeline(
             )
 
 
-# PLOTTING PIPELINE FOR TIME SCORES PLOTS
+def _clear_empty_axes_if_necessary(subplot_axes, idx):
+    # remove empty ``axes`` instances
+    print("IDC ", idx)
+    if idx % 2 != 1:
+        [ax.axis("off") for ax in subplot_axes[(idx + 1) % 2 :]]
 
 
-def _generate_timeseries_plot(
-    data,
-    multiplots,
-    lt_range,
-    variable,
-    file,
-    file_postfix,
-    header_dict,
+def _save_figure(output_dir, filename, title, fig, axes, idx):
+    fig.suptitle(
+        title,
+        horizontalalignment="center",
+        verticalalignment="top",
+        fontdict={
+            "size": 6,
+            "color": "k",
+        },
+        bbox={"facecolor": "none", "edgecolor": "grey"},
+    )
+    _clear_empty_axes_if_necessary(axes, idx)
+    fig.savefig(f"{output_dir}/{filename[:-1]}.png")
+
+
+def _initialize_plots(labels: list):
+    fig, ((ax0), (ax1)) = plt.subplots(
+        nrows=2, ncols=1, tight_layout=True, figsize=(10, 10), dpi=200
+    )
+    custom_lines = [
+        Line2D([0], [0], color=PlotSettings.modelcolors[i], lw=2)
+        for i in range(len(labels))
+    ]
+    print("LABNELS ", labels)
+    fig.legend(
+        custom_lines,
+        labels,
+        loc="upper right",
+        ncol=1,
+        frameon=False,
+    )
+    plt.tight_layout(w_pad=8, h_pad=5, rect=[0.05, 0.05, 0.90, 0.90])
+    return fig, [ax0, ax1]
+
+
+# PLOTTING PIPELINE FOR TOTAL SCORES PLOTS
+def _set_ylim(param, score, ax, debug):  # pylint: disable=unused-argument
+    # define limits for yaxis if available
+    regular_param = (param, "min") in total_score_range.columns
+    regular_scores = score in total_score_range.index
+
+    if regular_param and regular_scores:
+        lower_bound = total_score_range[param]["min"].loc[score]
+        upper_bound = total_score_range[param]["max"].loc[score]
+        # if debug:
+        #     print(
+        #         f"found limits for {param}/{score} --> {lower_bound}/{upper_bound}"
+        # )
+        if lower_bound != upper_bound:
+            ax.set_ylim(lower_bound, upper_bound)
+
+    # TODO: add computation of y-lims for cat & ens scores
+
+
+def _customise_ax(parameter, scores, x_ticks, grid, ax):
+    """Apply cosmetics to current ax.
+
+    Args:
+        parameter (str): current parameter
+        score (str): current score
+        x_ticks (list): list of x-ticks labels (lead time ranges, as strings)
+        grid (bool): add grid to ax
+        ax (Axes): current ax
+
+    """
+    if grid:
+        ax.grid(which="major", color="#DDDDDD", linewidth=0.8)
+        ax.grid(which="minor", color="#EEEEEE", linestyle=":", linewidth=0.5)
+        ax.minorticks_on()
+
+    ax.tick_params(axis="both", which="major", labelsize=8)
+    ax.tick_params(axis="both", which="minor", labelsize=6)
+    ax.set_title(f"{parameter}: {','.join(scores)}")
+    ax.set_xlabel("Lead-Time Range (h)")
+    # plotting too many data on the x-axis
+    steps = len(x_ticks) // 7
+    skip_indices = slice(None, None, steps) if steps > 0 else slice(None)
+    ax.set_xticks(range(len(x_ticks))[skip_indices], x_ticks[skip_indices])
+    ax.autoscale(axis="y")
+
+
+def _plot_and_save_scores(
     output_dir,
-    grid,
+    base_filename,
+    parameter,
+    plot_scores_setup,
+    sup_title,
+    ltr_models_data,
+    debug=False,
+):
+    
+    print("PARAMETER ", parameter)
+    
+    for ltr, models_data in ltr_models_data.items():
+        fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys()
+        )
+        headers = [data['header'] for data in models_data.values()
+        ]
+        total_start_date = min([datetime.strptime(" ".join(header['Start time'][0:3:2]), "%Y-%m-%d %H:%M") for header in headers])
+        total_end_date = max([datetime.strptime(" ".join(header['End time'][0:2]), "%Y-%m-%d %H:%M") for header in headers])
+        #total_end_date = max([header['End time'] for header in headers])
+        print("JKDMNSDN D", total_end_date)
+        title_base = f"{parameter.upper()}: "
+        model_info = f" {list(models_data.keys())[0]}" if len(models_data.keys()) == 1 else ""        
+        x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")} """
+        filename = base_filename
+        for idx, score_setup in enumerate(plot_scores_setup):
+            title = title_base + ",".join(score_setup) + model_info
+            print("LTR LTR LTR ", base_filename)
+            ax = subplot_axes[idx % 2]
+            print("SCORE SETUP ", score_setup, ltr_models_data.keys(), models_data.keys())
+            for model_idx, data in enumerate(models_data.values()):
+                model_plot_color = PlotSettings.modelcolors[model_idx]
+                header = data["header"]
+                unit = header["Unit"][0]
+                x_int = data["df"][["timestamp"]]
+                y_label = ",".join(score_setup)
+                ax.set_ylabel(f"{y_label.upper()} ({unit})")
+                ax.set_xlabel(x_label_base + ltr)
+                ax.set_title(title)
+                for score_idx, score in enumerate(score_setup):
+                    score_values = data["df"][[score]]
+                    ax.plot(
+                        np.asarray(x_int, dtype="datetime64[s]"),
+                        score_values,
+                        color=model_plot_color,
+                        linestyle=PlotSettings.line_styles[score_idx],
+                        fillstyle="none",
+                        label=f"{score.upper()}",
+                    )
+                    ax.tick_params(axis="both", which="major", labelsize=8)
+                    ax.tick_params(axis="both", which="minor", labelsize=6)
+                    ax.autoscale(axis="y")
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d\n%H:%M"))
+            print("LALALA ", score_setup)
+            if len(score_setup) > 1:
+                sub_plot_legend = ax.legend(
+                    score_setup,
+                    loc="upper right",
+                    markerscale=0.9,
+                    bbox_to_anchor=(1.1, 1.05),
+                )
+                for line in sub_plot_legend.get_lines():
+                        line.set_color("black")
+            filename += "_"+"_".join(score_setup)
+
+            if idx % 2 == 1 or idx == len(plot_scores_setup)-1:
+                _clear_empty_axes_if_necessary(subplot_axes,idx)
+                fig.savefig(f"{output_dir}/{filename}.png")
+                filename = base_filename
+                fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
+
+                    
+        
+            
+
+
+# PLOTTING PIPELINE FOR TIME SCORES PLOTS
+def _generate_timeseries_plots(
+    plot_scores,
+    models_data,
+    parameter,
+    output_dir,
     debug,
 ):
-    """Generate Timeseries Plot."""
-    # output_dir = f"{output_dir}/time_scores"
-    if not Path(output_dir).exists():
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
-    # print(f"creating plots for file: {file}")
-    # extract scores, which are available in the dataframe (data)
-    # for each score
-    scores = data.columns.tolist()
-    scores.remove("timestamp")
+    model_plot_colors = PlotSettings.modelcolors
+    model_versions = list(models_data.keys())
+    
 
-    # define limits for plot (start, end time specified in header)
-    start = dt.datetime.strptime(
-        header_dict["Start time"][0] + " " + header_dict["Start time"][2],
-        "%Y-%m-%d %H:%M",
+    # initialise filename
+    base_filename = (
+        f"time_scores_{model_versions[0]}_{parameter}"
+        if len(model_versions) == 1
+        else f"time_scores_{parameter}"
     )
-    end = dt.datetime.strptime(
-        header_dict["End time"][0] + " " + header_dict["End time"][1], "%Y-%m-%d %H:%M"
+    '''
+    headers = [
+        data[sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))[-1]][
+            "header"
+        ]
+        for data in models_data.values()
+    ]
+
+    total_start_date = min(
+        datetime.strptime(header["Start time"][0], "%Y-%m-%d") for header in headers
     )
-    unit = header_dict["Unit"][0]
 
-    # this variable, remembers if a score has been added to another plot.
-    # for example in the multiplots dict
-    # when plotting MMOD, MOBS will also be added to the plot
-    # and does not need to be plotted again.
-    score_to_skip = None
-    for score in scores:
-        if score == score_to_skip:
-            continue
+    total_end_date = max(
+        datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
+    )
 
-        param = header_dict["Parameter"][0]
-        # param = TD_2M_KAL
-        param = check_params(
-            param=param, verbose=debug
-        )  # TODO: replace param w/ variable
-        # param = TD_2M*
-        print(f"plotting:\t{param}/{score}")
+    model_info = (
+        "" if len(model_versions) > 1 else f"Model: {headers[0]['Model version'][0]} | \n"
+    )
+    sup_title = (
+        model_info
+        + f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
+    )
+    '''
+    sup_title = ""
+    print("Plot Scores ", plot_scores)
+    # plot regular scores
+    _plot_and_save_scores(
+        output_dir,
+        base_filename,
+        parameter,
+        plot_scores["regular_scores"],
+        sup_title,
+        models_data,
+        debug=False,
+    )
 
-        multiplt = False
-        title = f"{variable}: {score}"  # 'variable' is the full parameter name.
-        footer = f"""Model: {header_dict['Model version'][0]} |
-        Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]}
-        ({lt_range}) | © MeteoSwiss"""
-        # initialise figure/axes instance
-        fig, ax = plt.subplots(
-            1, 1, figsize=(245 / 10, 51 / 10), dpi=150, tight_layout=True
-        )
-
-        ax.set_xlim(start, end)
-        ax.set_ylabel(f"{score.upper()} ({unit})")
-
-        if grid:
-            ax.grid(visible=True)
-
-        if debug:
-            print(f"Extract dataframe for score: {score}")
-            pprint(data)
-
-        x = data["timestamp"].values
-        y = data[score].values
-
-        if score in multiplots.keys():
-            y2 = data[multiplots[score]].values
-            multiplt = True
-            score_to_skip = multiplots[score]
-            title = f"{variable}: {score}/{multiplots[score]}"
-            ax.set_ylabel(f"{score.upper()}/{multiplots[score].upper()} ({unit})")
-
-        # plot dashed line @ 0
-        ax.plot(x, [0] * len(x), color="grey", linestyle="--")
-
-        # define limits for yaxis if available
-        regular_param = (param, "min") in time_score_range.columns
-        regular_score = score in time_score_range.index
-        cat_score = not regular_score
-
-        if regular_param and regular_score:
-            lower_bound = time_score_range[param]["min"].loc[score]
-            upper_bound = time_score_range[param]["max"].loc[score]
-            if debug:
-                print(
-                    f"found limits for {param}/{score} --> {lower_bound}/{upper_bound}"
-                )
-            if lower_bound != upper_bound:
-                ax.set_ylim(lower_bound, upper_bound)
-
-        if cat_score:
-            # get the index of the current score
-            index = cat_time_score_range[
-                cat_time_score_range[param]["scores"] == score
-            ].index.values[0]
-            # get min/max value
-            lower_bound = cat_time_score_range[param]["min"].iloc[index]
-            upper_bound = cat_time_score_range[param]["max"].iloc[index]
-            if debug:
-                print(
-                    f"found limits for {param}/{score} --> {lower_bound}/{upper_bound}"
-                )
-            if lower_bound != upper_bound:
-                ax.set_ylim(lower_bound, upper_bound)
-
-        label = f"{score.upper()}"
-        if not multiplt:
-            ax.plot(
-                x,
-                y,
-                color="k",
-                linestyle="-",
-                label=label,
-            )
-        if multiplt:
-            ax.plot(
-                x,
-                y,
-                color="red",
-                linestyle="-",
-                label=label,
-            )
-            label = f"{multiplots[score].upper()}"
-            ax.plot(
-                x,
-                y2,
-                color="k",
-                linestyle="-",
-                label=label,
-            )
-            # change title, y-axis label, filename here, for the multiplot case
-
-        plt.legend()
-
-        plt.suptitle(
-            footer,
-            x=0.0215,
-            y=0.908,
-            horizontalalignment="left",
-            verticalalignment="top",
-            fontdict={
-                "size": 6,
-                "color": "k",
-            },
-        )
-        ax.set_title(label=title)
-
-        print(f"saving:\t\t{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
-        plt.savefig(f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
-        plt.close(fig)
-
-    return
+    _plot_and_save_scores(
+        output_dir,
+        base_filename,
+        parameter,
+        plot_scores["cat_scores"],
+        sup_title,
+        models_data,
+        debug=False,
+    )

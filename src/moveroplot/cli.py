@@ -31,8 +31,7 @@ from .main import main
 @click.option(
     "--lt_ranges",
     type=str,
-    multiple=True,
-    default=("19-24",),
+    # multiple=True,
     help="Specify the lead time ranges of interest. Def: 19-24",
 )
 @click.option("--plot_params", type=str, help="Specify parameters to plot.")
@@ -57,7 +56,7 @@ from .main import main
 @click.option(
     "--input_dir",
     type=click.Path(exists=True),
-    default=Path("/scratch/osm/movero/wd/2021s4"),
+    default=Path("/scratch/osm/movero/wd/2022s4"),
     # default=Path("/scratch/kaufmann/movero/wd/2023s3_icon"),
     help="Specify input directory.",
 )

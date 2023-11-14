@@ -105,7 +105,6 @@ def _parse_inputs(
             ","
         )  # categorical scores: FBI,MF,POD,FAR,THS,ETS
         cat_threshs = plot_cat_thresh.split(":")
-        print("PPPP ", plot_cat_params, plot_cat_scores, cat_scores)
         # categorical thresholds: 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,
         # 25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
         cat_params_dict = {cat_param: [] for cat_param in cat_params}
@@ -131,7 +130,6 @@ def _parse_inputs(
         }
         for key in regular_params_dict
     }
-
     if not plot_setup["parameter"]:
         raise IOError("Invalid Input: parameter and/or scores are missing.")
 

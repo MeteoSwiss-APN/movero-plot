@@ -32,7 +32,7 @@ plt.rcParams.update(
 
 
 def collect_relevant_files(
-    input_dir, file_prefix, file_postfix, debug, model_plots, parameter
+    input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
 ):
     """Collect all data from each model.
 
@@ -59,7 +59,6 @@ def collect_relevant_files(
         corresponding_files_dict = {}
         for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
             if file_path.is_file():
-                # lt_range = key for corresponding_files_dict
                 ltr_match = re.search(r"(\d{2})-(\d{2})", file_path.name)
                 if ltr_match:
                     lt_range = ltr_match.group()
@@ -68,35 +67,34 @@ def collect_relevant_files(
                         f"The filename {file_path.name} does not contain a LT range."
                     )
 
-                # extract header & dataframe
-                loaded_Atab = Atab(file=file_path, sep=" ")
-                header = loaded_Atab.header
-                df = loaded_Atab.data
+                in_lt_ranges = True
+                if lt_ranges:
+                    in_lt_ranges = lt_range in lt_ranges
 
-                # clean df
-                df = df.replace(float(header["Missing value code"][0]), np.NaN)
+                if in_lt_ranges:
+                    # extract header & dataframe
+                    loaded_Atab = Atab(file=file_path, sep=" ")
+                    header = loaded_Atab.header
+                    df = loaded_Atab.data
 
-                df.set_index(keys="Score", inplace=True)
+                    # clean df
+                    df = df.replace(float(header["Missing value code"][0]), np.NaN)
+                    df.set_index(keys="Score", inplace=True)
+                    # add information to dict
+                    corresponding_files_dict[lt_range] = {
+                        # 'path':file_path,
+                        "header": header,
+                        "df": df,
+                    }
 
-                # add information to dict
-                corresponding_files_dict[lt_range] = {
-                    # 'path':file_path,
-                    "header": header,
-                    "df": df,
-                }
-
-                # add path of file to list of relevant files
-                files_list.append(file_path)
+                    # add path of file to list of relevant files
+                    files_list.append(file_path)
         extracted_model_data[model] = corresponding_files_dict
     if debug:
         print(f"\nFor parameter: {parameter} these files are relevant:\n")
         pprint(files_list)
-        print(
-            f"""\nFiles have been parsed & combined in the 'corresponding_files_dict'.
-            Each key (lt-range) has a subdict with two keys:
-            {corresponding_files_dict['19-24'].keys()}\n"""  # noqa: E501
-        )
 
+    # print("EXTRACTED MODEL DATA IN TOTAL SCORES ", extracted_model_data)
     return extracted_model_data
 
 
@@ -104,6 +102,7 @@ def collect_relevant_files(
 # pylint: disable=pointless-string-statement,too-many-arguments,too-many-locals
 def _total_scores_pipeline(
     plot_setup,
+    lt_ranges,
     file_prefix,
     file_postfix,
     input_dir,
@@ -136,7 +135,13 @@ def _total_scores_pipeline(
         for parameter, scores in plot_setup["parameter"].items():
             model_data = {}
             model_data = collect_relevant_files(
-                input_dir, file_prefix, file_postfix, debug, model_plots, parameter
+                input_dir,
+                file_prefix,
+                file_postfix,
+                debug,
+                model_plots,
+                parameter,
+                lt_ranges,
             )
             _generate_total_scores_plots(
                 plot_scores=scores,
@@ -187,9 +192,11 @@ def _customise_ax(parameter, scores, x_ticks, grid, ax):
     ax.set_title(f"{parameter}: {','.join(scores)}")
     ax.set_xlabel("Lead-Time Range (h)")
     # plotting too many data on the x-axis
-    steps = len(x_ticks) // 7
+    steps = len(x_ticks) // 5
     skip_indices = slice(None, None, steps) if steps > 0 else slice(None)
     ax.set_xticks(range(len(x_ticks))[skip_indices], x_ticks[skip_indices])
+    print("LEN C C", len(x_ticks))
+    # ax.tick_params(axis="x")
     ax.autoscale(axis="y")
 
 
@@ -265,10 +272,7 @@ def _plot_and_save_scores(
                 if model_idx == 0:
                     filename += f"{score}_"
                 _set_ylim(param=parameter, score=score_setup[0], ax=ax, debug=debug)
-                y_values = [
-                    data[ltr]["df"]["Total"].loc[score_setup[score_idx]]
-                    for ltr in ltr_sorted
-                ]
+                y_values = [data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted]
                 ax.plot(
                     x_int,
                     y_values,
@@ -285,7 +289,7 @@ def _plot_and_save_scores(
                     score_setup,
                     loc="upper right",
                     markerscale=0.9,
-                    bbox_to_anchor=(1.35, 1.1),
+                    bbox_to_anchor=(1.35, 1.05),
                 )
                 # make lines in the legend always black
                 for line in sub_plot_legend.get_lines():
@@ -328,10 +332,6 @@ def _generate_total_scores_plots(
     # get correct parameter, i.e. if parameter=T_2M_KAL --> param=T_2M*
     param = check_params(param=parameter, verbose=False)
 
-    # check (&create) output directory
-    if not Path(output_dir).exists():
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
-
     # initialise filename
     base_filename = (
         f"total_scores_{model_versions[0]}_{parameter}_"
@@ -353,9 +353,11 @@ def _generate_total_scores_plots(
     total_end_date = max(
         datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
     )
-
+    
     model_info = (
-        "" if len(model_versions) > 1 else f"Model: {headers[0]['Model version']} | \n"
+        ""
+        if len(model_versions) > 1
+        else f"Model: {headers[0]['Model version'][0]} | \n"
     )
     sup_title = (
         model_info

@@ -24,8 +24,6 @@ def _daytime_scores_pipeline(
     file_postfix,
     input_dir,
     output_dir,
-    model_version,
-    grid,
     debug,
 ) -> None:
     """Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>.
@@ -48,6 +46,13 @@ def _daytime_scores_pipeline(
 
     """  # noqa: E501
     print("\n--- initialising daytime score pipeline")
+    if not lt_ranges:
+        lt_ranges = "19-24"
+    print("KKKK ", plot_setup)
+    for model_plots in plot_setup["model_versions"]:
+        for parameter, scores in plot_setup["parameter"].items():
+            return
+    return
     for lt_range in lt_ranges:
         for parameter in plot_setup:
             # retrieve list of scores, relevant for current parameter

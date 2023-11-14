@@ -115,8 +115,12 @@ def main(
     # -1. DEFINE PLOTS
     station_scores = False
     time_scores = False
-    daytime_scores = False
-    total_scores = True
+    daytime_scores = True
+    total_scores = False
+    ensemble_scores = False
+
+    if not Path(output_dir).exists():
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # 0. PARSE USER INPUT
     plot_setup = _parse_inputs(
@@ -140,8 +144,6 @@ def main(
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            model_versions=model_versions,  # C-1E-CTR_ch
-            relief=relief,
             debug=debug,
         )
     # 2. INITIALISE TIME SERIES PLOTTING PIPELINE
@@ -153,8 +155,6 @@ def main(
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            model_versions=model_versions,
-            grid=grid,
             debug=debug,
         )
     # 3. INITIALISE DYURNAL CYCLE PLOTTING PIPELINE
@@ -166,18 +166,20 @@ def main(
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            model_versions=model_versions,
-            grid=grid,
             debug=debug,
         )
     # 4. INITIALIS TOTAL SCORES PLOTTING PIPELINE
     if total_scores:
         _total_scores_pipeline(
             plot_setup=plot_setup,
+            lt_ranges=lt_ranges,
             file_prefix="total_scores",
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
             debug=debug,
         )
+
+    if ensemble_scores:
+        pass
     print("\n--- Done.")
