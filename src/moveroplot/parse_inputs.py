@@ -4,6 +4,7 @@
 from pprint import pprint
 import re
 from .config.plot_settings import PlotSettings
+from .config.plot_settings import PlotSettings
 
 
 def _parse_inputs(
@@ -15,6 +16,7 @@ def _parse_inputs(
     plot_cat_params,
     plot_cat_thresh,
     plot_cat_scores,
+    plotcolors,
     plotcolors,
 ):
     """Parse the user input flags.
