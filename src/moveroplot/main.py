@@ -114,9 +114,9 @@ def main(
     """  # noqa: E501
     # -1. DEFINE PLOTS
     station_scores = False
-    time_scores = False
+    time_scores = True
     daytime_scores = True
-    total_scores = False
+    total_scores = True
     ensemble_scores = False
 
     if not Path(output_dir).exists():

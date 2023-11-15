@@ -102,13 +102,7 @@ def collect_relevant_files(
 # pylint: disable=pointless-string-statement,too-many-arguments,too-many-locals
 def _total_scores_pipeline(
     plot_setup,
-<<<<<<< HEAD
     lt_ranges,
-=======
-    plot_cat_scores,
-    plot_cat_params,
-    plot_cat_thresh,
->>>>>>> d376b086911e4e97345dcd44ca0029278c7c40fb
     file_prefix,
     file_postfix,
     input_dir,
@@ -336,17 +330,7 @@ def _generate_total_scores_plots(
         for i in range(len(model_versions))
     ]
     # get correct parameter, i.e. if parameter=T_2M_KAL --> param=T_2M*
-<<<<<<< HEAD
     param = check_params(param=parameter, verbose=False)
-=======
-    param = check_params(
-        param=parameter, verbose=False
-    )
-
-    # check (&create) output directory
-    if not Path(output_dir).exists():
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
->>>>>>> d376b086911e4e97345dcd44ca0029278c7c40fb
 
     # initialise filename
     base_filename = (
@@ -379,7 +363,6 @@ def _generate_total_scores_plots(
         model_info
         + f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
     )
-<<<<<<< HEAD
 
     # plot regular scores
     _plot_and_save_scores(
@@ -403,10 +386,3 @@ def _generate_total_scores_plots(
         custom_lines,
         debug=False,
     )
-=======
-    
-    #plot regular scores
-    _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores["regular_scores"],sup_title, models_data,custom_lines, debug = False)
-    #plot categorial scores
-    _plot_and_save_scores(output_dir, base_filename,parameter,plot_scores['cat_scores'],sup_title, models_data,custom_lines, debug = False)
->>>>>>> d376b086911e4e97345dcd44ca0029278c7c40fb

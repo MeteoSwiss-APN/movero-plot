@@ -17,7 +17,6 @@ def _parse_inputs(
     plot_cat_thresh,
     plot_cat_scores,
     plotcolors,
-    plotcolors,
 ):
     """Parse the user input flags.
 
