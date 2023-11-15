@@ -162,15 +162,6 @@ def _daytime_scores_pipeline(
 
 
 # PLOTTING PIPELINE FOR DAYTIME SCORES PLOTS
-# generator that gives time between start and end times with delta intervals
-# inspired by: https://stackoverflow.com/questions/61733727/how-to-set-minutes-time-as-x-axis-of-a-matplotlib-plot-in-python  # noqa: E501
-def deltatime(start, end, delta):
-    current = start
-    while current < end:
-        yield current
-        current += delta
-
-
 def get_xaxis():
     # Standard library
     from datetime import datetime
@@ -287,7 +278,6 @@ def _plot_and_save_scores(
     ltr_models_data,
     debug=False,
 ):
-
     for ltr, models_data in ltr_models_data.items():
         fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
         headers = [data["header"] for data in models_data.values()]
@@ -323,7 +313,7 @@ def _plot_and_save_scores(
                 ax.set_ylabel(f"{y_label.upper()} ({unit})")
                 ax.set_xlabel(x_label_base + ltr)
                 ax.set_title(title)
-                
+
                 for score_idx, score in enumerate(score_setup):
                     x_int = list(data["df"]["hh"])
                     score_values = data["df"][score].to_list()
@@ -336,7 +326,11 @@ def _plot_and_save_scores(
                         x_int = [0] + x_int + [24]
                         score_values = [score_value0] + score_values + [score_value0]
 
-                    x_datetimes = [datetime.combine(datetime.now().date(), datetime.min.time()) + timedelta(hours=hour) for hour in x_int]
+                    x_datetimes = [
+                        datetime.combine(datetime.now().date(), datetime.min.time())
+                        + timedelta(hours=hour)
+                        for hour in x_int
+                    ]
                     ax.plot(
                         x_datetimes,
                         score_values,
@@ -349,7 +343,7 @@ def _plot_and_save_scores(
                     ax.tick_params(axis="both", which="major", labelsize=8)
                     ax.tick_params(axis="both", which="minor", labelsize=6)
                     ax.autoscale(axis="y")
-                    ax.set_xlim(x_datetimes[0],x_datetimes[-1])
+                    ax.set_xlim(x_datetimes[0], x_datetimes[-1])
                 ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
                 ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
             if len(score_setup) > 1:
@@ -431,207 +425,3 @@ def _generate_daytime_plots(
         models_data,
         debug=False,
     )
-
-
-def _generate_daytime_plot(
-    data,
-    multiplots,
-    lt_range,
-    variable,
-    file,
-    file_postfix,
-    header_dict,
-    output_dir,
-    grid,
-    debug,
-):
-    """Generate Daytime Plot."""
-    # output_dir = f"{output_dir}/daytime_scores"
-    if not Path(output_dir).exists():
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
-    print(f"creating plots for file: {file}")
-
-    # extract scores, which are available in the dataframe (data)
-    scores = data.columns.tolist()
-
-    # Standard library
-    from datetime import datetime
-    from datetime import timedelta
-
-    # two random consecutive dates [date1, date2]
-    start_time = datetime.combine(
-        datetime.strptime("01/02/1991", "%d/%m/%Y"),
-        datetime.strptime("00:00:00", "%H:%M:%S").time(),
-    )
-    end_time = datetime.combine(
-        datetime.strptime("02/02/1991", "%d/%m/%Y"),
-        datetime.strptime("00:00:00", "%H:%M:%S").time(),
-    )
-
-    # define x-axis only once. list of datetimes from date1 00:00 - date2 00:00
-    x = get_xaxis()
-
-    # check, which timestamps are actually necessary
-    available_times = data.index.tolist()
-    available_x = []
-    for available_time in available_times:
-        available_x.append(x[available_time])
-    first_point = available_x[0]
-    last_point = available_x[-1]
-    available_x.insert(0, last_point - timedelta(hours=24))
-    available_x.append(first_point + timedelta(hours=24))
-
-    unit = header_dict["Unit"][0]
-
-    # define further plot properties
-    grid = True
-
-    score_to_skip = None
-    for score in scores:
-        if score == score_to_skip:
-            continue
-
-        param = header_dict["Parameter"][0]
-        param = check_params(param=param, verbose=debug)
-        print(f"plotting:\t{param}/{score}")
-
-        multiplt = False
-        title = f"{variable}: {score}"
-        footer = f"""Model: {header_dict['Model version'][0]} |
-                    Period: {header_dict['Start time'][0]} -
-                    {header_dict['End time'][0]} ({lt_range}) | © MeteoSwiss"""
-
-        # initialise figure/axes instance
-        fig, ax = plt.subplots(
-            1, 1, figsize=(1660 / 100, 1100 / 100), dpi=150, tight_layout=True
-        )
-
-        ax.set_xlim(start_time, end_time)
-        ax.set_ylabel(f"{score.upper()} ({unit})")
-
-        # TODO: retrieve ymin/ymax from correct tables in plot_synop
-        # and set ax.set_ylim(ymin,ymax)
-
-        if grid:
-            ax.grid(which="major", color="#DDDDDD", linewidth=0.8)
-            ax.grid(which="minor", color="#EEEEEE", linestyle=":", linewidth=0.5)
-            ax.minorticks_on()
-
-        if debug:
-            print(f"Extract dataframe for score: {score}")
-            pprint(data)
-
-        y = data[score].values.tolist()
-
-        if score in multiplots.keys():
-            y2 = data[multiplots[score]].values.tolist()
-            multiplt = True
-            score_to_skip = multiplots[score]
-            title = f"{variable}: {score}/{multiplots[score]}"
-            ax.set_ylabel(f"{score.upper()}/{multiplots[score].upper()} ({unit})")
-
-        # plot dashed line @ 0
-        ax.plot(x, [0] * len(x), color="grey", linestyle="--")
-
-        # define limits for yaxis if available
-        regular_param = (param, "min") in daytime_score_range.columns
-        regular_score = score in daytime_score_range.index
-        cat_score = not regular_score
-
-        if regular_param and regular_score:
-            lower_bound = daytime_score_range[param]["min"].loc[score]
-            upper_bound = daytime_score_range[param]["max"].loc[score]
-            if debug:
-                print(
-                    f"found limits for {param}/{score} --> {lower_bound}/{upper_bound}"
-                )
-            if lower_bound != upper_bound:
-                ax.set_ylim(lower_bound, upper_bound)
-
-        if cat_score:
-            # get the index of the current score
-            index = cat_daytime_score_range[
-                cat_daytime_score_range[param]["scores"] == score
-            ].index.values[0]
-            # get min/max value
-            lower_bound = cat_daytime_score_range[param]["min"].iloc[index]
-            upper_bound = cat_daytime_score_range[param]["max"].iloc[index]
-            if debug:
-                print(
-                    f"found limits for {param}/{score} --> {lower_bound}/{upper_bound}"
-                )
-            if lower_bound != upper_bound:
-                ax.set_ylim(lower_bound, upper_bound)
-
-        label = f"{score.upper()}"
-        if not multiplt:
-            # pre-/append first and last values to the scores lists
-            first_y, last_y = y[0], y[-1]
-            y.insert(0, last_y)
-            y.append(first_y)
-
-            ax.plot(
-                available_x,
-                y,
-                color="k",
-                marker="o",
-                linestyle="-",
-                label=label,
-            )
-        if multiplt:
-            # pre-/append first and last values to the scores lists
-            first_y, last_y = y[0], y[-1]
-            y.insert(0, last_y)
-            y.append(first_y)
-            first_y2, last_y2 = y2[0], y2[-1]
-            y2.insert(0, last_y2)
-            y2.append(first_y2)
-
-            # change title, y-axis label, filename here, for the multiplot case
-            ax.plot(
-                available_x,
-                y,
-                color="red",
-                linestyle="-",
-                marker="o",
-                label=label,
-            )
-            label = f"{multiplots[score].upper()}"
-            ax.plot(
-                available_x,
-                y2,
-                color="k",
-                linestyle="-",
-                marker="o",
-                label=label,
-            )
-
-        # From the SO:https://stackoverflow.com/questions/42398264/matplotlib-xticks-every-15-minutes-starting-on-the-hour  # noqa: E501
-        # Set time format and the interval of ticks (every n minutes)
-        xformatter = md.DateFormatter("%H:%M")
-        xlocator = md.MinuteLocator(interval=360)
-        # Set xtick labels to appear every n minutes
-        ax.xaxis.set_major_locator(xlocator)
-        # Format xtick labels as HH:MM
-        plt.gcf().axes[0].xaxis.set_major_formatter(xformatter)
-
-        plt.legend()
-
-        plt.suptitle(
-            footer,
-            x=0.03,
-            y=0.957,
-            horizontalalignment="left",
-            verticalalignment="top",
-            fontdict={
-                "size": 6,
-                "color": "k",
-            },
-        )
-        ax.set_title(label=title)
-
-        print(f"saving:\t\t{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
-        plt.savefig(f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
-        plt.close(fig)
-
-    return

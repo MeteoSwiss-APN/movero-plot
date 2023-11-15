@@ -360,27 +360,40 @@ def _plot_and_save_scores(
     ltr_models_data,
     debug=False,
 ):
-    
     print("PARAMETER ", parameter)
-    
+
     for ltr, models_data in ltr_models_data.items():
-        fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys()
+        fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
+        headers = [data["header"] for data in models_data.values()]
+        total_start_date = min(
+            [
+                datetime.strptime(
+                    " ".join(header["Start time"][0:3:2]), "%Y-%m-%d %H:%M"
+                )
+                for header in headers
+            ]
         )
-        headers = [data['header'] for data in models_data.values()
-        ]
-        total_start_date = min([datetime.strptime(" ".join(header['Start time'][0:3:2]), "%Y-%m-%d %H:%M") for header in headers])
-        total_end_date = max([datetime.strptime(" ".join(header['End time'][0:2]), "%Y-%m-%d %H:%M") for header in headers])
-        #total_end_date = max([header['End time'] for header in headers])
+        total_end_date = max(
+            [
+                datetime.strptime(" ".join(header["End time"][0:2]), "%Y-%m-%d %H:%M")
+                for header in headers
+            ]
+        )
+        # total_end_date = max([header['End time'] for header in headers])
         print("JKDMNSDN D", total_end_date)
         title_base = f"{parameter.upper()}: "
-        model_info = f" {list(models_data.keys())[0]}" if len(models_data.keys()) == 1 else ""        
+        model_info = (
+            f" {list(models_data.keys())[0]}" if len(models_data.keys()) == 1 else ""
+        )
         x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")} """
         filename = base_filename
         for idx, score_setup in enumerate(plot_scores_setup):
             title = title_base + ",".join(score_setup) + model_info
             print("LTR LTR LTR ", base_filename)
             ax = subplot_axes[idx % 2]
-            print("SCORE SETUP ", score_setup, ltr_models_data.keys(), models_data.keys())
+            print(
+                "SCORE SETUP ", score_setup, ltr_models_data.keys(), models_data.keys()
+            )
             for model_idx, data in enumerate(models_data.values()):
                 model_plot_color = PlotSettings.modelcolors[model_idx]
                 header = data["header"]
@@ -413,18 +426,14 @@ def _plot_and_save_scores(
                     bbox_to_anchor=(1.1, 1.05),
                 )
                 for line in sub_plot_legend.get_lines():
-                        line.set_color("black")
-            filename += "_"+"_".join(score_setup)
+                    line.set_color("black")
+            filename += "_" + "_".join(score_setup)
 
-            if idx % 2 == 1 or idx == len(plot_scores_setup)-1:
-                _clear_empty_axes_if_necessary(subplot_axes,idx)
+            if idx % 2 == 1 or idx == len(plot_scores_setup) - 1:
+                _clear_empty_axes_if_necessary(subplot_axes, idx)
                 fig.savefig(f"{output_dir}/{filename}.png")
                 filename = base_filename
                 fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
-
-                    
-        
-            
 
 
 # PLOTTING PIPELINE FOR TIME SCORES PLOTS
@@ -437,7 +446,6 @@ def _generate_timeseries_plots(
 ):
     model_plot_colors = PlotSettings.modelcolors
     model_versions = list(models_data.keys())
-    
 
     # initialise filename
     base_filename = (

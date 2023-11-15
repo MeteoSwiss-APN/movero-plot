@@ -353,7 +353,7 @@ def _generate_total_scores_plots(
     total_end_date = max(
         datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
     )
-    
+
     model_info = (
         ""
         if len(model_versions) > 1
