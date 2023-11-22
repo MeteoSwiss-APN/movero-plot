@@ -81,7 +81,7 @@ def main(
     output_dir: str,
     relief: bool,
     grid: bool,
-    plotcolors: str,
+    colors: str,
 ):
     """Entry Point for the MOVERO Plotting Pipeline.
 
@@ -113,10 +113,10 @@ def main(
     --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
     """  # noqa: E501
     # -1. DEFINE PLOTS
-    station_scores = False
-    time_scores = True
-    daytime_scores = True
-    total_scores = True
+    station_scores = True
+    time_scores = False
+    daytime_scores = False
+    total_scores = False
     ensemble_scores = False
 
     if not Path(output_dir).exists():
@@ -132,7 +132,7 @@ def main(
         plot_cat_params,
         plot_cat_thresh,
         plot_cat_scores,
-        plotcolors,
+        colors,
     )
 
     # 1. INITIALISE STATION SCORES PLOTTING PIPELINE

@@ -162,35 +162,6 @@ def _daytime_scores_pipeline(
 
 
 # PLOTTING PIPELINE FOR DAYTIME SCORES PLOTS
-def get_xaxis():
-    # Standard library
-    from datetime import datetime
-    from datetime import timedelta
-
-    # two random consecutive dates [date1, date2]
-    dates = [("01/02/1991", "02/02/1991")]  # , '01/03/1991', '01/04/1991']
-
-    # generate the list for each date between 00:00 on date1 to 00:00 on date2 hourly intervals  # noqa: E501
-    datetimes = []
-    for start, end in dates:
-        startime = datetime.combine(
-            datetime.strptime(start, "%d/%m/%Y"),
-            datetime.strptime("0:00:00", "%H:%M:%S").time(),
-        )
-        endtime = datetime.combine(
-            datetime.strptime(end, "%d/%m/%Y"),
-            datetime.strptime("01:00:00", "%H:%M:%S").time(),
-        )
-        datetimes.append(
-            [j for j in deltatime(startime, endtime, timedelta(minutes=60))]
-        )
-
-    # #flatten datetimes list
-    datetimes = [datetime for day in datetimes for datetime in day]
-    x = datetimes
-    return x
-
-
 def collect_relevant_files(
     input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
 ):

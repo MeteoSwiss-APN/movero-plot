@@ -67,7 +67,7 @@ from .main import main
     help="Specify output directory. Def: plots",
 )
 @click.option(
-    "--plotcolors",
+    "--colors",
     type=str,
     help="Specify the plot color for each model version using matploblib's color coding",
 )

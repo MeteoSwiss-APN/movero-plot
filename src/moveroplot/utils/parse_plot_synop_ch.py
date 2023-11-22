@@ -264,11 +264,9 @@ if True:
     # ['param1_scores', 'param1_min', 'param1_max',
     # 'param2_scores', 'param2_min', 'param2_max',...]
     cat_station_score_range = cat_station_score_range[cat_columns_tmp]
-
     # now that the columns are in the correct order,
     # create subcolumns (scores, min, max) for each parameter
     cat_station_score_range.columns = cat_columns  # type: ignore
-
     if verbose:
         print("\n Categorical Station Score Ranges")
         pprint(cat_station_score_range)

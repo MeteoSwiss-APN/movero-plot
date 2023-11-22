@@ -379,8 +379,6 @@ def _plot_and_save_scores(
                 for header in headers
             ]
         )
-        # total_end_date = max([header['End time'] for header in headers])
-        print("JKDMNSDN D", total_end_date)
         title_base = f"{parameter.upper()}: "
         model_info = (
             f" {list(models_data.keys())[0]}" if len(models_data.keys()) == 1 else ""

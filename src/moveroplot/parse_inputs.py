@@ -77,7 +77,7 @@ def _parse_inputs(
     regular_params_dict = {}
     cat_params_dict = {}
 
-    plot_setup["parameter"] = None
+    plot_setup["parameter"] = {}
 
     # REGULAR PARAMETERS
     if plot_params and plot_scores:
@@ -100,6 +100,7 @@ def _parse_inputs(
     # CATEGORICAL PARAMETERS
     if plot_cat_params and plot_cat_scores and plot_cat_thresh:
         cat_params = plot_cat_params.split(",")
+        print("KKKK ")
         # categorical parameters: TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,
         # T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
         cat_scores = plot_cat_scores.split(
@@ -124,13 +125,15 @@ def _parse_inputs(
         if debug:
             print("Categorical Parameter Dict: ")
             pprint(cat_params_dict)
+    all_keys = set(regular_params_dict) | set(cat_params_dict)
     plot_setup["parameter"] = {
         key: {
             "regular_scores": regular_params_dict.get(key, []),
             "cat_scores": cat_params_dict.get(key, []),
         }
-        for key in regular_params_dict
+        for key in all_keys
     }
+    print("PLOT SETUP ", plot_setup)
     if not plot_setup["parameter"]:
         raise IOError("Invalid Input: parameter and/or scores are missing.")
 

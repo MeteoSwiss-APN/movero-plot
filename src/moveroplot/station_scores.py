@@ -1,7 +1,10 @@
 # pylint: skip-file
 # relevant imports for parsing pipeline
 # Standard library
+from datetime import datetime
+import itertools
 import pprint
+import re
 import sys
 from pathlib import Path
 
@@ -40,6 +43,148 @@ class ShadedReliefESRI(GoogleTiles):
         return url
 
 
+def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 2)):
+    """
+    Calculate the figure size given the number of rows and columns of subplots.
+
+    Args:
+    - num_rows: Number of rows of subplots.
+    - num_cols: Number of columns of subplots.
+    - single_plot_size: A tuple (width, height) of the size of a single subplot.
+    - padding: A tuple (horizontal_padding, vertical_padding) between plots.
+
+    Returns:
+    - tuple representing the figure size.
+    """
+    total_width = num_cols * single_plot_size[0] + (num_cols - 1) * padding[0]
+    total_height = num_rows * single_plot_size[1] + (num_rows - 1) * padding[1]
+    return (total_width, total_height)
+
+
+def _initialize_plots(labels: list, scores: list):
+    num_cols = len(labels)
+    num_rows = len(scores)
+    figsize = _calculate_figsize(num_rows, num_cols, (8, 4), (0, 4))
+    fig, axes = plt.subplots(
+        subplot_kw=dict(projection=ccrs.PlateCarree()),
+        nrows=num_rows,
+        ncols=num_cols,
+        tight_layout=True,
+        figsize=figsize,
+        dpi=500,
+        squeeze=False,
+    )
+    for ax in axes.ravel():
+        ax.set_extent([5.3, 11.2, 45.4, 48.2])
+        _add_features(ax)
+    fig.tight_layout(w_pad=8, h_pad=2, rect=[0.05, 0.05, 0.90, 0.90])
+    plt.subplots_adjust(bottom=0.15)
+    return fig, axes
+
+
+def _add_plot_text(ax, data, score, ltr):
+    [subplot_title] = data["header"]["Model version"]
+    min_value = data["df"].loc[score].min()
+    min_station = data["df"].loc[score].idxmin()
+    max_value = data["df"].loc[score].max()
+    max_station = data["df"].loc[score].idxmax()
+    start_date = datetime.strptime(
+        " ".join(data["header"]["Start time"][0:3:2]), "%Y-%m-%d %H:%M"
+    )
+    end_date = datetime.strptime(
+        " ".join(data["header"]["End time"][0:2]), "%Y-%m-%d %H:%M"
+    )
+    ax.set_title(f"{subplot_title}: {score}")
+    plt.text(
+        0.5,
+        -0.1,
+        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} ({ltr}) +Min: {min_value} mm at station {min_station} +Max: {max_value} mm at station {max_station}""",
+        horizontalalignment="center",
+        verticalalignment="center",
+        transform=ax.transAxes,
+        fontsize=8,
+    )
+
+
+def _plot_and_save_scores(
+    output_dir,
+    base_filename,
+    parameter,
+    plot_scores_setup,
+    sup_title,
+    ltr_models_data,
+    debug=False,
+):
+    for ltr, models_data in ltr_models_data.items():
+        ltr_info = f"_{ltr}"
+        model_info = (
+            "" if len(models_data.keys()) > 1 else f"_{next(iter(models_data.keys()))}"
+        )
+        for scores in plot_scores_setup:
+            filename = base_filename + ltr_info + model_info
+            fig, subplot_axes = _initialize_plots(models_data.keys(), scores)
+            for idx, score in enumerate(scores):
+                filename += f"_{score}"
+                for model_idx, data in enumerate(models_data.values()):
+                    ax = subplot_axes[idx][model_idx]
+                    _add_datapoints2(
+                        fig=fig,
+                        data=data["df"],
+                        score=score,
+                        ax=ax,
+                        min=-10,
+                        max=10,
+                        unit=data["header"]["Unit"][0],
+                        param=data["header"]["Parameter"],
+                    )
+
+                    _add_plot_text(ax, data, score, ltr)
+
+            fig.suptitle(
+                sup_title,
+                horizontalalignment="center",
+                verticalalignment="top",
+                fontdict={
+                    "size": 6,
+                    "color": "k",
+                },
+                bbox={"facecolor": "none", "edgecolor": "grey"},
+            )
+            fig.savefig(f"{output_dir}/{filename}.png")
+
+
+def _generate_station_plots(
+    plot_scores,
+    models_data,
+    parameter,
+    output_dir,
+    debug,
+):
+    # initialise filename
+    base_filename = f"station_scores_{parameter}"
+
+    sup_title = f"PARAMETER: {parameter}"
+
+    _plot_and_save_scores(
+        output_dir,
+        base_filename,
+        parameter,
+        plot_scores["regular_scores"],
+        sup_title,
+        models_data,
+        debug=False,
+    )
+    _plot_and_save_scores(
+        output_dir,
+        base_filename,
+        parameter,
+        plot_scores["cat_scores"],
+        sup_title,
+        models_data,
+        debug=False,
+    )
+
+
 # enter directory / read station_scores files / call plotting pipeline
 # type: ignore
 def _station_scores_pipeline(
@@ -49,8 +194,6 @@ def _station_scores_pipeline(
     file_postfix,
     input_dir,
     output_dir,
-    model_version,
-    relief,
     debug,
 ) -> None:
     """Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>.
@@ -73,6 +216,28 @@ def _station_scores_pipeline(
 
     """  # noqa: E501
     print("--- initialising station score pipeline")
+
+    if not lt_ranges:
+        lt_ranges = "19-24"
+    for model_plots in plot_setup["model_versions"]:
+        for parameter, scores in plot_setup["parameter"].items():
+            model_data = collect_relevant_files(
+                input_dir,
+                file_prefix,
+                file_postfix,
+                debug,
+                model_plots,
+                parameter,
+                lt_ranges,
+            )
+            _generate_station_plots(
+                plot_scores=scores,
+                models_data=model_data,
+                parameter=parameter,
+                output_dir=output_dir,
+                debug=debug,
+            )
+    return
     for lt_range in lt_ranges:
         for parameter in plot_setup:
             # retrieve list of scores, relevant for current parameter
@@ -178,6 +343,61 @@ def _station_scores_pipeline(
             )
 
 
+def collect_relevant_files(
+    input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
+):
+    corresponding_files_dict = {}
+    extracted_model_data = {}
+    # for dbg purposes:
+    files_list = []
+    for model in model_plots:
+        source_path = Path(f"{input_dir}/{model}")
+        for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
+            if file_path.is_file():
+                ltr_match = re.search(r"(\d{2})-(\d{2})", file_path.name)
+                if ltr_match:
+                    lt_range = ltr_match.group()
+                else:
+                    raise IOError(
+                        f"The filename {file_path.name} does not contain a LT range."
+                    )
+
+                in_lt_ranges = True
+                if lt_ranges:
+                    in_lt_ranges = lt_range in lt_ranges
+
+                if in_lt_ranges:
+                    print("FILE PATH", file_path, file_prefix, in_lt_ranges)
+
+                    loaded_Atab = Atab(file=file_path, sep=" ")
+
+                    header = loaded_Atab.header
+                    df = loaded_Atab.data
+                    # clean df
+                    df = df.replace(float(header["Missing value code"][0]), np.NaN)
+                    df.rename(columns={"ScoreABO": "ABO"}, inplace=True)
+                    df.loc["lon"] = list(filter(None, header["Longitude"]))
+                    df.loc["lat"] = list(filter(None, header["Latitude"]))
+                    # add information to dict
+                    if lt_range not in corresponding_files_dict:
+                        corresponding_files_dict[lt_range] = {}
+
+                    corresponding_files_dict[lt_range][model] = {
+                        "header": header,
+                        "df": df,
+                    }
+
+                    # add path of file to list of relevant files
+                    files_list.append(file_path)
+
+    if debug:
+        print(f"\nFor parameter: {parameter} these files are relevant:\n")
+        pprint(files_list)
+
+    extracted_model_data = corresponding_files_dict
+    return extracted_model_data
+
+
 # PLOTTING PIPELINE FOR STATION SCORES PLOTS
 def _add_features(ax):
     """Add features to map.
@@ -222,8 +442,50 @@ def _add_features(ax):
         rasterized=True,
         color="#97b6e1",
     )
+    # ax.add_image(ShadedReliefESRI(), 8)
 
-    return
+
+def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
+    # dataframes have two different structures
+    if score in station_score_range.index:
+        param_score_range = station_score_range[param[0]].loc[score]
+    else:
+        param_score_range = (
+            cat_station_score_range[param[0]].set_index("scores").loc[score]
+        )
+    lower_bound = param_score_range["min"]
+    upper_bound = param_score_range["max"]
+    plot_data = data.loc[["lon", "lat", score]].astype(float)
+    nan_data = plot_data.loc[:, plot_data.isna().any()]
+    plot_data = plot_data.dropna(axis="columns")
+    sc = ax.scatter(
+        x=list(plot_data.loc["lon"]),
+        y=list(plot_data.loc["lat"]),
+        marker="o",
+        c=list(plot_data.loc[score]),
+        vmin=lower_bound,
+        vmax=upper_bound,
+        rasterized=True,
+        transform=ccrs.PlateCarree(),
+    )
+    cax = fig.add_axes(
+        [
+            ax.get_position().x1 + 0.005,
+            ax.get_position().y0,
+            0.008,
+            ax.get_position().height,
+        ]
+    )
+    cbar = plt.colorbar(sc, cax=cax)
+    cbar.set_label(unit, rotation=270, labelpad=10)
+    ax.scatter(
+        x=list(nan_data.loc["lon"]),
+        y=list(nan_data.loc["lat"]),
+        marker="x",
+        rasterized=True,
+        transform=ccrs.PlateCarree(),
+        c="black",
+    )
 
 
 def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
@@ -231,16 +493,33 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
     print(f"plotting:\t{param}/{score}")
     # check param, before trying to assign cmap to it
 
-    # i.e. param = TD_2M_KAL
-    param = check_params(param, debug)
-    # i.e. param = TD_2M*
-
     print("Station Score Colortable")
-    pprint(station_score_colortable)
+    # pprint(station_score_colortable)
     print("Note: Index = Scores")
 
-    print("Cat Station Score Colortable")
-    pprint(cat_station_score_colortable)
+    # print("Cat Station Score Colortable")
+    # print(data.loc[["lon", "lat", score]])
+    lower_bound = station_score_range[param[0], "min"][score]
+    upper_bound = station_score_range[param[0], "max"][score]
+
+    sc = ax.scatter(
+        x=list(data.loc["lon"].astype(float)),
+        y=list(data.loc["lat"].astype(float)),
+        marker="o",
+        c=list(data.loc[score].astype(float)),
+        vmin=lower_bound,
+        vmax=upper_bound,
+        rasterized=True,
+        transform=ccrs.PlateCarree(),
+    )
+
+    cbar = plt.colorbar(sc, ax=ax, orientation="vertical", fraction=0.046, pad=0.04)
+    cbar.set_label(unit, rotation=270, labelpad=15)
+
+    # cbar = plt.colorbar(sc, ax=ax)
+    # cbar.set_label(unit, rotation=270, labelpad=15)
+    return
+    # pprint(cat_station_score_colortable)
 
     # RESOLVE CORRECT PARAMETER
     try:  # try to get the cmap from the regular station_score_colortable
