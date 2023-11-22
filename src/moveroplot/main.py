@@ -77,6 +77,11 @@ def main(
     plot_cat_params: str,
     plot_cat_thresh: str,
     plot_cat_scores: str,
+    plot_ens_params: str,
+    plot_ens_scores: str,
+    plot_ens_cat_params: str,
+    plot_ens_cat_thresh: str,
+    plot_ens_cat_scores: str,
     # new inputs
     input_dir: Path,
     output_dir: str,
