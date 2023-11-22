@@ -58,6 +58,7 @@ from .parse_inputs import _parse_inputs
 from .station_scores import _station_scores_pipeline
 from .time_scores import _time_scores_pipeline
 from .total_scores import _total_scores_pipeline
+from .ensemble_scores import _ensemble_scores_pipeline
 
 
 # pylint: enable=line-too-long
@@ -113,11 +114,11 @@ def main(
     --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
     """  # noqa: E501
     # -1. DEFINE PLOTS
-    station_scores = True
+    station_scores = False
     time_scores = False
     daytime_scores = False
     total_scores = False
-    ensemble_scores = False
+    ensemble_scores = True
 
     if not Path(output_dir).exists():
         Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -181,5 +182,13 @@ def main(
         )
 
     if ensemble_scores:
-        pass
+        _ensemble_scores_pipeline(
+            plot_setup=plot_setup,
+            lt_ranges=lt_ranges,
+            file_prefix="total_scores",
+            file_postfix=".dat",
+            input_dir=input_dir,
+            output_dir=output_dir,
+            debug=debug,
+        )
     print("\n--- Done.")
