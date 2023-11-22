@@ -50,6 +50,16 @@ from .main import main
 # 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,
 # 15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
 @click.option("--plot_cat_scores", type=str, help="Specify categorical scores to plot.")
+
+@click.option("--plot_ens_params", type=str, help="Specify parameters to ensemble plots.")
+@click.option("--plot_ens_scores", type=str, help="Specify scores to ensemble plots.")
+@click.option(
+    "--plot_ens_cat_params", type=str, help="Specify categorical parameters to ensemble plots."
+)
+@click.option("--plot_ens_cat_scores", type=str, help="Specify categorical scores to ensemble plots.")
+@click.option(
+    "--plot_ens_cat_thresh", type=str, help="Specify categorical scores thresholds to ensemble plots."
+)
 # FBI,MF,POD,FAR,THS,ETS
 # C-1E-CTR_ch
 # 🔰 new options for plot_synop call
