@@ -5,6 +5,7 @@ from pprint import pprint
 import re
 from .config.plot_settings import PlotSettings
 from .config.plot_settings import PlotSettings
+import itertools
 
 
 def _parse_inputs(
@@ -16,6 +17,11 @@ def _parse_inputs(
     plot_cat_params,
     plot_cat_thresh,
     plot_cat_scores,
+    plot_ens_params,
+    plot_ens_scores,
+    plot_ens_cat_params,
+    plot_ens_cat_thresh,
+    plot_ens_cat_scores,
     plotcolors,
 ):
     """Parse the user input flags.
@@ -76,6 +82,8 @@ def _parse_inputs(
     # initialise empty dictionaries
     regular_params_dict = {}
     cat_params_dict = {}
+    regular_ens_params_dict = {}
+    ens_cat_params_dict = {}
 
     plot_setup["parameter"] = {}
 
@@ -100,7 +108,6 @@ def _parse_inputs(
     # CATEGORICAL PARAMETERS
     if plot_cat_params and plot_cat_scores and plot_cat_thresh:
         cat_params = plot_cat_params.split(",")
-        print("KKKK ")
         # categorical parameters: TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,
         # T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
         cat_scores = plot_cat_scores.split(
@@ -125,15 +132,50 @@ def _parse_inputs(
         if debug:
             print("Categorical Parameter Dict: ")
             pprint(cat_params_dict)
-    all_keys = set(regular_params_dict) | set(cat_params_dict)
+
+    if plot_ens_params and plot_ens_scores:
+        ens_params = plot_ens_params.split(",")
+        ens_scores = [
+            score_combinations.split("/")
+            for score_combinations in plot_ens_scores.split(",")
+        ]
+        regular_ens_params_dict = {param: [] for param in ens_params}
+        for param in ens_params:
+            regular_ens_params_dict[param].extend(ens_scores)
+
+    if plot_ens_cat_params and plot_ens_cat_scores and plot_ens_cat_thresh:
+        ens_cat_params = plot_ens_cat_params.split(",")
+        ens_cat_score_combs = [
+            score_comb.split("/") for score_comb in plot_ens_cat_scores.split(",")
+        ]
+        ens_cat_params_dict = {cat_param: [] for cat_param in ens_cat_params}
+        # print("SCORE COMBS", ens_cat_score_combs)
+        for param, threshs in zip(ens_cat_params, plot_ens_cat_thresh.split(":")):
+            param_thresh_combs = [
+                thresholds.split("/") for thresholds in threshs.split(",")
+            ]
+            for thresh_comb in param_thresh_combs:
+                for score_comb in ens_cat_score_combs:
+                    _temp_scores = list()
+                    for thresh, score in itertools.product(score_comb, thresh_comb):
+                        _temp_scores.append(f"{thresh}({score})")
+                    ens_cat_params_dict[param].append(_temp_scores)
+
+    all_keys = (
+        set(regular_params_dict)
+        | set(cat_params_dict)
+        | set(regular_ens_params_dict)
+        | set(ens_cat_params_dict)
+    )
     plot_setup["parameter"] = {
         key: {
             "regular_scores": regular_params_dict.get(key, []),
             "cat_scores": cat_params_dict.get(key, []),
+            "regular_ens_scores": regular_ens_params_dict.get(key, []),
+            "ens_cat_scores": ens_cat_params_dict.get(key, []),
         }
         for key in all_keys
     }
-    print("PLOT SETUP ", plot_setup)
     if not plot_setup["parameter"]:
         raise IOError("Invalid Input: parameter and/or scores are missing.")
 

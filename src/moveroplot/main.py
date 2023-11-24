@@ -46,6 +46,7 @@ python plot_synop.py C-1E_ch --plot_params CLCT --plot_scores MMOD/MOBS
 """  # noqa: E501
 # Standard library
 from pathlib import Path
+from typing import Optional
 
 # Third-party
 from click import Context
@@ -72,22 +73,22 @@ def main(
     debug: bool,
     lt_ranges: tuple,
     # Parameters / Scores / Thresholds
-    plot_params: str,
-    plot_scores: str,
-    plot_cat_params: str,
-    plot_cat_thresh: str,
-    plot_cat_scores: str,
-    plot_ens_params: str,
-    plot_ens_scores: str,
-    plot_ens_cat_params: str,
-    plot_ens_cat_thresh: str,
-    plot_ens_cat_scores: str,
+    plot_params: Optional[str],
+    plot_scores: Optional[str],
+    plot_cat_params: Optional[str],
+    plot_cat_thresh: Optional[str],
+    plot_cat_scores: Optional[str],
+    plot_ens_params: Optional[str],
+    plot_ens_scores: Optional[str],
+    plot_ens_cat_params: Optional[str],
+    plot_ens_cat_thresh: Optional[str],
+    plot_ens_cat_scores: Optional[str],
     # new inputs
     input_dir: Path,
-    output_dir: str,
+    output_dir: Optional[str],
     relief: bool,
     grid: bool,
-    colors: str,
+    colors: Optional[str],
 ):
     """Entry Point for the MOVERO Plotting Pipeline.
 
@@ -138,6 +139,11 @@ def main(
         plot_cat_params,
         plot_cat_thresh,
         plot_cat_scores,
+        plot_ens_params,
+        plot_ens_scores,
+        plot_ens_cat_params,
+        plot_ens_cat_thresh,
+        plot_ens_cat_scores,
         colors,
     )
 
