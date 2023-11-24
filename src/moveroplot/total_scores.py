@@ -1,9 +1,8 @@
-"""Calculate Total score from parsed data."""
+"""Calculate total scores from parsed data."""
 # Standard library
 from pathlib import Path
 from pprint import pprint
 from datetime import datetime
-from datetime import date
 import re
 
 # Third-party
@@ -195,8 +194,6 @@ def _customise_ax(parameter, scores, x_ticks, grid, ax):
     steps = len(x_ticks) // 5
     skip_indices = slice(None, None, steps) if steps > 0 else slice(None)
     ax.set_xticks(range(len(x_ticks))[skip_indices], x_ticks[skip_indices])
-    print("LEN C C", len(x_ticks))
-    # ax.tick_params(axis="x")
     ax.autoscale(axis="y")
 
 
