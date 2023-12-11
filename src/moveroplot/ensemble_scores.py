@@ -1,26 +1,27 @@
 """Calculate ensemble scores from parsed data."""
 # Standard library
+import re
+from datetime import datetime
 from pathlib import Path
 from pprint import pprint
-from datetime import datetime
-import re
 
 # Third-party
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from .config.plot_settings import PlotSettings
-
-# Third-party
 from matplotlib.lines import Line2D
 
 # Local
+from .config.plot_settings import PlotSettings
+from .total_scores import _customise_ax
+from .total_scores import _initialize_plots
+from .total_scores import _save_figure
+from .total_scores import _set_ylim
+
 # pylint: disable=no-name-in-module
 from .utils.atab import Atab
 from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import total_score_range
-from .total_scores import _initialize_plots
-from .total_scores import _customise_ax, _set_ylim, _save_figure
 
 ens_plot_function_dict = {
     "OUTLIERS": None,
@@ -37,6 +38,7 @@ ens_plot_function_dict = {
     "REL_DIA": None,
 }
 
+
 def memoize(func):
     cache = {}
 
@@ -48,6 +50,7 @@ def memoize(func):
         return result
 
     return wrapper
+
 
 def collect_relevant_files(
     input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
@@ -69,7 +72,7 @@ def collect_relevant_files(
                     )
 
                 in_lt_ranges = True
-                
+
                 if lt_ranges:
                     in_lt_ranges = lt_range in lt_ranges
 
@@ -128,8 +131,8 @@ def _ensemble_scores_pipeline(
                 lt_ranges,
             )
             print(model_data.keys())
-            
-            print("MODELS DATA ",model_data[next(iter(model_data.keys()))].keys() )
+
+            print("MODELS DATA ", model_data[next(iter(model_data.keys()))].keys())
             _generate_ensemble_scores_plots(
                 plot_scores=scores,
                 models_data=model_data,
@@ -138,8 +141,10 @@ def _ensemble_scores_pipeline(
                 debug=debug,
             )
 
+
 def num_sort(test_string):
-    return list(map(int, re.findall(r'\d+', test_string)))[0]
+    return list(map(int, re.findall(r"\d+", test_string)))[0]
+
 
 def _plot_and_save_scores(
     output_dir,
@@ -157,17 +162,29 @@ def _plot_and_save_scores(
         print("SCORE SETUP ", score_setup, models_data.keys())
         for score_idx, score in enumerate(score_setup):
             if score == "RANK":
-                
                 for ltr, model_data in models_data.items():
                     fig, ((ax0), (ax2)) = plt.subplots(nrows=2, ncols=1)
-                    for model_idx, (model_version, data) in enumerate(model_data.items()):
-                        model_ranks = sorted([index for index in data["df"]["Total"].index if "RANK" in index], key=lambda x: int(''.join(filter(str.isdigit, x))))
+                    for model_idx, (model_version, data) in enumerate(
+                        model_data.items()
+                    ):
+                        model_ranks = sorted(
+                            [
+                                index
+                                for index in data["df"]["Total"].index
+                                if "RANK" in index
+                            ],
+                            key=lambda x: int("".join(filter(str.isdigit, x))),
+                        )
                         ds = data["df"]["Total"][model_ranks].reset_index(drop=True)
-                        print("MODEK RANKS ",model_ranks)
-                        ax0.bar(np.arange(len(model_ranks))+model_idx*0.25, ds, width=0.25)
+                        print("MODEK RANKS ", model_ranks)
+                        ax0.bar(
+                            np.arange(len(model_ranks)) + model_idx * 0.25,
+                            ds,
+                            width=0.25,
+                        )
 
                     fig.savefig(f"{output_dir}/test.png")
-            
+
             else:
                 return
                 ltr_list = []
@@ -183,9 +200,7 @@ def _plot_and_save_scores(
                         for series in models_data.values()
                     )
                 )
-                all_ranks = [
-                    index for index in all_indices if "RANK" in index
-                ]
+                all_ranks = [index for index in all_indices if "RANK" in index]
                 model_rank_data = pd.DataFrame()
                 print(all_ranks)
                 for model_version, data in models_data.items():
@@ -193,13 +208,13 @@ def _plot_and_save_scores(
                     rank_cols = sorted(
                         [ind for ind in model_data.index if "RANK" in ind]
                     )
-                    model_rank_data[model_version] = model_data.loc[rank_cols].reindex(all_ranks).fillna(0)
+                    model_rank_data[model_version] = (
+                        model_data.loc[rank_cols].reindex(all_ranks).fillna(0)
+                    )
 
                 model_rank_data = model_rank_data.sort_index()
-                #print("RANK COLS \n", model_rank_data)
+                # print("RANK COLS \n", model_rank_data)
                 # print("MODEL RANKS ", model_ranks , "\n", next(iter(models_data.values()))['19-24']['df'].loc['RANK[8]'])
-                pass
-            else:
                 pass
 
         return
@@ -318,7 +333,7 @@ def _generate_ensemble_scores_plots(
         if len(model_versions) > 1
         else f"Model: {headers[0]['Model version'][0]} | \n"
     )
-    
+
     sup_title = (
         model_info
         + f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""

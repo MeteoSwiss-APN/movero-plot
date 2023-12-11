@@ -1,11 +1,11 @@
 # pylint: skip-file
 # relevant imports for parsing pipeline
 # Standard library
-from datetime import datetime
 import itertools
 import pprint
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # Third-party

@@ -1,19 +1,18 @@
 """Calculate total scores from parsed data."""
 # Standard library
+import re
+from datetime import datetime
 from pathlib import Path
 from pprint import pprint
-from datetime import datetime
-import re
 
 # Third-party
 import matplotlib.pyplot as plt
 import numpy as np
-from .config.plot_settings import PlotSettings
-
-# Third-party
 from matplotlib.lines import Line2D
 
 # Local
+from .config.plot_settings import PlotSettings
+
 # pylint: disable=no-name-in-module
 from .utils.atab import Atab
 from .utils.check_params import check_params

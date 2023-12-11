@@ -1,17 +1,18 @@
 # pylint: skip-file
 # Standard library
+import re
 from datetime import datetime
 from pathlib import Path
 from pprint import pprint
-from matplotlib.lines import Line2D
-import matplotlib.dates as mdates
 
 # Third-party
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import re
+from matplotlib.lines import Line2D
 
+# First-party
 from moveroplot.config.plot_settings import PlotSettings
 
 # Local

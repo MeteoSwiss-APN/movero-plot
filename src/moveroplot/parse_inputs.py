@@ -1,11 +1,12 @@
 #  pylint: skip-file
 """Parse raw data from ATAB files into data frame."""
 # Standard library
-from pprint import pprint
-import re
-from .config.plot_settings import PlotSettings
-from .config.plot_settings import PlotSettings
 import itertools
+import re
+from pprint import pprint
+
+# Local
+from .config.plot_settings import PlotSettings
 
 
 def _parse_inputs(

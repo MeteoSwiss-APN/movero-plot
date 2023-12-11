@@ -53,13 +53,13 @@ from click import Context
 
 # Local
 from .daytime_scores import _daytime_scores_pipeline
+from .ensemble_scores import _ensemble_scores_pipeline
 
 # local
 from .parse_inputs import _parse_inputs
 from .station_scores import _station_scores_pipeline
 from .time_scores import _time_scores_pipeline
 from .total_scores import _total_scores_pipeline
-from .ensemble_scores import _ensemble_scores_pipeline
 
 
 # pylint: enable=line-too-long
@@ -120,7 +120,7 @@ def main(
     --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
     """  # noqa: E501
     # -1. DEFINE PLOTS
-    station_scores = False
+    station_scores = True
     time_scores = False
     daytime_scores = False
     total_scores = False
