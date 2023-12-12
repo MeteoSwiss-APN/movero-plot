@@ -129,8 +129,6 @@ def _ensemble_scores_pipeline(
                 parameter,
                 lt_ranges,
             )
-            print(model_data["13-18"])
-
             print("MODELS DATA ", model_data[next(iter(model_data.keys()))].keys())
             _generate_ensemble_scores_plots(
                 plot_scores=scores,
@@ -151,7 +149,7 @@ from .station_scores import _calculate_figsize
 def _initialize_plots(labels: list, scores: list, lines: list[Line2D]):
     num_cols = 1
     num_rows = len(scores)
-    figsize = _calculate_figsize(num_rows, num_cols, (8, 4), (0, 2))  # (10, 6.8)
+    figsize = _calculate_figsize(num_rows, num_cols, (8, 4), (2, 2))  # (10, 6.8)
     fig, axes = plt.subplots(
         nrows=num_rows,
         ncols=num_cols,
@@ -168,7 +166,7 @@ def _initialize_plots(labels: list, scores: list, lines: list[Line2D]):
         ncol=1,
         frameon=False,
     )
-    fig.tight_layout(w_pad=8, h_pad=2, rect=[0.05, 0.05, 0.90, 0.90])
+    fig.tight_layout(w_pad=8, h_pad=4, rect=[0.05, 0.05, 0.90, 0.90])
     plt.subplots_adjust(bottom=0.15)
     return fig, axes.ravel()
 
@@ -198,8 +196,9 @@ def _plot_and_save_scores(
             score_setup,
             models_color_lines,
         )
-        for score_idx, score in enumerate(score_setup):
-            if score == "RANK":
+        print("SCORE SETUP ", score_setup)
+        if "RANK" in score_setup:
+            for score_idx, score in enumerate(score_setup):
                 filename = base_filename
                 fig, subplot_axes = _initialize_plots(
                     list(models_data[next(iter(models_data.keys()))].keys()),
@@ -245,113 +244,63 @@ def _plot_and_save_scores(
                     )
 
                 fig.savefig(f"{output_dir}/{filename}_RANK.png")
-            elif score == "REL_DIA":
-                continue
-            else:
-                return
-                ltr_list = []
-                for model_version, data in models_data.items():
-                    ltr_sorted = sorted(
-                        list(data.keys()), key=lambda x: int(x.split("-")[0])
-                    )
-                    ltr_list += ltr_sorted
-                ltr = "19-24"
-                all_indices = set().union(
-                    *(
-                        series[ltr]["df"]["Total"].index
-                        for series in models_data.values()
-                    )
-                )
-                all_ranks = [index for index in all_indices if "RANK" in index]
-                model_rank_data = pd.DataFrame()
-                print(all_ranks)
-                for model_version, data in models_data.items():
-                    model_data = data[ltr]["df"]["Total"]
-                    rank_cols = sorted(
-                        [ind for ind in model_data.index if "RANK" in ind]
-                    )
-                    model_rank_data[model_version] = (
-                        model_data.loc[rank_cols].reindex(all_ranks).fillna(0)
-                    )
-
-                model_rank_data = model_rank_data.sort_index()
-                # print("RANK COLS \n", model_rank_data)
-                # print("MODEL RANKS ", model_ranks , "\n", next(iter(models_data.values()))['19-24']['df'].loc['RANK[8]'])
-                pass
-
-        return
-        for model_idx, data in enumerate(models_data.values()):
-            model_plot_color = PlotSettings.modelcolors[model_idx]
-            # sorted lead time ranges
-            ltr_sorted = sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))
+        elif "REL_DIA" in score_setup:
+            continue
+        else:
+            filename = base_filename
+            fig, subplot_axes = _initialize_plots(
+                list(models_data[next(iter(models_data.keys()))].keys()),
+                score_setup,
+                models_color_lines,
+            )
+            ltr_sorted = sorted(
+                list(models_data.keys()), key=lambda x: int(x.split("-")[0])
+            )
             x_int = list(range(len(ltr_sorted)))
-
-            # extract header from data & create title
-            header = data[ltr_sorted[-1]]["header"]
-            unit = header["Unit"][0]
-            # get ax, to add plot to
-            ax = subplot_axes[idx % 4]
-            # ax.set_xlim(x_int[0], x_int[-1])
-            y_label = ",".join(score_setup)
-            ax.set_ylabel(f"{y_label.upper()} ({unit})")
-
-            if len(score_setup) > 2:
-                raise ValueError(
-                    f"Maximum two scores are allowed in one plot. Got {len(score_setup)}"
-                )
+            print("LTR LTR LTR ", ltr_sorted, x_int)
             for score_idx, score in enumerate(score_setup):
-                if model_idx == 0:
-                    filename += f"{score}_"
-                if score == "RANK":
-                    print("DATA ", data)
-                elif score == "REL_DIA":
+                ax = subplot_axes[score_idx]
+                filename += f"_{score}"
+                for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
+                    # print("MMMM ", model_data)
                     pass
-                else:
-                    _set_ylim(param=parameter, score=score_setup[0], ax=ax, debug=debug)
+                for model_idx, model_name in enumerate(
+                    models_data[next(iter(ltr_sorted))].keys()
+                ):
+                    model_plot_color = PlotSettings.modelcolors[model_idx]
                     y_values = [
-                        data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted
+                        models_data[ltr][model_name]["df"]["Total"].loc[score]
+                        for ltr in ltr_sorted
                     ]
                     ax.plot(
                         x_int,
                         y_values,
                         color=model_plot_color,
-                        linestyle=PlotSettings.line_styles[score_idx],
                         marker="D",
                         fillstyle="none",
-                        label=f"{score_setup[0].upper()}",
                     )
+                    ax.set_ylabel(f"{score}")
+                print(ltr_sorted)
+                ax.set_xticks(x_int, ltr_sorted)
 
-            # Generate a legend if two scores in one subplot
-            if len(score_setup) > 1:
-                sub_plot_legend = ax.legend(
-                    score_setup,
-                    loc="upper right",
-                    markerscale=0.9,
-                    bbox_to_anchor=(1.35, 1.05),
-                )
-                # make lines in the legend always black
-                for line in sub_plot_legend.get_lines():
-                    line.set_color("black")
+                ax.set_title(f"{parameter}: {score}")
 
-        # customise grid, title, xticks, legend of current ax
-        _customise_ax(
-            parameter=parameter,
-            scores=score_setup,
-            x_ticks=ltr_sorted,
-            grid=True,
-            ax=ax,
-        )
+                ax.grid(which="major", color="#DDDDDD", linewidth=0.8)
+                ax.grid(which="minor", color="#EEEEEE", linestyle=":", linewidth=0.5)
+                ax.set_xlabel("Lead-Time Range (h)")
 
-        # save filled figure & re-set necessary for next iteration
-        full_figure = idx > 0 and (idx + 1) % 4 == 0
-        last_plot = idx == len(plot_scores_setup) - 1
-        if full_figure or last_plot:
-            _save_figure(output_dir, filename, sup_title, fig, subplot_axes, idx)
-            fig, subplot_axes = _initialize_plots(
-                models_color_lines, models_data.keys()
+            fig.suptitle(
+                sup_title,
+                horizontalalignment="center",
+                verticalalignment="top",
+                fontdict={
+                    "size": 6,
+                    "color": "k",
+                },
+                bbox={"facecolor": "none", "edgecolor": "grey"},
             )
-            filename = base_filename
 
+            fig.savefig(f"{output_dir}/{filename}.png")
 
 def _generate_ensemble_scores_plots(
     plot_scores,
@@ -416,6 +365,17 @@ def _generate_ensemble_scores_plots(
         base_filename,
         parameter,
         plot_scores["regular_ens_scores"],
+        sup_title,
+        models_data,
+        custom_lines,
+        debug=False,
+    )
+
+    _plot_and_save_scores(
+        output_dir,
+        base_filename,
+        parameter,
+        plot_scores["ens_cat_scores"],
         sup_title,
         models_data,
         custom_lines,
