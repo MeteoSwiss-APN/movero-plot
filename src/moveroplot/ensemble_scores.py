@@ -14,7 +14,6 @@ from matplotlib.lines import Line2D
 # Local
 from .config.plot_settings import PlotSettings
 from .total_scores import _customise_ax
-from .total_scores import _initialize_plots
 from .total_scores import _save_figure
 from .total_scores import _set_ylim
 
@@ -117,7 +116,7 @@ def _ensemble_scores_pipeline(
 ) -> None:
     print("PLOT SETUP ", plot_setup)
     if not lt_ranges:
-        lt_ranges = "19-24"
+        lt_ranges = "19-24,13-18"
     for model_plots in plot_setup["model_versions"]:
         for parameter, scores in plot_setup["parameter"].items():
             model_data = {}
@@ -130,7 +129,7 @@ def _ensemble_scores_pipeline(
                 parameter,
                 lt_ranges,
             )
-            print(model_data.keys())
+            print(model_data["13-18"])
 
             print("MODELS DATA ", model_data[next(iter(model_data.keys()))].keys())
             _generate_ensemble_scores_plots(
@@ -146,6 +145,34 @@ def num_sort(test_string):
     return list(map(int, re.findall(r"\d+", test_string)))[0]
 
 
+from .station_scores import _calculate_figsize
+
+
+def _initialize_plots(labels: list, scores: list, lines: list[Line2D]):
+    num_cols = 1
+    num_rows = len(scores)
+    figsize = _calculate_figsize(num_rows, num_cols, (8, 4), (0, 2))  # (10, 6.8)
+    fig, axes = plt.subplots(
+        nrows=num_rows,
+        ncols=num_cols,
+        tight_layout=True,
+        figsize=figsize,
+        dpi=500,
+        squeeze=False,
+    )
+    print("LABELS ", labels)
+    fig.legend(
+        lines,
+        labels,
+        loc="upper right",
+        ncol=1,
+        frameon=False,
+    )
+    fig.tight_layout(w_pad=8, h_pad=2, rect=[0.05, 0.05, 0.90, 0.90])
+    plt.subplots_adjust(bottom=0.15)
+    return fig, axes.ravel()
+
+
 def _plot_and_save_scores(
     output_dir,
     base_filename,
@@ -157,16 +184,36 @@ def _plot_and_save_scores(
     debug=False,
 ):
     filename = base_filename
-    fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
+    print("MODEL COLOR LINES ", len(models_color_lines))
     for idx, score_setup in enumerate(plot_scores_setup):
-        print("SCORE SETUP ", score_setup, models_data.keys())
+        print(
+            "SCORE SETUP ",
+            score_setup,
+            models_data.keys(),
+            models_data[next(iter(models_data.keys()))].keys(),
+        )
+        print("SUP TITLE ", sup_title)
+        fig, subplot_axes = _initialize_plots(
+            list(models_data[next(iter(models_data.keys()))].keys()),
+            score_setup,
+            models_color_lines,
+        )
         for score_idx, score in enumerate(score_setup):
             if score == "RANK":
-                for ltr, model_data in models_data.items():
-                    fig, ((ax0), (ax2)) = plt.subplots(nrows=2, ncols=1)
+                filename = base_filename
+                fig, subplot_axes = _initialize_plots(
+                    list(models_data[next(iter(models_data.keys()))].keys()),
+                    list(models_data.keys()),
+                    models_color_lines,
+                )
+
+                for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
+                    filename += f"_{ltr}"
+                    ax = subplot_axes[ltr_idx]
                     for model_idx, (model_version, data) in enumerate(
                         model_data.items()
                     ):
+                        model_plot_color = PlotSettings.modelcolors[model_idx]
                         model_ranks = sorted(
                             [
                                 index
@@ -176,15 +223,30 @@ def _plot_and_save_scores(
                             key=lambda x: int("".join(filter(str.isdigit, x))),
                         )
                         ds = data["df"]["Total"][model_ranks].reset_index(drop=True)
-                        print("MODEK RANKS ", model_ranks)
-                        ax0.bar(
+                        header = data["header"]
+                        ax.set_xlabel(f"RANK, LT: {ltr}")
+                        print("MODE RANKS ", model_ranks)
+                        ax.bar(
                             np.arange(len(model_ranks)) + model_idx * 0.25,
                             ds,
                             width=0.25,
+                            color=model_plot_color,
                         )
 
-                    fig.savefig(f"{output_dir}/test.png")
+                    fig.suptitle(
+                        f"RANK: {sup_title}",
+                        horizontalalignment="center",
+                        verticalalignment="top",
+                        fontdict={
+                            "size": 6,
+                            "color": "k",
+                        },
+                        bbox={"facecolor": "none", "edgecolor": "grey"},
+                    )
 
+                fig.savefig(f"{output_dir}/{filename}_RANK.png")
+            elif score == "REL_DIA":
+                continue
             else:
                 return
                 ltr_list = []
@@ -300,7 +362,7 @@ def _generate_ensemble_scores_plots(
 ):
     """Generate Ensemble Score Plots."""
     model_plot_colors = PlotSettings.modelcolors
-    model_versions = list(models_data.keys())
+    model_versions = list(models_data[next(iter(models_data))].keys())
     custom_lines = [
         Line2D([0], [0], color=model_plot_colors[i], lw=2)
         for i in range(len(model_versions))
@@ -308,10 +370,19 @@ def _generate_ensemble_scores_plots(
 
     # initialise filename
     base_filename = (
-        f"ensemble_scores_{parameter}_"
+        f"ensemble_scores_{parameter}"
         if len(model_versions) == 1
-        else f"ensemble_scores_{parameter}_"
+        else f"ensemble_scores_{parameter}"
     )
+    headers = [data["header"] for data in models_data[next(iter(models_data))].values()]
+    total_start_date = min(
+        datetime.strptime(header["Start time"][0], "%Y-%m-%d") for header in headers
+    )
+
+    total_end_date = max(
+        datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
+    )
+    print("HEADERS ", total_end_date, total_start_date)
     '''
     headers = [
         data[sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))[-1]][
@@ -319,7 +390,6 @@ def _generate_ensemble_scores_plots(
         ]
         for data in models_data.values()
     ]
-
     total_start_date = min(
         datetime.strptime(header["Start time"][0], "%Y-%m-%d") for header in headers
     )
@@ -339,7 +409,7 @@ def _generate_ensemble_scores_plots(
         + f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
     )
     '''
-    sup_title = ""
+    sup_title = f"""{parameter}\nPeriod: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
 
     _plot_and_save_scores(
         output_dir,
