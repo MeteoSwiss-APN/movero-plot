@@ -8,6 +8,7 @@ from pprint import pprint
 # Local
 from .config.plot_settings import PlotSettings
 
+invalid_ensemble_paramter = ['DD_10M','PS','PMSL']
 
 def _parse_inputs(
     debug,
@@ -135,6 +136,9 @@ def _parse_inputs(
             raise ValueError("Missing params, scores or thresholds for ensemble plots.")
         if plot_ens_params and plot_ens_scores:
             ens_params = plot_ens_params.split(",")
+            for invalid_param in invalid_ensemble_paramter:
+                if invalid_param in ens_params:
+                    raise ValueError(f"{invalid_param} us not a valid parameter for plot_ens_params.")
             ens_scores = list()
             score_setups = [
                 score_combinations.split("/")
