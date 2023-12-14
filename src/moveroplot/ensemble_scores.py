@@ -16,6 +16,8 @@ from .config.plot_settings import PlotSettings
 from .total_scores import _customise_ax
 from .total_scores import _save_figure
 from .total_scores import _set_ylim
+from .station_scores import _calculate_figsize
+
 
 # pylint: disable=no-name-in-module
 from .utils.atab import Atab
@@ -71,7 +73,6 @@ def collect_relevant_files(
                     )
 
                 in_lt_ranges = True
-
                 if lt_ranges:
                     in_lt_ranges = lt_range in lt_ranges
 
@@ -114,8 +115,7 @@ def _ensemble_scores_pipeline(
 ) -> None:
     print("PLOT SETUP ", plot_setup)
     if not lt_ranges:
-        lt_ranges = "19-24,13-18,01-06"
-        #lt_ranges = "19-24"
+        lt_ranges = "07-12,13-18,19-24"
     for model_plots in plot_setup["model_versions"]:
         for parameter, scores in plot_setup["parameter"].items():
             model_data = {}
@@ -128,7 +128,6 @@ def _ensemble_scores_pipeline(
                 parameter,
                 lt_ranges,
             )
-            print("MODELS DATA ", model_data[next(iter(model_data.keys()))].keys())
             _generate_ensemble_scores_plots(
                 plot_scores=scores,
                 models_data=model_data,
@@ -137,40 +136,8 @@ def _ensemble_scores_pipeline(
                 debug=debug,
             )
 
-
-def num_sort(test_string):
-    return list(map(int, re.findall(r"\d+", test_string)))[0]
-
-
-from .station_scores import _calculate_figsize
-
-
-def _initialize_plots(labels: list, scores: list, lines: list[Line2D]):
-    num_cols = 1
-    num_rows = len(scores)
-    figsize = _calculate_figsize(num_rows, num_cols, (8, 4), (2, 2))  # (10, 6.8)
-    fig, axes = plt.subplots(
-        nrows=num_rows,
-        ncols=num_cols,
-        tight_layout=True,
-        figsize=figsize,
-        dpi=500,
-        squeeze=False,
-    )
-    print("LABELS ", labels)
-    fig.legend(
-        lines,
-        labels,
-        loc="upper right",
-        ncol=1,
-        frameon=False,
-    )
-    fig.tight_layout(w_pad=8, h_pad=4, rect=[0.05, 0.05, 0.90, 0.90])
-    plt.subplots_adjust(bottom=0.15)
-    return fig, axes.ravel()
-
-def _initialize_plots(num_rows: int, num_cols: int):
-    figsize = _calculate_figsize(num_rows, num_cols, (8, 4), (1, 1))  # (10, 6.8)
+def _initialize_plots(num_rows: int, num_cols: int, single_figsize:tuple[int] = (8, 4)):
+    figsize = _calculate_figsize(num_rows, num_cols, single_figsize, (1, 1))  # (10, 6.8)
     fig, axes = plt.subplots(
         nrows=num_rows,
         ncols=num_cols,
@@ -259,6 +226,7 @@ def _plot_and_save_scores(
             fig, subplot_axes = _initialize_plots(
                     len(score_setup),
                     len(models_data.keys()),
+                    (6,6)
                 )
             filename += f"_REL_DIA_{'_'.join(models_data.keys())}"
             for score_idx, score in enumerate(score_setup):

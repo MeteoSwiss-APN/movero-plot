@@ -447,11 +447,14 @@ def _add_features(ax):
 
 def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     # dataframes have two different structures
+    print("PARAM ", param, score)
+    param = check_params(param[0])
+    print("PARAM ", param, score)
     if score in station_score_range.index:
-        param_score_range = station_score_range[param[0]].loc[score]
+        param_score_range = station_score_range[param].loc[score]
     else:
         param_score_range = (
-            cat_station_score_range[param[0]].set_index("scores").loc[score]
+            cat_station_score_range[param].set_index("scores").loc[score]
         )
     lower_bound = param_score_range["min"]
     upper_bound = param_score_range["max"]
@@ -470,7 +473,6 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     )
     max_idx = plot_data.loc[score].idxmax()
     min_idx = plot_data.loc[score].idxmin()
-    print("LLLL ", [plot_data[max_idx].loc[score]])
     ax.scatter(
         x=[plot_data[max_idx].loc["lon"]],
         y=[plot_data[max_idx].loc["lat"]],

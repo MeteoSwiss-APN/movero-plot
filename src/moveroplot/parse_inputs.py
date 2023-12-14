@@ -24,6 +24,7 @@ def _parse_inputs(
     plot_ens_cat_thresh,
     plot_ens_cat_scores,
     plotcolors,
+    plot_type,
 ):
     """Parse the user input flags.
 
@@ -85,99 +86,96 @@ def _parse_inputs(
     cat_params_dict = {}
     regular_ens_params_dict = {}
     ens_cat_params_dict = {}
-
+    print("PLOT TYPE 2", plot_type, [plot_params and plot_scores,plot_cat_params and plot_cat_scores and plot_cat_thresh])
+    print(plot_cat_params, plot_ens_cat_scores, plot_cat_thresh)
     plot_setup["parameter"] = {}
-
-    # REGULAR PARAMETERS
-    if plot_params and plot_scores:
-        params = plot_params.split(",")
-        # TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,
-        # TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,
-        # FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL
-        scores = plot_scores.split(",")  # ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS
-        regular_params_dict = {param: [] for param in params}
-        for param in params:
-            for score in scores:
-                if "/" in score:
-                    regular_params_dict[param].append(score.split("/"))
-                else:
-                    regular_params_dict[param].append([score])
-        if debug:
-            print("Regular Parameter Dict: ")
-            pprint(regular_params_dict)
-
-    # CATEGORICAL PARAMETERS
-    if plot_cat_params and plot_cat_scores and plot_cat_thresh:
-        cat_params = plot_cat_params.split(",")
-        # categorical parameters: TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,
-        # T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
-        cat_scores = plot_cat_scores.split(
-            ","
-        )  # categorical scores: FBI,MF,POD,FAR,THS,ETS
-        cat_threshs = plot_cat_thresh.split(":")
-        # categorical thresholds: 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,
-        # 25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
-        cat_params_dict = {cat_param: [] for cat_param in cat_params}
-        for param, threshs in zip(cat_params, cat_threshs):
-            # append all scores with a threshold in their name to current to parameter
-            thresholds = threshs.split(",")
-            for threshold in thresholds:
-                for score in cat_scores:
+    if plot_type in ['total', 'time', 'station', 'daytime']:
+        if not any([plot_params and plot_scores,plot_cat_params and plot_cat_scores and plot_cat_thresh]):
+            raise ValueError(f"Missing params, scores or thresholds for {plot_type} score plots.")
+        # REGULAR PARAMETERS
+        if plot_params and plot_scores:
+            params = plot_params.split(",")
+            scores = plot_scores.split(",")  # ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS
+            regular_params_dict = {param: [] for param in params}
+            for param in params:
+                for score in scores:
                     if "/" in score:
-                        cat_params_dict[param].append(
-                            [x + f"({threshold})" for x in score.split("/")]
-                        )
+                        regular_params_dict[param].append(score.split("/"))
                     else:
-                        cat_params_dict[param].append([f"{score}({threshold})"])
+                        regular_params_dict[param].append([score])
+            if debug:
+                print("Regular Parameter Dict: ")
+                pprint(regular_params_dict)
 
-        if debug:
-            print("Categorical Parameter Dict: ")
-            pprint(cat_params_dict)
+        # CATEGORICAL PARAMETERS
+        if plot_cat_params and plot_cat_scores and plot_cat_thresh:
+            cat_params = plot_cat_params.split(",")
+            cat_scores = plot_cat_scores.split(
+                ","
+            )
+            cat_threshs = plot_cat_thresh.split(":")
+            cat_params_dict = {cat_param: [] for cat_param in cat_params}
+            for param, threshs in zip(cat_params, cat_threshs):
+                # append all scores with a threshold in their name to current to parameter
+                thresholds = threshs.split(",")
+                for threshold in thresholds:
+                    for score in cat_scores:
+                        if "/" in score:
+                            cat_params_dict[param].append(
+                                [x + f"({threshold})" for x in score.split("/")]
+                            )
+                        else:
+                            cat_params_dict[param].append([f"{score}({threshold})"])
 
-    if plot_ens_params and plot_ens_scores:
-        ens_params = plot_ens_params.split(",")
-        ens_scores = list()
-        score_setups = [
-            score_combinations.split("/")
-            for score_combinations in plot_ens_scores.split(",")
-        ]
-        for score_set in score_setups:
-            if "RANK" in score_set and len(score_set) > 1:
-                ens_scores.append([score for score in score_set if not "RANK" in score])
-                ens_scores.append(["RANK"])
-            else:
-                ens_scores.append(score_set)
-
-        regular_ens_params_dict = {param: [] for param in ens_params}
-        for param in ens_params:
-            regular_ens_params_dict[param].extend(ens_scores)
-
-    if plot_ens_cat_params and plot_ens_cat_scores and plot_ens_cat_thresh:
-        ens_cat_params = plot_ens_cat_params.split(",")
-        ens_cat_scores = list()
-        ens_cat_score_setups = [
-            score_comb.split("/") for score_comb in plot_ens_cat_scores.split(",")
-        ]
-        for score_set in ens_cat_score_setups:
-            if "REL_DIA" in score_set and len(score_set) > 1:
-                ens_cat_scores.append(
-                    [score for score in score_set if not "REL_DIA" in score]
-                )
-                ens_cat_scores.append(["REL_DIA"])
-            else:
-                ens_cat_scores.append(score_set)
-        print("CAT SCORES ENS ", ens_cat_scores)
-        ens_cat_params_dict = {cat_param: [] for cat_param in ens_cat_params}
-        for param, threshs in zip(ens_cat_params, plot_ens_cat_thresh.split(":")):
-            param_thresh_combs = [
-                thresholds.split("/") for thresholds in threshs.split(",")
+            if debug:
+                print("Categorical Parameter Dict: ")
+                pprint(cat_params_dict)
+    if plot_type == 'ensemble':
+        if not any([plot_ens_params and plot_ens_scores,plot_ens_cat_params and plot_ens_cat_scores and plot_ens_cat_thresh]):
+            raise ValueError("Missing params, scores or thresholds for ensemble plots.")
+        if plot_ens_params and plot_ens_scores:
+            ens_params = plot_ens_params.split(",")
+            ens_scores = list()
+            score_setups = [
+                score_combinations.split("/")
+                for score_combinations in plot_ens_scores.split(",")
             ]
-            for thresh_comb in param_thresh_combs:
-                for score_comb in ens_cat_scores:
-                    _temp_scores = list()
-                    for thresh, score in itertools.product(score_comb, thresh_comb):
-                        _temp_scores.append(f"{thresh}({score})")
-                    ens_cat_params_dict[param].append(_temp_scores)
+            for score_set in score_setups:
+                if "RANK" in score_set and len(score_set) > 1:
+                    ens_scores.append([score for score in score_set if not "RANK" in score])
+                    ens_scores.append(["RANK"])
+                else:
+                    ens_scores.append(score_set)
+
+            regular_ens_params_dict = {param: [] for param in ens_params}
+            for param in ens_params:
+                regular_ens_params_dict[param].extend(ens_scores)
+
+        if plot_ens_cat_params and plot_ens_cat_scores and plot_ens_cat_thresh:
+            ens_cat_params = plot_ens_cat_params.split(",")
+            ens_cat_scores = list()
+            ens_cat_score_setups = [
+                score_comb.split("/") for score_comb in plot_ens_cat_scores.split(",")
+            ]
+            for score_set in ens_cat_score_setups:
+                if "REL_DIA" in score_set and len(score_set) > 1:
+                    ens_cat_scores.append(
+                        [score for score in score_set if not "REL_DIA" in score]
+                    )
+                    ens_cat_scores.append(["REL_DIA"])
+                else:
+                    ens_cat_scores.append(score_set)
+            ens_cat_params_dict = {cat_param: [] for cat_param in ens_cat_params}
+            for param, threshs in zip(ens_cat_params, plot_ens_cat_thresh.split(":")):
+                param_thresh_combs = [
+                    thresholds.split("/") for thresholds in threshs.split(",")
+                ]
+                for thresh_comb in param_thresh_combs:
+                    for score_comb in ens_cat_scores:
+                        _temp_scores = list()
+                        for thresh, score in itertools.product(score_comb, thresh_comb):
+                            _temp_scores.append(f"{thresh}({score})")
+                        ens_cat_params_dict[param].append(_temp_scores)
 
     all_keys = (
         set(regular_params_dict)

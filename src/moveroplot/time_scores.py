@@ -26,6 +26,7 @@ from .utils.parse_plot_synop_ch import time_score_range
 def collect_relevant_files(
     input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
 ):
+    print("SDJIWJHCJ ", lt_ranges)
     corresponding_files_dict = {}
     extracted_model_data = {}
     # for dbg purposes:
@@ -43,15 +44,13 @@ def collect_relevant_files(
                     )
 
                 in_lt_ranges = True
-                print("LTR RANGES ", lt_range)
                 if lt_ranges:
                     in_lt_ranges = lt_range in lt_ranges
 
                 if in_lt_ranges:
-                    print(lt_range, " IN ", lt_ranges)
+                    print(parameter, lt_range, " IN ", lt_ranges)
                     # extract header & dataframe
                     loaded_Atab = Atab(file=file_path, sep=" ")
-
                     header = loaded_Atab.header
                     df = loaded_Atab.data
                     # clean df

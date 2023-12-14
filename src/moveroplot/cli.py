@@ -22,6 +22,11 @@ from .main import main
 )
 @click.version_option(__version__, "--version", "-V", message="%(version)s")
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
+@click.option(
+    "--plot_type",
+    type=click.Choice(['total', 'time', 'station', 'daytime','ensemble'], case_sensitive=False),
+    help="Specify the type of plot to generate."
+)
 @click.argument(
     "model_versions", type=str, default="C-1E-CTR_ch,C-1E_ch"
 )  # help="Specify the correct run. I.e. C-1E-CTR_ch"

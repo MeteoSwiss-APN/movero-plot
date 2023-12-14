@@ -89,6 +89,7 @@ def main(
     relief: bool,
     grid: bool,
     colors: Optional[str],
+    plot_type:str
 ):
     """Entry Point for the MOVERO Plotting Pipeline.
 
@@ -119,16 +120,14 @@ def main(
 
     --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
     """  # noqa: E501
-    # -1. DEFINE PLOTS
-    station_scores = False
-    time_scores = False
-    daytime_scores = False
-    total_scores = False
-    ensemble_scores = True
+    # -1. Check plot type input
+    if plot_type is None:
+        raise ValueError("ERROR: No plot type argument --plot_type.")
 
     if not Path(output_dir).exists():
         Path(output_dir).mkdir(parents=True, exist_ok=True)
-
+    print( " SSJNKDF ", plot_type)
+    print("KKKK ",plot_cat_scores, plot_cat_params, plot_cat_thresh)
     # 0. PARSE USER INPUT
     plot_setup = _parse_inputs(
         debug,
@@ -145,10 +144,11 @@ def main(
         plot_ens_cat_thresh,
         plot_ens_cat_scores,
         colors,
+        plot_type
     )
-
+    print("PLOT SETUP ", plot_setup)
     # 1. INITIALISE STATION SCORES PLOTTING PIPELINE
-    if station_scores:
+    if plot_type == 'station':
         _station_scores_pipeline(
             plot_setup=plot_setup,
             lt_ranges=lt_ranges,
@@ -159,7 +159,7 @@ def main(
             debug=debug,
         )
     # 2. INITIALISE TIME SERIES PLOTTING PIPELINE
-    if time_scores:
+    if plot_type == 'time':
         _time_scores_pipeline(
             plot_setup=plot_setup,
             lt_ranges=lt_ranges,
@@ -170,7 +170,7 @@ def main(
             debug=debug,
         )
     # 3. INITIALISE DYURNAL CYCLE PLOTTING PIPELINE
-    if daytime_scores:
+    if plot_type == 'daytime':
         _daytime_scores_pipeline(
             plot_setup=plot_setup,
             lt_ranges=lt_ranges,
@@ -181,7 +181,7 @@ def main(
             debug=debug,
         )
     # 4. INITIALIS TOTAL SCORES PLOTTING PIPELINE
-    if total_scores:
+    if plot_type == 'total':
         _total_scores_pipeline(
             plot_setup=plot_setup,
             lt_ranges=lt_ranges,
@@ -192,7 +192,7 @@ def main(
             debug=debug,
         )
 
-    if ensemble_scores:
+    if plot_type == 'ensemble':
         _ensemble_scores_pipeline(
             plot_setup=plot_setup,
             lt_ranges=lt_ranges,

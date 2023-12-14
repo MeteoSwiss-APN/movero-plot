@@ -278,7 +278,7 @@ def _plot_and_save_scores(
                     fillstyle="none",
                     label=f"{score_setup[0].upper()}",
                 )
-            ax.set_xticklabels(labels)
+            
             # Generate a legend if two scores in one subplot
             if len(score_setup) > 1:
                 sub_plot_legend = ax.legend(
