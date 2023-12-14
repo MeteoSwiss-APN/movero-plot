@@ -136,27 +136,44 @@ def _parse_inputs(
 
     if plot_ens_params and plot_ens_scores:
         ens_params = plot_ens_params.split(",")
-        ens_scores = [
+        ens_scores = list()
+        score_setups = [
             score_combinations.split("/")
             for score_combinations in plot_ens_scores.split(",")
         ]
+        for score_set in score_setups:
+            if "RANK" in score_set and len(score_set) > 1:
+                ens_scores.append([score for score in score_set if not "RANK" in score])
+                ens_scores.append(["RANK"])
+            else:
+                ens_scores.append(score_set)
+
         regular_ens_params_dict = {param: [] for param in ens_params}
         for param in ens_params:
             regular_ens_params_dict[param].extend(ens_scores)
 
     if plot_ens_cat_params and plot_ens_cat_scores and plot_ens_cat_thresh:
         ens_cat_params = plot_ens_cat_params.split(",")
-        ens_cat_score_combs = [
+        ens_cat_scores = list()
+        ens_cat_score_setups = [
             score_comb.split("/") for score_comb in plot_ens_cat_scores.split(",")
         ]
+        for score_set in ens_cat_score_setups:
+            if "REL_DIA" in score_set and len(score_set) > 1:
+                ens_cat_scores.append(
+                    [score for score in score_set if not "REL_DIA" in score]
+                )
+                ens_cat_scores.append(["REL_DIA"])
+            else:
+                ens_cat_scores.append(score_set)
+        print("CAT SCORES ENS ", ens_cat_scores)
         ens_cat_params_dict = {cat_param: [] for cat_param in ens_cat_params}
-        # print("SCORE COMBS", ens_cat_score_combs)
         for param, threshs in zip(ens_cat_params, plot_ens_cat_thresh.split(":")):
             param_thresh_combs = [
                 thresholds.split("/") for thresholds in threshs.split(",")
             ]
             for thresh_comb in param_thresh_combs:
-                for score_comb in ens_cat_score_combs:
+                for score_comb in ens_cat_scores:
                     _temp_scores = list()
                     for thresh, score in itertools.product(score_comb, thresh_comb):
                         _temp_scores.append(f"{thresh}({score})")
