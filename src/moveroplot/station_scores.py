@@ -64,7 +64,7 @@ def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 
 def _initialize_plots(labels: list, scores: list):
     num_cols = len(labels)
     num_rows = len(scores)
-    figsize = _calculate_figsize(num_rows, num_cols, (8, 4), (0, 4))
+    figsize = _calculate_figsize(num_rows, num_cols, (10, 14.7), (0, 2))  # (10, 6.8)
     fig, axes = plt.subplots(
         subplot_kw=dict(projection=ccrs.PlateCarree()),
         nrows=num_rows,
@@ -98,7 +98,7 @@ def _add_plot_text(ax, data, score, ltr):
     plt.text(
         0.5,
         -0.1,
-        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} ({ltr}) +Min: {min_value} mm at station {min_station} +Max: {max_value} mm at station {max_station}""",
+        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} ({ltr}) -Min: {min_value} mm at station {min_station} +Max: {max_value} mm at station {max_station}""",
         horizontalalignment="center",
         verticalalignment="center",
         transform=ax.transAxes,
@@ -468,6 +468,25 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         rasterized=True,
         transform=ccrs.PlateCarree(),
     )
+    max_idx = plot_data.loc[score].idxmax()
+    min_idx = plot_data.loc[score].idxmin()
+    print("LLLL ", [plot_data[max_idx].loc[score]])
+    ax.scatter(
+        x=[plot_data[max_idx].loc["lon"]],
+        y=[plot_data[max_idx].loc["lat"]],
+        marker="+",
+        color="black",
+        s=80,
+        transform=ccrs.PlateCarree(),
+    )
+    ax.scatter(
+        x=[plot_data[min_idx].loc["lon"]],
+        y=[plot_data[min_idx].loc["lat"]],
+        marker="_",
+        color="black",
+        s=80,
+        transform=ccrs.PlateCarree(),
+    )
     cax = fig.add_axes(
         [
             ax.get_position().x1 + 0.005,
@@ -481,10 +500,11 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     ax.scatter(
         x=list(nan_data.loc["lon"]),
         y=list(nan_data.loc["lat"]),
-        marker="x",
         rasterized=True,
         transform=ccrs.PlateCarree(),
-        c="black",
+        facecolors="none",
+        edgecolors="black",
+        linewidth=0.5,
     )
 
 
@@ -681,7 +701,7 @@ def _generate_map_plot(
                 max_station = station
 
         # plotting pipeline
-        fig = plt.figure(figsize=(16, 9), dpi=500)
+        fig = plt.figure(figsize=(14.7, 10), dpi=500)
         if relief:
             ax = plt.axes(projection=ShadedReliefESRI().crs)
         else:

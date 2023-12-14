@@ -120,7 +120,7 @@ def main(
     --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
     """  # noqa: E501
     # -1. DEFINE PLOTS
-    station_scores = True
+    station_scores = False
     time_scores = False
     daytime_scores = False
     total_scores = False
