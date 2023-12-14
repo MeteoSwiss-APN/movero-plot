@@ -117,6 +117,7 @@ def _ensemble_scores_pipeline(
     print("PLOT SETUP ", plot_setup)
     if not lt_ranges:
         lt_ranges = "19-24,13-18"
+        # lt_ranges = "19-24"
     for model_plots in plot_setup["model_versions"]:
         for parameter, scores in plot_setup["parameter"].items():
             model_data = {}
@@ -221,13 +222,12 @@ def _plot_and_save_scores(
                             ],
                             key=lambda x: int("".join(filter(str.isdigit, x))),
                         )
-                        ds = data["df"]["Total"][model_ranks].reset_index(drop=True)
-                        header = data["header"]
+                        ranks = data["df"]["Total"][model_ranks].reset_index(drop=True)
                         ax.set_xlabel(f"RANK, LT: {ltr}")
                         print("MODE RANKS ", model_ranks)
                         ax.bar(
                             np.arange(len(model_ranks)) + model_idx * 0.25,
-                            ds,
+                            ranks,
                             width=0.25,
                             color=model_plot_color,
                         )
@@ -244,8 +244,127 @@ def _plot_and_save_scores(
                     )
 
                 fig.savefig(f"{output_dir}/{filename}_RANK.png")
-        elif "REL_DIA" in score_setup:
-            continue
+        elif any(["REL_DIA" in score for score in score_setup]):
+            for score_idx, score in enumerate(score_setup):
+                filename = base_filename
+                fig, subplot_axes = _initialize_plots(
+                    list(models_data[next(iter(models_data.keys()))].keys()),
+                    list(models_data.keys()),
+                    models_color_lines,
+                )
+                threshold = re.search(r"\(.*?\)", score).group()
+                for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
+                    filename += f"_{ltr}"
+                    ax = subplot_axes[ltr_idx]
+                    ax.plot(
+                        np.arange(0, 1.1, 0.1),
+                        np.arange(0, 1.1, 0.1),
+                        color="black",
+                        fillstyle="none",
+                        linestyle="--",
+                        alpha=0.2,
+                    )
+                    ax.set_ylabel("Observed Relative Frequency")
+                    ax.set_xlabel(f"Forecast Probability, LT: {ltr}")
+                    ax.set_xlim(0, 1)
+                    ax.set_ylim(0, 1)
+
+                    box = ax.get_position()
+                    width = box.width
+                    height = box.height
+                    l, b, h, w = 0.8, 0.025, 0.3, 0.2
+                    w *= width
+                    h *= height
+                    inax_position = ax.transAxes.transform([l, b])
+                    transFigure = fig.transFigure.inverted()
+                    infig_position = transFigure.transform(inax_position)
+                    ax2 = fig.add_axes([*infig_position, w, h])
+
+                    [unit] = model_data[next(iter(model_data.keys()))]["header"]["Unit"]
+                    for model_idx, (model_version, data) in enumerate(
+                        model_data.items()
+                    ):
+                        model_plot_color = PlotSettings.modelcolors[model_idx]
+                        FBIN_indices = [
+                            index
+                            for index in list(data["df"]["Total"].index)
+                            if f"FBIN{threshold}" in index
+                        ]
+                        OBIN_indices = [
+                            index
+                            for index in list(data["df"]["Total"].index)
+                            if f"OBIN{threshold}" in index
+                        ]
+                        NBIN_indices = [
+                            index
+                            for index in list(data["df"]["Total"].index)
+                            if f"NBIN{threshold}" in index
+                        ]
+                        OF_indices = [
+                            index
+                            for index in list(data["df"]["Total"].index)
+                            if f"OF{threshold}" in index
+                        ]
+                        FBIN_values = data["df"]["Total"][FBIN_indices]
+                        OBIN_values = data["df"]["Total"][OBIN_indices]
+                        NBIN_values = data["df"]["Total"][NBIN_indices]
+                        OF_value = data["df"]["Total"][OF_indices]
+                        ax.plot(
+                            FBIN_values,
+                            OBIN_values,
+                            color=model_plot_color,
+                            marker="D",
+                            fillstyle="none",
+                        )
+
+                        ax2.bar(
+                            np.arange(len(NBIN_values)) + model_idx * 0.25,
+                            NBIN_values,
+                            width=0.25,
+                            color=model_plot_color,
+                        )
+
+                    ax.plot(
+                        np.arange(0, 1.1, 0.1),
+                        [OF_value] * 11,
+                        color="black",
+                        fillstyle="none",
+                        linestyle="--",
+                        alpha=0.2,
+                    )
+
+                    bisect_zero = (1 - np.tan(np.pi / 8)) * OF_value
+                    bisect_one = bisect_zero + np.tan(np.pi / 8)
+                    print("OSJKJC ", bisect_one, bisect_zero)
+                    ax.plot(
+                        [0, 1],
+                        [
+                            (1 - np.tan(np.pi / 8)) * OF_value,
+                            OF_value + (1 - OF_value) * np.tan(np.pi / 8),
+                        ],
+                        color="black",
+                        fillstyle="none",
+                        linestyle="--",
+                        alpha=0.2,
+                    )
+                    ax.set_title(f"{parameter} {threshold[1:-1]} {unit}")
+
+                    ax2.set_xticks([])
+                    ax2.set_title("N")
+                    ax2.set_yticks(np.round([max(NBIN_values)], -3))
+
+                    fig.suptitle(
+                        sup_title,
+                        horizontalalignment="center",
+                        verticalalignment="top",
+                        fontdict={
+                            "size": 6,
+                            "color": "k",
+                        },
+                        bbox={"facecolor": "none", "edgecolor": "grey"},
+                    )
+                fig.savefig(f"{output_dir}/{filename}_REL_DIA.png")
+
         else:
             filename = base_filename
             fig, subplot_axes = _initialize_plots(
@@ -301,6 +420,7 @@ def _plot_and_save_scores(
             )
 
             fig.savefig(f"{output_dir}/{filename}.png")
+
 
 def _generate_ensemble_scores_plots(
     plot_scores,
