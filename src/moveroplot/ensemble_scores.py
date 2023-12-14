@@ -24,35 +24,6 @@ from .utils.atab import Atab
 from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import total_score_range
 
-ens_plot_function_dict = {
-    "OUTLIERS": None,
-    "RPS": None,
-    "RPS_REF": None,
-    "RPSS": None,
-    "RANK": None,
-    "REL": None,
-    "RES": None,
-    "BS": None,
-    "BS_REF": None,
-    "BSS": None,
-    "BSSD": None,
-    "REL_DIA": None,
-}
-
-
-def memoize(func):
-    cache = {}
-
-    def wrapper(*args):
-        if args in cache:
-            return cache[args]
-        result = func(*args)
-        cache[args] = result
-        return result
-
-    return wrapper
-
-
 def collect_relevant_files(
     input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
 ):
