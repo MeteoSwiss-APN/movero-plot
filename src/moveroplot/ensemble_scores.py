@@ -78,7 +78,6 @@ def collect_relevant_files(
                 if in_lt_ranges:
                     # extract header & dataframe
                     loaded_Atab = Atab(file=file_path, sep=" ")
-
                     header = loaded_Atab.header
                     df = loaded_Atab.data
                     # clean df
@@ -93,7 +92,6 @@ def collect_relevant_files(
                         "header": header,
                         "df": df,
                     }
-
                     # add path of file to list of relevant files
                     files_list.append(file_path)
 
@@ -117,7 +115,7 @@ def _ensemble_scores_pipeline(
     print("PLOT SETUP ", plot_setup)
     if not lt_ranges:
         lt_ranges = "19-24,13-18,01-06"
-        # lt_ranges = "19-24"
+        #lt_ranges = "19-24"
     for model_plots in plot_setup["model_versions"]:
         for parameter, scores in plot_setup["parameter"].items():
             model_data = {}
@@ -171,7 +169,6 @@ def _initialize_plots(labels: list, scores: list, lines: list[Line2D]):
     plt.subplots_adjust(bottom=0.15)
     return fig, axes.ravel()
 
-
 def _initialize_plots(num_rows: int, num_cols: int):
     figsize = _calculate_figsize(num_rows, num_cols, (8, 4), (1, 1))  # (10, 6.8)
     fig, axes = plt.subplots(
@@ -186,6 +183,30 @@ def _initialize_plots(num_rows: int, num_cols: int):
     plt.subplots_adjust(bottom=0.15)
     return fig, axes
 
+def _add_sample_subplot(fig, ax):
+    box = ax.get_position()
+    width = box.width
+    height = box.height
+    l, b, h, w = .8, .025, .3, .2
+    w*=width
+    h*=height
+    inax_position  = ax.transAxes.transform([l,b])
+    transFigure = fig.transFigure.inverted()
+    infig_position = transFigure.transform(inax_position)
+    sub_plot = fig.add_axes([*infig_position, w, h])
+    sub_plot.set_xticks([])
+    sub_plot.set_title("N")
+    return sub_plot
+
+def _add_boundary_line(ax, points):
+    ax.plot(
+            [0,1],
+            points,
+            color="black",
+            fillstyle="none",
+            linestyle="--",
+            alpha=0.2,
+        )
 
 def _plot_and_save_scores(
     output_dir,
@@ -197,34 +218,18 @@ def _plot_and_save_scores(
     models_color_lines,
     debug=False,
 ):
-    filename = base_filename
-    print("MODEL COLOR LINES ", len(models_color_lines))
     for idx, score_setup in enumerate(plot_scores_setup):
+        custom_sup_title = sup_title
+        filename = base_filename
         if "RANK" in score_setup:
+            custom_sup_title = f"RANK: {sup_title}"
+            filename += "_RANK"
             for score_idx, score in enumerate(score_setup):
-                filename = base_filename
-                """
-                fig, subplot_axes = _initialize_plots(
-                    list(models_data[next(iter(models_data.keys()))].keys()),
-                    list(models_data.keys()),
-                    models_color_lines,
-                )
-                """
-                print("KEYS KEYS ", models_data.keys())
                 fig, subplot_axes = _initialize_plots(
                     2 if len(models_data.keys()) > 1 else 1,
-                    (len(models_data.keys()) + 1) // 2,
+                    (len(models_data.keys())+1)//2,
                 )
                 subplot_axes = subplot_axes.ravel()
-
-                fig.legend(
-                    models_color_lines,
-                    list(models_data[next(iter(models_data.keys()))].keys()),
-                    loc="upper right",
-                    ncol=1,
-                    frameon=False,
-                )
-
                 for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
                     filename += f"_{ltr}"
                     ax = subplot_axes[ltr_idx]
@@ -248,64 +253,26 @@ def _plot_and_save_scores(
                             width=0.25,
                             color=model_plot_color,
                         )
-
-                fig.suptitle(
-                    f"RANK: {sup_title}",
-                    horizontalalignment="center",
-                    verticalalignment="top",
-                    fontdict={
-                        "size": 6,
-                        "color": "k",
-                    },
-                    bbox={"facecolor": "none", "edgecolor": "grey"},
-                )
-
-                if len(models_data.keys()) > 2 and len(models_data.keys()) % 2 == 1:
+                if len(models_data.keys()) > 2 and len(models_data.keys())%2 == 1:
                     subplot_axes[-1].axis("off")
-
-                fig.savefig(f"{output_dir}/{filename}_RANK.png")
         elif any(["REL_DIA" in score for score in score_setup]):
             fig, subplot_axes = _initialize_plots(
-                len(score_setup),
-                len(models_data.keys()),
-            )
-            fig.legend(
-                models_color_lines,
-                list(models_data[next(iter(models_data.keys()))].keys()),
-                loc="upper right",
-                ncol=1,
-                frameon=False,
-            )
+                    len(score_setup),
+                    len(models_data.keys()),
+                )
+            filename += f"_REL_DIA_{'_'.join(models_data.keys())}"
             for score_idx, score in enumerate(score_setup):
-                filename = base_filename
                 threshold = re.search(r"\(.*?\)", score).group()
                 for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
-                    filename += f"_{ltr}"
                     ax = subplot_axes[score_idx][ltr_idx]
-                    ax.plot(
-                        np.arange(0, 1.1, 0.1),
-                        np.arange(0, 1.1, 0.1),
-                        color="black",
-                        fillstyle="none",
-                        linestyle="--",
-                        alpha=0.2,
-                    )
                     ax.set_ylabel("Observed Relative Frequency")
-                    ax.set_xlabel(f"Forecast Probability, LT: {ltr}")
+                    ax.set_xlabel(f"Forecast Probability, LT: {ltr}")   
                     ax.set_xlim(0, 1)
                     ax.set_ylim(0, 1)
-                    box = ax.get_position()
-                    width = box.width
-                    height = box.height
-                    l, b, h, w = 0.8, 0.025, 0.3, 0.2
-                    w *= width
-                    h *= height
-                    inax_position = ax.transAxes.transform([l, b])
-                    transFigure = fig.transFigure.inverted()
-                    infig_position = transFigure.transform(inax_position)
-                    sample_subplot = fig.add_axes([*infig_position, w, h])
-
                     [unit] = model_data[next(iter(model_data.keys()))]["header"]["Unit"]
+                    ax.set_title(f"{parameter} {threshold[1:-1]} {unit}")
+                    sample_subplot = _add_sample_subplot(fig, ax)
+
                     for model_idx, (model_version, data) in enumerate(
                         model_data.items()
                     ):
@@ -348,57 +315,16 @@ def _plot_and_save_scores(
                             width=0.25,
                             color=model_plot_color,
                         )
-
-                    ax.plot(
-                        np.arange(0, 1.1, 0.1),
-                        [OF_value] * 11,
-                        color="black",
-                        fillstyle="none",
-                        linestyle="--",
-                        alpha=0.2,
-                    )
-                    ax.plot(
-                        [0, 1],
-                        [
-                            (1 - np.tan(np.pi / 8)) * OF_value,
-                            OF_value + (1 - OF_value) * np.tan(np.pi / 8),
-                        ],
-                        color="black",
-                        fillstyle="none",
-                        linestyle="--",
-                        alpha=0.2,
-                    )
-                    ax.set_title(f"{parameter} {threshold[1:-1]} {unit}")
-                    sample_subplot.set_xticks([])
-                    sample_subplot.set_title("N")
-                    sample_subplot.set_yticks(np.round([max(NBIN_values)], -3))
-
-                    fig.suptitle(
-                        sup_title,
-                        horizontalalignment="center",
-                        verticalalignment="top",
-                        fontdict={
-                            "size": 6,
-                            "color": "k",
-                        },
-                        bbox={"facecolor": "none", "edgecolor": "grey"},
-                    )
-                fig.savefig(f"{output_dir}/{filename}_REL_DIA.png")
-
+                    
+                    _add_boundary_line(ax,[0,1])
+                    _add_boundary_line(ax,[OF_value,OF_value])
+                    _add_boundary_line(ax,[(1-np.tan(np.pi/8))*OF_value, OF_value+(1-OF_value)*np.tan(np.pi/8)])    
+                    sample_subplot.set_yticks(np.round([max(NBIN_values)],-3))
         else:
-            print("SETUP ", score_setup, 1 // 2 + 1, 2 // 2 + 1, 3 // 2, 5 // 2 + 1)
-            filename = base_filename
-            """
             fig, subplot_axes = _initialize_plots(
-                list(models_data[next(iter(models_data.keys()))].keys()),
-                score_setup,
-                models_color_lines,
-            )
-            """
-            fig, subplot_axes = _initialize_plots(
-                2 if len(score_setup) > 1 else 1,
-                (len(score_setup) + 1) // 2 if len(score_setup) > 2 else 1,
-            )
+                    2 if len(score_setup) > 1 else 1,
+                    (len(score_setup)+1)//2,
+                )
             subplot_axes = subplot_axes.ravel()
             fig.legend(
                 models_color_lines,
@@ -406,7 +332,7 @@ def _plot_and_save_scores(
                 loc="upper right",
                 ncol=1,
                 frameon=False,
-            )
+                )
             ltr_sorted = sorted(
                 list(models_data.keys()), key=lambda x: int(x.split("-")[0])
             )
@@ -429,7 +355,7 @@ def _plot_and_save_scores(
                         marker="D",
                         fillstyle="none",
                     )
-
+                    
                 ax.set_ylabel(f"{score}")
                 ax.set_xticks(x_int, ltr_sorted)
                 ax.set_title(f"{parameter}: {score}")
@@ -437,20 +363,29 @@ def _plot_and_save_scores(
                 ax.grid(which="minor", color="#EEEEEE", linestyle=":", linewidth=0.5)
                 ax.set_xlabel("Lead-Time Range (h)")
 
-            fig.suptitle(
-                sup_title,
-                horizontalalignment="center",
-                verticalalignment="top",
-                fontdict={
-                    "size": 6,
-                    "color": "k",
-                },
-                bbox={"facecolor": "none", "edgecolor": "grey"},
-            )
-            if len(score_setup) > 2 and len(score_setup) % 2 == 1:
+            if len(score_setup) > 2 and len(score_setup)%2 == 1:
                 subplot_axes[-1].axis("off")
 
-            fig.savefig(f"{output_dir}/{filename}.png")
+        fig.suptitle(
+            custom_sup_title,
+            horizontalalignment="center",
+            verticalalignment="top",
+            fontdict={
+                "size": 6,
+                "color": "k",
+            },
+            bbox={"facecolor": "none", "edgecolor": "grey"},
+        )
+        
+        fig.legend(
+                models_color_lines,
+                list(models_data[next(iter(models_data.keys()))].keys()),
+                loc="upper right",
+                ncol=1,
+                frameon=False,
+                )
+            
+        fig.savefig(f"{output_dir}/{filename}.png")
 
 
 def _generate_ensemble_scores_plots(
