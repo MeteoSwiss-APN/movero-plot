@@ -8,7 +8,8 @@ from pprint import pprint
 # Local
 from .config.plot_settings import PlotSettings
 
-invalid_ensemble_paramter = ['DD_10M','PS','PMSL']
+invalid_ensemble_paramter = ["DD_10M", "PS", "PMSL"]
+
 
 def _parse_inputs(
     debug,
@@ -87,12 +88,17 @@ def _parse_inputs(
     cat_params_dict = {}
     regular_ens_params_dict = {}
     ens_cat_params_dict = {}
-    print("PLOT TYPE 2", plot_type, [plot_params and plot_scores,plot_cat_params and plot_cat_scores and plot_cat_thresh])
-    print(plot_cat_params, plot_ens_cat_scores, plot_cat_thresh)
     plot_setup["parameter"] = {}
-    if plot_type in ['total', 'time', 'station', 'daytime']:
-        if not any([plot_params and plot_scores,plot_cat_params and plot_cat_scores and plot_cat_thresh]):
-            raise ValueError(f"Missing params, scores or thresholds for {plot_type} score plots.")
+    if plot_type in ["total", "time", "station", "daytime"]:
+        if not any(
+            [
+                plot_params and plot_scores,
+                plot_cat_params and plot_cat_scores and plot_cat_thresh,
+            ]
+        ):
+            raise ValueError(
+                f"Missing params, scores or thresholds for {plot_type} score plots."
+            )
         # REGULAR PARAMETERS
         if plot_params and plot_scores:
             params = plot_params.split(",")
@@ -111,9 +117,7 @@ def _parse_inputs(
         # CATEGORICAL PARAMETERS
         if plot_cat_params and plot_cat_scores and plot_cat_thresh:
             cat_params = plot_cat_params.split(",")
-            cat_scores = plot_cat_scores.split(
-                ","
-            )
+            cat_scores = plot_cat_scores.split(",")
             cat_threshs = plot_cat_thresh.split(":")
             cat_params_dict = {cat_param: [] for cat_param in cat_params}
             for param, threshs in zip(cat_params, cat_threshs):
@@ -131,14 +135,21 @@ def _parse_inputs(
             if debug:
                 print("Categorical Parameter Dict: ")
                 pprint(cat_params_dict)
-    if plot_type == 'ensemble':
-        if not any([plot_ens_params and plot_ens_scores,plot_ens_cat_params and plot_ens_cat_scores and plot_ens_cat_thresh]):
+    if plot_type == "ensemble":
+        if not any(
+            [
+                plot_ens_params and plot_ens_scores,
+                plot_ens_cat_params and plot_ens_cat_scores and plot_ens_cat_thresh,
+            ]
+        ):
             raise ValueError("Missing params, scores or thresholds for ensemble plots.")
         if plot_ens_params and plot_ens_scores:
             ens_params = plot_ens_params.split(",")
             for invalid_param in invalid_ensemble_paramter:
                 if invalid_param in ens_params:
-                    raise ValueError(f"{invalid_param} us not a valid parameter for plot_ens_params.")
+                    raise ValueError(
+                        f"{invalid_param} us not a valid parameter for plot_ens_params."
+                    )
             ens_scores = list()
             score_setups = [
                 score_combinations.split("/")
@@ -146,7 +157,9 @@ def _parse_inputs(
             ]
             for score_set in score_setups:
                 if "RANK" in score_set and len(score_set) > 1:
-                    ens_scores.append([score for score in score_set if not "RANK" in score])
+                    ens_scores.append(
+                        [score for score in score_set if not "RANK" in score]
+                    )
                     ens_scores.append(["RANK"])
                 else:
                     ens_scores.append(score_set)
