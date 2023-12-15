@@ -76,6 +76,7 @@ def _daytime_scores_pipeline(
                 debug=debug,
             )
 
+
 # PLOTTING PIPELINE FOR DAYTIME SCORES PLOTS
 def collect_relevant_files(
     input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
@@ -246,6 +247,7 @@ def _plot_and_save_scores(
             if idx % 2 == 1 or idx == len(plot_scores_setup) - 1:
                 _clear_empty_axes_if_necessary(subplot_axes, idx)
                 fig.savefig(f"{output_dir}/{filename}.png")
+                plt.close()
                 filename = base_filename
                 fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
 

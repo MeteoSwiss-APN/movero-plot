@@ -44,8 +44,7 @@ class ShadedReliefESRI(GoogleTiles):
 
 
 def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 2)):
-    """
-    Calculate the figure size given the number of rows and columns of subplots.
+    """Calculate the figure size given the number of rows and columns of subplots.
 
     Args:
     - num_rows: Number of rows of subplots.
@@ -151,6 +150,7 @@ def _plot_and_save_scores(
                 bbox={"facecolor": "none", "edgecolor": "grey"},
             )
             fig.savefig(f"{output_dir}/{filename}.png")
+            plt.close()
 
 
 def _generate_station_plots(
@@ -447,7 +447,6 @@ def _add_features(ax):
 
 def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     # dataframes have two different structures
-    print("PARAM ", param, score)
     param = check_params(param[0])
     print("PARAM ", param, score)
     if score in station_score_range.index:

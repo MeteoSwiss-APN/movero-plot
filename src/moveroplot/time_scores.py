@@ -48,7 +48,6 @@ def collect_relevant_files(
                     in_lt_ranges = lt_range in lt_ranges
 
                 if in_lt_ranges:
-                    print(parameter, lt_range, " IN ", lt_ranges)
                     # extract header & dataframe
                     loaded_Atab = Atab(file=file_path, sep=" ")
                     header = loaded_Atab.header
@@ -84,7 +83,6 @@ def collect_relevant_files(
         pprint(files_list)
 
     extracted_model_data = corresponding_files_dict
-    print("JKSNKD XC ", corresponding_files_dict["19-24"].keys())
     return extracted_model_data
 
 
@@ -117,7 +115,6 @@ def _time_scores_pipeline(
 
     """  # noqa: E501
     print("---initialising time score pipeline")
-    print("PLOT SETUP IN TIME SCORES ", plot_setup)
     if not lt_ranges:
         lt_ranges = "19-24"
 
@@ -265,7 +262,6 @@ def _time_scores_pipeline(
 
 def _clear_empty_axes_if_necessary(subplot_axes, idx):
     # remove empty ``axes`` instances
-    print("IDC ", idx)
     if idx % 2 != 1:
         [ax.axis("off") for ax in subplot_axes[(idx + 1) % 2 :]]
 
@@ -283,6 +279,7 @@ def _save_figure(output_dir, filename, title, fig, axes, idx):
     )
     _clear_empty_axes_if_necessary(axes, idx)
     fig.savefig(f"{output_dir}/{filename[:-1]}.png")
+    plt.close()
 
 
 def _initialize_plots(labels: list):
@@ -293,7 +290,6 @@ def _initialize_plots(labels: list):
         Line2D([0], [0], color=PlotSettings.modelcolors[i], lw=2)
         for i in range(len(labels))
     ]
-    print("LABNELS ", labels)
     fig.legend(
         custom_lines,
         labels,
@@ -387,7 +383,6 @@ def _plot_and_save_scores(
         filename = base_filename
         for idx, score_setup in enumerate(plot_scores_setup):
             title = title_base + ",".join(score_setup) + model_info
-            print("LTR LTR LTR ", base_filename)
             ax = subplot_axes[idx % 2]
             print(
                 "SCORE SETUP ", score_setup, ltr_models_data.keys(), models_data.keys()
@@ -415,7 +410,6 @@ def _plot_and_save_scores(
                     ax.tick_params(axis="both", which="minor", labelsize=6)
                     ax.autoscale(axis="y")
                 ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d\n%H:%M"))
-            print("LALALA ", score_setup)
             if len(score_setup) > 1:
                 sub_plot_legend = ax.legend(
                     score_setup,
@@ -430,6 +424,7 @@ def _plot_and_save_scores(
             if idx % 2 == 1 or idx == len(plot_scores_setup) - 1:
                 _clear_empty_axes_if_necessary(subplot_axes, idx)
                 fig.savefig(f"{output_dir}/{filename}.png")
+                plt.close()
                 filename = base_filename
                 fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
 

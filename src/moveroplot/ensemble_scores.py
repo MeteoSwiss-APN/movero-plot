@@ -13,16 +13,16 @@ from matplotlib.lines import Line2D
 
 # Local
 from .config.plot_settings import PlotSettings
+from .station_scores import _calculate_figsize
 from .total_scores import _customise_ax
 from .total_scores import _save_figure
 from .total_scores import _set_ylim
-from .station_scores import _calculate_figsize
-
 
 # pylint: disable=no-name-in-module
 from .utils.atab import Atab
 from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import total_score_range
+
 
 def collect_relevant_files(
     input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
@@ -84,7 +84,6 @@ def _ensemble_scores_pipeline(
     output_dir,
     debug,
 ) -> None:
-    print("PLOT SETUP ", plot_setup)
     if not lt_ranges:
         lt_ranges = "07-12,13-18,19-24"
     for model_plots in plot_setup["model_versions"]:
@@ -107,8 +106,13 @@ def _ensemble_scores_pipeline(
                 debug=debug,
             )
 
-def _initialize_plots(num_rows: int, num_cols: int, single_figsize:tuple[int] = (8, 4)):
-    figsize = _calculate_figsize(num_rows, num_cols, single_figsize, (1, 1))  # (10, 6.8)
+
+def _initialize_plots(
+    num_rows: int, num_cols: int, single_figsize: tuple[int] = (8, 4)
+):
+    figsize = _calculate_figsize(
+        num_rows, num_cols, single_figsize, (1, 1)
+    )  # (10, 6.8)
     fig, axes = plt.subplots(
         nrows=num_rows,
         ncols=num_cols,
@@ -121,14 +125,15 @@ def _initialize_plots(num_rows: int, num_cols: int, single_figsize:tuple[int] = 
     plt.subplots_adjust(bottom=0.15)
     return fig, axes
 
+
 def _add_sample_subplot(fig, ax):
     box = ax.get_position()
     width = box.width
     height = box.height
-    l, b, h, w = .8, .025, .3, .2
-    w*=width
-    h*=height
-    inax_position  = ax.transAxes.transform([l,b])
+    l, b, h, w = 0.8, 0.025, 0.3, 0.2
+    w *= width
+    h *= height
+    inax_position = ax.transAxes.transform([l, b])
     transFigure = fig.transFigure.inverted()
     infig_position = transFigure.transform(inax_position)
     sub_plot = fig.add_axes([*infig_position, w, h])
@@ -136,15 +141,17 @@ def _add_sample_subplot(fig, ax):
     sub_plot.set_title("N")
     return sub_plot
 
+
 def _add_boundary_line(ax, points):
     ax.plot(
-            [0,1],
-            points,
-            color="black",
-            fillstyle="none",
-            linestyle="--",
-            alpha=0.2,
-        )
+        [0, 1],
+        points,
+        color="black",
+        fillstyle="none",
+        linestyle="--",
+        alpha=0.2,
+    )
+
 
 def _plot_and_save_scores(
     output_dir,
@@ -165,7 +172,7 @@ def _plot_and_save_scores(
             for score_idx, score in enumerate(score_setup):
                 fig, subplot_axes = _initialize_plots(
                     2 if len(models_data.keys()) > 1 else 1,
-                    (len(models_data.keys())+1)//2,
+                    (len(models_data.keys()) + 1) // 2,
                 )
                 subplot_axes = subplot_axes.ravel()
                 for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
@@ -191,21 +198,19 @@ def _plot_and_save_scores(
                             width=0.25,
                             color=model_plot_color,
                         )
-                if len(models_data.keys()) > 2 and len(models_data.keys())%2 == 1:
+                if len(models_data.keys()) > 2 and len(models_data.keys()) % 2 == 1:
                     subplot_axes[-1].axis("off")
         elif any(["REL_DIA" in score for score in score_setup]):
             fig, subplot_axes = _initialize_plots(
-                    len(score_setup),
-                    len(models_data.keys()),
-                    (6,6)
-                )
+                len(score_setup), len(models_data.keys()), (6, 6)
+            )
             filename += f"_REL_DIA_{'_'.join(models_data.keys())}"
             for score_idx, score in enumerate(score_setup):
                 threshold = re.search(r"\(.*?\)", score).group()
                 for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
                     ax = subplot_axes[score_idx][ltr_idx]
                     ax.set_ylabel("Observed Relative Frequency")
-                    ax.set_xlabel(f"Forecast Probability, LT: {ltr}")   
+                    ax.set_xlabel(f"Forecast Probability, LT: {ltr}")
                     ax.set_xlim(0, 1)
                     ax.set_ylim(0, 1)
                     [unit] = model_data[next(iter(model_data.keys()))]["header"]["Unit"]
@@ -254,16 +259,22 @@ def _plot_and_save_scores(
                             width=0.25,
                             color=model_plot_color,
                         )
-                    
-                    _add_boundary_line(ax,[0,1])
-                    _add_boundary_line(ax,[OF_value,OF_value])
-                    _add_boundary_line(ax,[(1-np.tan(np.pi/8))*OF_value, OF_value+(1-OF_value)*np.tan(np.pi/8)])    
-                    sample_subplot.set_yticks(np.round([max(NBIN_values)],-3))
+
+                    _add_boundary_line(ax, [0, 1])
+                    _add_boundary_line(ax, [OF_value, OF_value])
+                    _add_boundary_line(
+                        ax,
+                        [
+                            (1 - np.tan(np.pi / 8)) * OF_value,
+                            OF_value + (1 - OF_value) * np.tan(np.pi / 8),
+                        ],
+                    )
+                    sample_subplot.set_yticks(np.round([max(NBIN_values)], -3))
         else:
             fig, subplot_axes = _initialize_plots(
-                    2 if len(score_setup) > 1 else 1,
-                    (len(score_setup)+1)//2,
-                )
+                2 if len(score_setup) > 1 else 1,
+                (len(score_setup) + 1) // 2,
+            )
             subplot_axes = subplot_axes.ravel()
             fig.legend(
                 models_color_lines,
@@ -271,7 +282,7 @@ def _plot_and_save_scores(
                 loc="upper right",
                 ncol=1,
                 frameon=False,
-                )
+            )
             ltr_sorted = sorted(
                 list(models_data.keys()), key=lambda x: int(x.split("-")[0])
             )
@@ -294,7 +305,7 @@ def _plot_and_save_scores(
                         marker="D",
                         fillstyle="none",
                     )
-                    
+
                 ax.set_ylabel(f"{score}")
                 ax.set_xticks(x_int, ltr_sorted)
                 ax.set_title(f"{parameter}: {score}")
@@ -302,7 +313,7 @@ def _plot_and_save_scores(
                 ax.grid(which="minor", color="#EEEEEE", linestyle=":", linewidth=0.5)
                 ax.set_xlabel("Lead-Time Range (h)")
 
-            if len(score_setup) > 2 and len(score_setup)%2 == 1:
+            if len(score_setup) > 2 and len(score_setup) % 2 == 1:
                 subplot_axes[-1].axis("off")
 
         fig.suptitle(
@@ -315,16 +326,17 @@ def _plot_and_save_scores(
             },
             bbox={"facecolor": "none", "edgecolor": "grey"},
         )
-        
+
         fig.legend(
-                models_color_lines,
-                list(models_data[next(iter(models_data.keys()))].keys()),
-                loc="upper right",
-                ncol=1,
-                frameon=False,
-                )
-            
+            models_color_lines,
+            list(models_data[next(iter(models_data.keys()))].keys()),
+            loc="upper right",
+            ncol=1,
+            frameon=False,
+        )
+
         fig.savefig(f"{output_dir}/{filename}.png")
+        plt.close()
 
 
 def _generate_ensemble_scores_plots(

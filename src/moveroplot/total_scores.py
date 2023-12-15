@@ -230,6 +230,7 @@ def _save_figure(output_dir, filename, title, fig, axes, idx):
     )
     _clear_empty_axes_if_necessary(axes, idx)
     fig.savefig(f"{output_dir}/{filename[:-1]}.png")
+    plt.close()
 
 
 def _plot_and_save_scores(
@@ -278,7 +279,7 @@ def _plot_and_save_scores(
                     fillstyle="none",
                     label=f"{score_setup[0].upper()}",
                 )
-            
+
             # Generate a legend if two scores in one subplot
             if len(score_setup) > 1:
                 sub_plot_legend = ax.legend(
@@ -334,7 +335,6 @@ def _generate_total_scores_plots(
         if len(model_versions) == 1
         else f"total_scores_{parameter}_"
     )
-
     headers = [
         data[sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))[-1]][
             "header"
