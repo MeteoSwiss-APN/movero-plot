@@ -95,7 +95,8 @@ from .main import main
 @click.option(
     "--colors",
     type=str,
-    help="Specify the plot color for each model version using matploblib's color coding",
+    help="""Specify the plot color for each model version
+    using matploblib's color coding""",
 )
 @click.option("--relief", type=bool, is_flag=True, help="Add relief to maps.")
 @click.option("--grid", type=bool, is_flag=True, help="Add grid to plots.")

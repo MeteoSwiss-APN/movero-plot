@@ -16,11 +16,8 @@ from matplotlib.lines import Line2D
 from moveroplot.config.plot_settings import PlotSettings
 
 # Local
-# import datetime
 from .utils.atab import Atab
-from .utils.check_params import check_params
-from .utils.parse_plot_synop_ch import cat_time_score_range
-from .utils.parse_plot_synop_ch import time_score_range
+from .utils.parse_plot_synop_ch import total_score_range
 
 
 def collect_relevant_files(
@@ -49,9 +46,9 @@ def collect_relevant_files(
 
                 if in_lt_ranges:
                     # extract header & dataframe
-                    loaded_Atab = Atab(file=file_path, sep=" ")
-                    header = loaded_Atab.header
-                    df = loaded_Atab.data
+                    loaded_atab = Atab(file=file_path, sep=" ")
+                    header = loaded_atab.header
+                    df = loaded_atab.data
                     # clean df
                     df = df.replace(float(header["Missing value code"][0]), np.NaN)
                     df["timestamp"] = pd.to_datetime(
@@ -129,133 +126,12 @@ def _time_scores_pipeline(
                 parameter,
                 lt_ranges,
             )
-            print("MODEL DATA ", model_data.keys())
 
             _generate_timeseries_plots(
                 plot_scores=scores,
                 models_data=model_data,
                 parameter=parameter,
                 output_dir=output_dir,
-                debug=debug,
-            )
-
-    return
-    for lt_range in lt_ranges:
-        return
-
-        for parameter in plot_setup:
-            # retrieve list of scores, relevant for current parameter
-            scores = plot_setup[parameter]  # this scores is a list of lists
-
-            # define path to the file of current parameter (station_score atab file)
-            file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
-            print("FILE", file)
-            path = Path(f"{input_dir}/{model_versions}/{file}")
-
-            # check if the file exists
-            if not path.exists():
-                print(
-                    f"""WARNING: No data file for parameter
-                    {parameter} could be found. {path} does not exist."""
-                )
-                continue  # for the current parameter no file could be retrieved
-
-            if debug:
-                print(f"\nFilepath:\t{path}")
-
-            # extract header & dataframe
-            header = Atab(file=path, sep=" ").header
-            df = Atab(file=path, sep=" ").data
-
-            # cast time columns as str, so they can be combined to one datetime column
-            data_types_dict = {"YYYY": str, "MM": str, "DD": str, "hh": str, "mm": str}
-            df = df.astype(data_types_dict)
-
-            # TODO: optimise this - it is inefficient and ugly.
-            # create datetime column (just called time) & drop unnecessary columns
-            df["timestamp"] = pd.to_datetime(
-                df["YYYY"]  # noqa: W503
-                + "-"  # noqa: W503
-                + df["MM"]  # noqa: W503
-                + "-"  # noqa: W503
-                + df["DD"]  # noqa: W503
-                + " "  # noqa: W503
-                + df["hh"]  # noqa: W503
-                + ":"  # noqa: W503
-                + df["mm"]  # noqa: W503
-            )
-            """
-            # dbg()
-            # df['timestamp_new'] = [' '.join([x + '-' + y + '-' + z + ' ' + q + ':' + r]) for x, y, z, q, r in zip(df['YYYY'], df['MM'], df['DD'], df['hh'], df['mm'])]
-            # df['timestamp_new'] = pd.to_datetime(df['timestamp_new'])
-            # df['timestamp_new_2'] = pd.to_datetime([' '.join([x + '-' + y + '-' + z + ' ' + q + ':' + r]) for x, y, z, q, r in zip(df['YYYY'], df['MM'], df['DD'], df['hh'], df['mm'])])
-            # df['timestamp'] = pd.to_datetime([' '.join([x + '-' + y + '-' + z + ' ' + q + ':' + r]) for x, y, z, q, r in zip(df['YYYY'], df['MM'], df['DD'], df['hh'], df['mm'])])
-            # dbg()
-            """  # noqa: E501
-
-            df.drop(
-                ["YYYY", "MM", "DD", "hh", "mm", "lt_hh", "lt_mm"], axis=1, inplace=True
-            )
-
-            # > remove/replace missing values in dataframe with np.NaN
-            df = df.replace(float(header["Missing value code"][0]), np.NaN)
-
-            # > if there are columns (= scores), that only contain np.NaN, remove them
-            # df = df.dropna(axis=1, how="all")
-
-            # > check which relevant scores are available; extract those from df
-            all_scores = df.columns.tolist()
-            available_scores = [
-                "timestamp"
-            ]  # this list is the columns, that should be kept
-            multiplot_scores = {}
-            for score in scores:  # scores = [[score1], [score2/score3], [score4],...]
-                if len(score) == 1:
-                    if score[0] in all_scores:
-                        available_scores.append(score[0])
-                    else:  # warn that a relevant score was not available in dataframe
-                        print(
-                            f"""WARNING: Score {score[0]} not available
-                            for parameter {parameter}."""
-                        )
-                if len(score) > 1:  # currently only 2-in-1 plots are possible
-                    # MMOD/MOBS --> MMOD:MOBS
-                    multiplot_scores[score[0]] = score[1]
-                    for sc in score:
-                        if sc in all_scores:
-                            available_scores.append(sc)
-                        else:
-                            print(
-                                f"""WARNING: Score {sc} not available
-                                for parameter {parameter}."""
-                            )
-
-            df = df[available_scores]
-
-            if False:
-                print("\nFile header:")
-                pprint(header)
-                print("\nData:")
-                pprint(df)
-
-            if debug:
-                print(
-                    f"""Generating plot for {parameter} for
-                    lt_range: {lt_range}. (File: {file})"""
-                )
-
-            return
-            # for each score in df, create one map
-            _generate_timeseries_plot(
-                data=df,
-                multiplots=multiplot_scores,  # { MMOD : MOBS }
-                lt_range=lt_range,
-                variable=parameter,
-                file=file,
-                file_postfix=file_postfix,
-                header_dict=header,
-                output_dir=output_dir,
-                grid=grid,
                 debug=debug,
             )
 
@@ -297,7 +173,7 @@ def _initialize_plots(labels: list):
         ncol=1,
         frameon=False,
     )
-    plt.tight_layout(w_pad=8, h_pad=5, rect=[0.05, 0.05, 0.90, 0.90])
+    plt.tight_layout(w_pad=8, h_pad=5, rect=(0.05, 0.05, 0.90, 0.90))
     return fig, [ax0, ax1]
 
 
@@ -310,14 +186,8 @@ def _set_ylim(param, score, ax, debug):  # pylint: disable=unused-argument
     if regular_param and regular_scores:
         lower_bound = total_score_range[param]["min"].loc[score]
         upper_bound = total_score_range[param]["max"].loc[score]
-        # if debug:
-        #     print(
-        #         f"found limits for {param}/{score} --> {lower_bound}/{upper_bound}"
-        # )
         if lower_bound != upper_bound:
             ax.set_ylim(lower_bound, upper_bound)
-
-    # TODO: add computation of y-lims for cat & ens scores
 
 
 def _customise_ax(parameter, scores, x_ticks, grid, ax):
@@ -379,7 +249,8 @@ def _plot_and_save_scores(
         model_info = (
             f" {list(models_data.keys())[0]}" if len(models_data.keys()) == 1 else ""
         )
-        x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")} """
+        x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} -
+        {total_end_date.strftime("%Y-%m-%d %H:%M")}"""
         filename = base_filename
         for idx, score_setup in enumerate(plot_scores_setup):
             title = title_base + ",".join(score_setup) + model_info
@@ -437,7 +308,6 @@ def _generate_timeseries_plots(
     output_dir,
     debug,
 ):
-    model_plot_colors = PlotSettings.modelcolors
     model_versions = list(models_data.keys())
 
     # initialise filename
@@ -446,32 +316,7 @@ def _generate_timeseries_plots(
         if len(model_versions) == 1
         else f"time_scores_{parameter}"
     )
-    '''
-    headers = [
-        data[sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))[-1]][
-            "header"
-        ]
-        for data in models_data.values()
-    ]
-
-    total_start_date = min(
-        datetime.strptime(header["Start time"][0], "%Y-%m-%d") for header in headers
-    )
-
-    total_end_date = max(
-        datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
-    )
-
-    model_info = (
-        "" if len(model_versions) > 1 else f"Model: {headers[0]['Model version'][0]} | \n"
-    )
-    sup_title = (
-        model_info
-        + f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
-    )
-    '''
     sup_title = ""
-    print("Plot Scores ", plot_scores)
     # plot regular scores
     _plot_and_save_scores(
         output_dir,

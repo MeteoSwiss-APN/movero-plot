@@ -85,7 +85,7 @@ def main(
     plot_ens_cat_scores: Optional[str],
     # new inputs
     input_dir: Path,
-    output_dir: Optional[str],
+    output_dir: Path,
     relief: bool,
     grid: bool,
     colors: Optional[str],
@@ -126,8 +126,7 @@ def main(
 
     if not Path(output_dir).exists():
         Path(output_dir).mkdir(parents=True, exist_ok=True)
-    print(" SSJNKDF ", plot_type)
-    print("KKKK ", plot_cat_scores, plot_cat_params, plot_cat_thresh)
+
     # 0. PARSE USER INPUT
     plot_setup = _parse_inputs(
         debug,

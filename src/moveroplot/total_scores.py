@@ -15,7 +15,6 @@ from .config.plot_settings import PlotSettings
 
 # pylint: disable=no-name-in-module
 from .utils.atab import Atab
-from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import total_score_range
 
 # pylint: enable=no-name-in-module
@@ -29,6 +28,7 @@ plt.rcParams.update(
 )
 
 
+# pylint: disable=too-many-arguments,too-many-locals
 def collect_relevant_files(
     input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
 ):
@@ -71,9 +71,9 @@ def collect_relevant_files(
 
                 if in_lt_ranges:
                     # extract header & dataframe
-                    loaded_Atab = Atab(file=file_path, sep=" ")
-                    header = loaded_Atab.header
-                    df = loaded_Atab.data
+                    loaded_atab = Atab(file=file_path, sep=" ")
+                    header = loaded_atab.header
+                    df = loaded_atab.data
 
                     # clean df
                     df = df.replace(float(header["Missing value code"][0]), np.NaN)
@@ -199,7 +199,8 @@ def _customise_ax(parameter, scores, x_ticks, grid, ax):
 def _clear_empty_axes_if_necessary(subplot_axes, idx):
     # remove empty ``axes`` instances
     if (idx + 1) % 4 != 0:
-        [ax.axis("off") for ax in subplot_axes[(idx + 1) % 4 :]]
+        for ax in subplot_axes[(idx + 1) % 4 :]:
+            ax.axis("off")
 
 
 def _initialize_plots(lines: list[Line2D], labels: list):
@@ -213,7 +214,7 @@ def _initialize_plots(lines: list[Line2D], labels: list):
         ncol=1,
         frameon=False,
     )
-    plt.tight_layout(w_pad=8, h_pad=3, rect=[0.05, 0.05, 0.90, 0.90])
+    plt.tight_layout(w_pad=8, h_pad=3, rect=(0.05, 0.05, 0.90, 0.90))
     return fig, [ax0, ax1, ax2, ax3]
 
 
@@ -263,7 +264,8 @@ def _plot_and_save_scores(
 
             if len(score_setup) > 2:
                 raise ValueError(
-                    f"Maximum two scores are allowed in one plot. Got {len(score_setup)}"
+                    f"""Maximum two scores are allowed in one plot.
+                    Got {len(score_setup)}"""
                 )
             for score_idx, score in enumerate(score_setup):
                 if model_idx == 0:
@@ -326,8 +328,6 @@ def _generate_total_scores_plots(
         Line2D([0], [0], color=model_plot_colors[i], lw=2)
         for i in range(len(model_versions))
     ]
-    # get correct parameter, i.e. if parameter=T_2M_KAL --> param=T_2M*
-    param = check_params(param=parameter, verbose=False)
 
     # initialise filename
     base_filename = (
@@ -357,9 +357,11 @@ def _generate_total_scores_plots(
     )
     sup_title = (
         model_info
-        + f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
+        + f"""Period: {total_start_date.strftime("%Y-%m-%d")} -
+        {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
     )
-
+    if debug:
+        print("Try to generate total score plots.")
     # plot regular scores
     _plot_and_save_scores(
         output_dir,

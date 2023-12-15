@@ -65,7 +65,8 @@ def _parse_inputs(
     if not set(all_model_versions).issubset(model_directories):
         not_in_dir = set(all_model_versions) - model_directories
         raise ValueError(
-            f"""The model version inputs {list(not_in_dir)} do not exist in the directory {input_dir}."""
+            f"""The model version inputs {list(not_in_dir)}
+            do not exist in the directory {input_dir}."""
         )
 
     if plotcolors:
@@ -73,7 +74,8 @@ def _parse_inputs(
         if len(color_list) < len(all_model_versions):
             raise ValueError(
                 f"""
-            The input length --plotcolor is smaller than the number of models to plot ({len(color_list)} < {len(all_model_versions)})
+            The input length --plotcolor is smaller than the
+            number of models to plot ({len(color_list)} < {len(all_model_versions)})
             """
             )
         PlotSettings.modelcolors = color_list
@@ -121,7 +123,7 @@ def _parse_inputs(
             cat_threshs = plot_cat_thresh.split(":")
             cat_params_dict = {cat_param: [] for cat_param in cat_params}
             for param, threshs in zip(cat_params, cat_threshs):
-                # append all scores with a threshold in their name to current to parameter
+                # append all scores with a threshold
                 thresholds = threshs.split(",")
                 for threshold in thresholds:
                     for score in cat_scores:
@@ -158,7 +160,7 @@ def _parse_inputs(
             for score_set in score_setups:
                 if "RANK" in score_set and len(score_set) > 1:
                     ens_scores.append(
-                        [score for score in score_set if not "RANK" in score]
+                        [score for score in score_set if "RANK" not in score]
                     )
                     ens_scores.append(["RANK"])
                 else:
@@ -177,7 +179,7 @@ def _parse_inputs(
             for score_set in ens_cat_score_setups:
                 if "REL_DIA" in score_set and len(score_set) > 1:
                     ens_cat_scores.append(
-                        [score for score in score_set if not "REL_DIA" in score]
+                        [score for score in score_set if "REL_DIA" not in score]
                     )
                     ens_cat_scores.append(["REL_DIA"])
                 else:

@@ -1,7 +1,6 @@
 # pylint: skip-file
 # relevant imports for parsing pipeline
 # Standard library
-import itertools
 import pprint
 import re
 import sys
@@ -54,6 +53,7 @@ def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 
 
     Returns:
     - tuple representing the figure size.
+
     """
     total_width = num_cols * single_plot_size[0] + (num_cols - 1) * padding[0]
     total_height = num_rows * single_plot_size[1] + (num_rows - 1) * padding[1]
@@ -63,7 +63,7 @@ def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 
 def _initialize_plots(labels: list, scores: list):
     num_cols = len(labels)
     num_rows = len(scores)
-    figsize = _calculate_figsize(num_rows, num_cols, (10, 14.7), (0, 2))  # (10, 6.8)
+    figsize = _calculate_figsize(num_rows, num_cols, (10, 14.7), (0, 2))
     fig, axes = plt.subplots(
         subplot_kw=dict(projection=ccrs.PlateCarree()),
         nrows=num_rows,
@@ -97,7 +97,10 @@ def _add_plot_text(ax, data, score, ltr):
     plt.text(
         0.5,
         -0.1,
-        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} ({ltr}) -Min: {min_value} mm at station {min_station} +Max: {max_value} mm at station {max_station}""",
+        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to
+        {end_date.strftime("%Y-%m-%d %H:%M")} ({ltr})
+        -Min: {min_value} mm at station {min_station}
+        +Max: {max_value} mm at station {max_station}""",
         horizontalalignment="center",
         verticalalignment="center",
         transform=ax.transAxes,
@@ -237,110 +240,6 @@ def _station_scores_pipeline(
                 output_dir=output_dir,
                 debug=debug,
             )
-    return
-    for lt_range in lt_ranges:
-        for parameter in plot_setup:
-            # retrieve list of scores, relevant for current parameter
-            scores = plot_setup[parameter]  # this scores is a list of lists
-
-            # define path to the file of the current parameter (station_score atab file)
-            file = f"{file_prefix}{lt_range}_{parameter}{file_postfix}"
-            path = Path(f"{input_dir}/{model_version}/{file}")
-
-            # check if the file exists
-            if not path.exists():
-                print(
-                    f"""WARNING: No data file for parameter {parameter} could be found.
-                    {path} does not exist."""
-                )
-                continue  # no file could be retrieved for the current parameter
-
-            if debug:
-                print(f"\nFilepath:\t{path}")
-
-            # extract header
-            header = Atab(file=path, sep=" ").header
-            relevant_header_information = {
-                "Start time": header["Start time"],
-                "End time": header[
-                    "End time"
-                ],  # i.e. ['2021-11-30', '2300', '', '+000'],
-                "Missing value code": header["Missing value code"][0],
-                "Model name": header["Model name"][0],
-                "Model version": header["Model version"][0],
-                "Parameter": header["Parameter"][0],
-                "Unit": header["Unit"][0],
-            }
-            # pprint.pprint(relevant_header_information) # dbg
-
-            # TODO: longitude gets parsed ugly --> check separator in atab.py
-            # looks like this: ['7.56100', '', '', '', '', '', '', '8.60800',....]
-            # should look like this: ['7.56100', '8.60800', ..]
-            longitudes = list(filter(None, header["Longitude"]))
-            latitudes = list(filter(None, header["Latitude"]))
-
-            # extract dataframe
-            df = Atab(file=path, sep=" ").data
-
-            print("OIOOOO ", path)
-            pprint(df)  # type: ignore
-            """
-            # > rename the first column
-            # TODO (in ATAB): split the first column based on number of characters and not based
-            # on separator. get number of characters from header: Width of text label column: 14
-
-            # alternatively:
-            # get column names
-            # get first column name
-            # remove Score from first column name
-            # keep rest and rename first column
-            """  # noqa: E501
-            df.rename(columns={"ScoreABO": "ABO"}, inplace=True)
-
-            # > add longitude and latitude to df
-            df.loc["lon"] = longitudes
-            df.loc["lat"] = latitudes
-
-            # > check which relevant scores are available; extract those from df
-            all_scores = df.index.tolist()
-            available_scores = ["lon", "lat"]  # this list, will be kept
-            for score in scores:  # scores = [[score1], [score2],...]
-                if score[0] in all_scores:
-                    available_scores.append(score[0])
-                else:  # warn that a relevant score was not available in dataframe
-                    print(
-                        f"""WARNING: Score {score[0]}
-                        not available for parameter {parameter}."""
-                    )
-
-            # reduce dataframe, s.t. only relevant scores + lon/lat are kept
-            df = df.loc[available_scores]
-
-            # > remove/replace missing values in dataframe with np.NaN
-            print("JJJJ ", relevant_header_information["Missing value code"])
-            df = df.replace(
-                float(relevant_header_information["Missing value code"]), np.NaN
-            )
-            """
-            # > if there are rows (= scores), that only contain np.NaN, remove them
-            # df = df.dropna(how="all")
-
-            # if debug:
-            #     print(f"Generating plot for {parameter} for lt_range: {lt_range}. (File: {file})")
-            # for each score in df, create one map
-            """  # noqa: E501
-            _generate_map_plot(
-                data=df,
-                lt_range=lt_range,
-                variable=parameter,
-                file=file,
-                file_postfix=file_postfix,
-                header_dict=relevant_header_information,
-                model_version=model_version,
-                output_dir=output_dir,
-                relief=relief,
-                debug=debug,
-            )
 
 
 def collect_relevant_files(
@@ -369,10 +268,10 @@ def collect_relevant_files(
                 if in_lt_ranges:
                     print("FILE PATH", file_path, file_prefix, in_lt_ranges)
 
-                    loaded_Atab = Atab(file=file_path, sep=" ")
+                    loaded_atab = Atab(file=file_path, sep=" ")
 
-                    header = loaded_Atab.header
-                    df = loaded_Atab.data
+                    header = loaded_atab.header
+                    df = loaded_atab.data
                     # clean df
                     df = df.replace(float(header["Missing value code"][0]), np.NaN)
                     df.rename(columns={"ScoreABO": "ABO"}, inplace=True)

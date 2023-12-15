@@ -1,3 +1,6 @@
+"""Static configurations settings for plots."""
+
+
 class PlotSettings:
     modelcolors: list[str] = [
         "black",

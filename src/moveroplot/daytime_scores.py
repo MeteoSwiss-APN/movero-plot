@@ -8,10 +8,8 @@ from pprint import pprint
 
 # Third-party
 import matplotlib.dates as mdates
-import matplotlib.dates as md
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.lines import Line2D
 
 # First-party
@@ -20,9 +18,6 @@ from moveroplot.config.plot_settings import PlotSettings
 # Local
 # import datetime
 from .utils.atab import Atab
-from .utils.check_params import check_params
-from .utils.parse_plot_synop_ch import cat_daytime_score_range
-from .utils.parse_plot_synop_ch import daytime_score_range
 
 
 # enter directory / read station_scores files / call plotting pipeline
@@ -103,10 +98,10 @@ def collect_relevant_files(
 
                 if in_lt_ranges:
                     # extract header & dataframe
-                    loaded_Atab = Atab(file=file_path, sep=" ")
+                    loaded_atab = Atab(file=file_path, sep=" ")
 
-                    header = loaded_Atab.header
-                    df = loaded_Atab.data
+                    header = loaded_atab.header
+                    df = loaded_atab.data
                     df["hh"] = df["hh"].astype(int)
                     # clean df
                     df = df.replace(float(header["Missing value code"][0]), np.NaN)
@@ -146,7 +141,7 @@ def _initialize_plots(labels: list):
         ncol=1,
         frameon=False,
     )
-    plt.tight_layout(w_pad=8, h_pad=5, rect=[0.05, 0.05, 0.90, 0.90])
+    plt.tight_layout(w_pad=8, h_pad=5, rect=(0.05, 0.05, 0.90, 0.90))
     return fig, [ax0, ax1]
 
 
@@ -187,7 +182,8 @@ def _plot_and_save_scores(
             f" {list(models_data.keys())[0]}" if len(models_data.keys()) == 1 else ""
         )
 
-        x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")} """
+        x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} -
+        {total_end_date.strftime("%Y-%m-%d %H:%M")}"""
         filename = base_filename
         for idx, score_setup in enumerate(plot_scores_setup):
             title = title_base + ",".join(score_setup) + model_info
@@ -259,7 +255,6 @@ def _generate_daytime_plots(
     output_dir,
     debug,
 ):
-    model_plot_colors = PlotSettings.modelcolors
     model_versions = list(models_data.keys())
 
     # initialise filename
@@ -268,30 +263,6 @@ def _generate_daytime_plots(
         if len(model_versions) == 1
         else f"daytime_scores_{parameter}"
     )
-    '''
-    headers = [
-        data[sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))[-1]][
-            "header"
-        ]
-        for data in models_data.values()
-    ]
-
-    total_start_date = min(
-        datetime.strptime(header["Start time"][0], "%Y-%m-%d") for header in headers
-    )
-
-    total_end_date = max(
-        datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
-    )
-
-    model_info = (
-        "" if len(model_versions) > 1 else f"Model: {headers[0]['Model version'][0]} | \n"
-    )
-    sup_title = (
-        model_info
-        + f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
-    )
-    '''
     sup_title = ""
     # plot regular scores
     _plot_and_save_scores(

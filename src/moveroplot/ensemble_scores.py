@@ -4,26 +4,22 @@ import re
 from datetime import datetime
 from pathlib import Path
 from pprint import pprint
+from typing import Tuple
 
 # Third-party
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.lines import Line2D
 
 # Local
 from .config.plot_settings import PlotSettings
 from .station_scores import _calculate_figsize
-from .total_scores import _customise_ax
-from .total_scores import _save_figure
-from .total_scores import _set_ylim
 
 # pylint: disable=no-name-in-module
 from .utils.atab import Atab
-from .utils.check_params import check_params
-from .utils.parse_plot_synop_ch import total_score_range
 
 
+# pylint: disable=too-many-arguments,too-many-locals
 def collect_relevant_files(
     input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
 ):
@@ -49,9 +45,9 @@ def collect_relevant_files(
 
                 if in_lt_ranges:
                     # extract header & dataframe
-                    loaded_Atab = Atab(file=file_path, sep=" ")
-                    header = loaded_Atab.header
-                    df = loaded_Atab.data
+                    loaded_atab = Atab(file=file_path, sep=" ")
+                    header = loaded_atab.header
+                    df = loaded_atab.data
                     # clean df
                     df = df.replace(float(header["Missing value code"][0]), np.NaN)
                     df.set_index(keys="Score", inplace=True)
@@ -108,7 +104,7 @@ def _ensemble_scores_pipeline(
 
 
 def _initialize_plots(
-    num_rows: int, num_cols: int, single_figsize: tuple[int] = (8, 4)
+    num_rows: int, num_cols: int, single_figsize: Tuple[int, int] = (8, 4)
 ):
     figsize = _calculate_figsize(
         num_rows, num_cols, single_figsize, (1, 1)
@@ -121,7 +117,7 @@ def _initialize_plots(
         dpi=500,
         squeeze=False,
     )
-    fig.tight_layout(w_pad=6, h_pad=4, rect=[0.05, 0.05, 0.90, 0.85])
+    fig.tight_layout(w_pad=6, h_pad=4, rect=(0.05, 0.05, 0.90, 0.85))
     plt.subplots_adjust(bottom=0.15)
     return fig, axes
 
@@ -134,8 +130,8 @@ def _add_sample_subplot(fig, ax):
     w *= width
     h *= height
     inax_position = ax.transAxes.transform([l, b])
-    transFigure = fig.transFigure.inverted()
-    infig_position = transFigure.transform(inax_position)
+    transformed_fig = fig.transFigure.inverted()
+    infig_position = transformed_fig.transform(inax_position)
     sub_plot = fig.add_axes([*infig_position, w, h])
     sub_plot.set_xticks([])
     sub_plot.set_title("N")
@@ -153,6 +149,16 @@ def _add_boundary_line(ax, points):
     )
 
 
+def _get_bin_values(data: dict, prefix: str, threshold: str):
+    indices = [
+        index
+        for index in list(data["df"]["Total"].index)
+        if f"{prefix}{threshold}" in index
+    ]
+    return data["df"]["Total"][indices]
+
+
+# pylint: disable=too-many-branches,too-many-statements
 def _plot_and_save_scores(
     output_dir,
     base_filename,
@@ -163,7 +169,9 @@ def _plot_and_save_scores(
     models_color_lines,
     debug=False,
 ):
-    for idx, score_setup in enumerate(plot_scores_setup):
+    if debug:
+        print("Plotting ensemble scores.")
+    for score_setup in plot_scores_setup:
         custom_sup_title = sup_title
         filename = base_filename
         if "RANK" in score_setup:
@@ -178,9 +186,7 @@ def _plot_and_save_scores(
                 for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
                     filename += f"_{ltr}"
                     ax = subplot_axes[ltr_idx]
-                    for model_idx, (model_version, data) in enumerate(
-                        model_data.items()
-                    ):
+                    for model_idx, data in enumerate(model_data.values()):
                         model_plot_color = PlotSettings.modelcolors[model_idx]
                         model_ranks = sorted(
                             [
@@ -200,7 +206,7 @@ def _plot_and_save_scores(
                         )
                 if len(models_data.keys()) > 2 and len(models_data.keys()) % 2 == 1:
                     subplot_axes[-1].axis("off")
-        elif any(["REL_DIA" in score for score in score_setup]):
+        elif any("REL_DIA" in score for score in score_setup):
             fig, subplot_axes = _initialize_plots(
                 len(score_setup), len(models_data.keys()), (6, 6)
             )
@@ -217,59 +223,37 @@ def _plot_and_save_scores(
                     ax.set_title(f"{parameter} {threshold[1:-1]} {unit}")
                     sample_subplot = _add_sample_subplot(fig, ax)
 
-                    for model_idx, (model_version, data) in enumerate(
-                        model_data.items()
-                    ):
+                    for model_idx, data in enumerate(model_data.values()):
                         model_plot_color = PlotSettings.modelcolors[model_idx]
-                        FBIN_indices = [
-                            index
-                            for index in list(data["df"]["Total"].index)
-                            if f"FBIN{threshold}" in index
-                        ]
-                        OBIN_indices = [
-                            index
-                            for index in list(data["df"]["Total"].index)
-                            if f"OBIN{threshold}" in index
-                        ]
-                        NBIN_indices = [
-                            index
-                            for index in list(data["df"]["Total"].index)
-                            if f"NBIN{threshold}" in index
-                        ]
-                        OF_indices = [
-                            index
-                            for index in list(data["df"]["Total"].index)
-                            if f"OF{threshold}" in index
-                        ]
-                        FBIN_values = data["df"]["Total"][FBIN_indices]
-                        OBIN_values = data["df"]["Total"][OBIN_indices]
-                        NBIN_values = data["df"]["Total"][NBIN_indices]
-                        OF_value = data["df"]["Total"][OF_indices]
+                        fbin_values = _get_bin_values(data, "FBIN", threshold)
+                        obin_values = _get_bin_values(data, "OBIN", threshold)
+                        nbin_values = _get_bin_values(data, "NBIN", threshold)
+                        of_value = _get_bin_values(data, "OF", threshold)
                         ax.plot(
-                            FBIN_values,
-                            OBIN_values,
+                            fbin_values,
+                            obin_values,
                             color=model_plot_color,
                             marker="D",
                             fillstyle="none",
                         )
 
                         sample_subplot.bar(
-                            np.arange(len(NBIN_values)) + model_idx * 0.25,
-                            NBIN_values,
+                            np.arange(len(nbin_values)) + model_idx * 0.25,
+                            nbin_values,
                             width=0.25,
                             color=model_plot_color,
                         )
 
                     _add_boundary_line(ax, [0, 1])
-                    _add_boundary_line(ax, [OF_value, OF_value])
+                    _add_boundary_line(ax, [of_value, of_value])
                     _add_boundary_line(
                         ax,
                         [
-                            (1 - np.tan(np.pi / 8)) * OF_value,
-                            OF_value + (1 - OF_value) * np.tan(np.pi / 8),
+                            (1 - np.tan(np.pi / 8)) * of_value,
+                            of_value + (1 - of_value) * np.tan(np.pi / 8),
                         ],
                     )
-                    sample_subplot.set_yticks(np.round([max(NBIN_values)], -3))
+                    sample_subplot.set_yticks(np.round([max(nbin_values)], -3))
         else:
             fig, subplot_axes = _initialize_plots(
                 2 if len(score_setup) > 1 else 1,
@@ -370,8 +354,11 @@ def _generate_ensemble_scores_plots(
         datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
     )
 
-    sup_title = f"""{parameter}\nPeriod: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
-
+    sup_title = f"""{parameter}\n
+    Period: {total_start_date.strftime("%Y-%m-%d")} -
+    {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
+    if debug:
+        print("Generating ensemble plots.")
     _plot_and_save_scores(
         output_dir,
         base_filename,
