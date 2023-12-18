@@ -3,7 +3,6 @@
 # Standard library
 import pprint
 import re
-import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -24,9 +23,7 @@ from cartopy.io.img_tiles import GoogleTiles
 # local
 from .utils.atab import Atab
 from .utils.check_params import check_params
-from .utils.parse_plot_synop_ch import cat_station_score_colortable
 from .utils.parse_plot_synop_ch import cat_station_score_range
-from .utils.parse_plot_synop_ch import station_score_colortable
 from .utils.parse_plot_synop_ch import station_score_range
 
 
@@ -94,18 +91,17 @@ def _add_plot_text(ax, data, score, ltr):
         " ".join(data["header"]["End time"][0:2]), "%Y-%m-%d %H:%M"
     )
     ax.set_title(f"{subplot_title}: {score}")
+    # pylint: disable=line-too-long
     plt.text(
         0.5,
         -0.1,
-        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to
-        {end_date.strftime("%Y-%m-%d %H:%M")} ({ltr})
-        -Min: {min_value} mm at station {min_station}
-        +Max: {max_value} mm at station {max_station}""",
+        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} ({ltr}) -Min: {min_value} mm at station {min_station} +Max: {max_value} mm at station {max_station}""",  # noqa: E501
         horizontalalignment="center",
         verticalalignment="center",
         transform=ax.transAxes,
         fontsize=8,
     )
+    # pylint: enable=line-too-long
 
 
 def _plot_and_save_scores(
@@ -347,15 +343,17 @@ def _add_features(ax):
 def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     # dataframes have two different structures
     param = check_params(param[0])
-    print("PARAM ", param, score)
     if score in station_score_range.index:
         param_score_range = station_score_range[param].loc[score]
-    else:
+    elif score in cat_station_score_range[param].set_index("scores").index:
         param_score_range = (
             cat_station_score_range[param].set_index("scores").loc[score]
         )
+    else:
+        param_score_range = {"min": None, "max": None}
     lower_bound = param_score_range["min"]
     upper_bound = param_score_range["max"]
+
     plot_data = data.loc[["lon", "lat", score]].astype(float)
     nan_data = plot_data.loc[:, plot_data.isna().any()]
     plot_data = plot_data.dropna(axis="columns")
@@ -409,7 +407,6 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
 
 
 def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
-    cat_score = False
     print(f"plotting:\t{param}/{score}")
     # check param, before trying to assign cmap to it
 
@@ -435,96 +432,6 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
 
     cbar = plt.colorbar(sc, ax=ax, orientation="vertical", fraction=0.046, pad=0.04)
     cbar.set_label(unit, rotation=270, labelpad=15)
-
-    # cbar = plt.colorbar(sc, ax=ax)
-    # cbar.set_label(unit, rotation=270, labelpad=15)
-    return
-    # pprint(cat_station_score_colortable)
-
-    # RESOLVE CORRECT PARAMETER
-    try:  # try to get the cmap from the regular station_score_colortable
-        cmap = station_score_colortable[param][score]
-
-    # if a KeyError occurs, the current parameter
-    # doesn't match the columns of the station_score_colourtable df AND/OR
-    # because the score is not present in the station_score_colourtable df.
-    except KeyError:
-        if score not in station_score_colortable.index.tolist():
-            if score in cat_station_score_colortable[param]["scores"].values:
-                cat_score = True
-                if debug:
-                    print(
-                        f"""{score} ∉  station score colortable.
-                        {score} ∈  categorical station score colortable."""
-                    )
-                index = cat_station_score_colortable[
-                    cat_station_score_colortable[param]["scores"] == score
-                ].index.values[0]
-                cmap = cat_station_score_colortable[param]["cmap"].iloc[index]
-            else:
-                print(f"{score} not known - check again.")
-                sys.exit(123)
-
-        elif not cat_score:
-            try:
-                cmap = station_score_colortable[param][score]
-            except KeyError:
-                print("Dont know this parameter and score combination.")
-
-    # define limits for colour bar
-    if not cat_score:
-        lower_bound = station_score_range[param]["min"].loc[score]
-        upper_bound = station_score_range[param]["max"].loc[score]
-    if cat_score:
-        # get the index of the current score
-        index = cat_station_score_range[
-            cat_station_score_range[param]["scores"] == score
-        ].index.values[0]
-        lower_bound = cat_station_score_range[param]["min"].iloc[index]
-        upper_bound = cat_station_score_range[param]["max"].iloc[index]
-
-    # if both are equal (i.e. 0), take the min/max values as limits
-    if lower_bound == upper_bound:
-        lower_bound = min
-        upper_bound = max
-
-    # print(param, score, lower_bound, upper_bound) # dbg
-    tmp = False
-    for name, info in data.iteritems():
-        lon, lat, value = float(info.lon), float(info.lat), float(info[score])
-        # add available datapoints
-        if not np.isnan(value):
-            tmp = True
-            sc = ax.scatter(
-                x=lon,
-                y=lat,
-                marker="o",
-                c=value,
-                vmin=lower_bound,
-                vmax=upper_bound,
-                cmap=cmap,
-                rasterized=True,
-                transform=ccrs.PlateCarree(),
-            )
-
-            if False:  # add the short name of the stations as well
-                ax.text(
-                    x=lon - 0.025,
-                    y=lat - 0.007,
-                    s=name,
-                    color="k",
-                    fontsize=3,
-                    transform=ccrs.PlateCarree(),
-                    rasterized=True,
-                )
-
-    if tmp:
-        cbar = plt.colorbar(sc, ax=ax)
-        cbar.set_label(unit, rotation=270, labelpad=15)
-        return
-
-    else:
-        return
 
 
 def _add_text(
