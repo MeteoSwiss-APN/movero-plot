@@ -245,11 +245,43 @@ def _plot_and_save_scores(
         model_info = (
             f" {list(models_data.keys())[0]}" if len(models_data.keys()) == 1 else ""
         )
+        print("SCORE SETUP ", plot_scores_setup)
         x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")}"""  # noqa: E501
-        filename = base_filename
+        filename = base_filename + f"_{ltr}"
+
+        pattern = re.search(r"\(.*?\)", next(iter(plot_scores_setup))[0])
+        prev_threshold = None
+        if pattern is not None:
+            prev_threshold = pattern.group()
+        current_threshold = prev_threshold
+        current_plot_idx = 0
+
         for idx, score_setup in enumerate(plot_scores_setup):
-            title = title_base + ",".join(score_setup) + model_info + f"LT: {ltr}"
-            ax = subplot_axes[idx % 2]
+            prev_threshold = current_threshold
+            pattern = re.search(r"\(.*?\)", next(iter(score_setup)))
+            current_threshold = pattern.group() if pattern is not None else None
+            different_threshold = prev_threshold != current_threshold
+            if different_threshold:
+                _clear_empty_axes_if_necessary(subplot_axes, current_plot_idx - 1)
+                fig.suptitle(
+                    sup_title,
+                    horizontalalignment="center",
+                    verticalalignment="top",
+                    fontdict={
+                        "size": 6,
+                        "color": "k",
+                    },
+                    bbox={"facecolor": "none", "edgecolor": "grey"},
+                )
+                fig.savefig(f"{output_dir}/{filename}.png")
+                plt.close()
+                filename = base_filename + f"_{ltr}"
+                fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
+                current_plot_idx += current_plot_idx % 4
+
+            title = title_base + ",".join(score_setup) + model_info + f" LT: {ltr}"
+            ax = subplot_axes[current_plot_idx % 2]
+            print("SSS ", score_setup)
             for model_idx, data in enumerate(models_data.values()):
                 model_plot_color = PlotSettings.modelcolors[model_idx]
                 header = data["header"]
@@ -257,7 +289,7 @@ def _plot_and_save_scores(
                 x_int = data["df"][["timestamp"]]
                 y_label = ",".join(score_setup)
                 ax.set_ylabel(f"{y_label.upper()} ({unit})")
-                ax.set_xlabel(x_label_base + ltr)
+                ax.set_xlabel(x_label_base)
                 ax.set_title(title)
                 for score_idx, score in enumerate(score_setup):
                     score_values = data["df"][[score]]
@@ -284,8 +316,8 @@ def _plot_and_save_scores(
                     line.set_color("black")
             filename += "_" + "_".join(score_setup)
 
-            if idx % 2 == 1 or idx == len(plot_scores_setup) - 1:
-                _clear_empty_axes_if_necessary(subplot_axes, idx)
+            if current_plot_idx % 2 == 1 or idx == len(plot_scores_setup) - 1:
+                _clear_empty_axes_if_necessary(subplot_axes, current_plot_idx)
                 fig.suptitle(
                     sup_title,
                     horizontalalignment="center",
@@ -298,8 +330,9 @@ def _plot_and_save_scores(
                 )
                 fig.savefig(f"{output_dir}/{filename}.png")
                 plt.close()
-                filename = base_filename
+                filename = base_filename + f"_{ltr}"
                 fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
+            current_plot_idx += 1
 
 
 # PLOTTING PIPELINE FOR TIME SCORES PLOTS
