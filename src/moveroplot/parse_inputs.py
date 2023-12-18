@@ -2,8 +2,8 @@
 """Parse raw data from ATAB files into data frame."""
 # Standard library
 import itertools
-from pathlib import Path
 import re
+from pathlib import Path
 from pprint import pprint
 
 # Local
@@ -64,7 +64,7 @@ def _parse_inputs(
     all_model_versions = re.split(r"[,/]", model_versions)
     input_dir = Path(input_dir)
     model_directories = set([x.name for x in input_dir.iterdir() if x.is_dir()])
-    print("MODEL DIRECTORIES ",model_versions,  model_directories)
+    print("MODEL DIRECTORIES ", model_versions, model_directories)
     if not set(all_model_versions).issubset(model_directories):
         not_in_dir = set(all_model_versions) - model_directories
         raise ValueError(

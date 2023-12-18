@@ -60,7 +60,7 @@ def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 
 def _initialize_plots(labels: list, scores: list):
     num_cols = len(labels)
     num_rows = len(scores)
-    figsize = _calculate_figsize(num_rows, num_cols, (10, 14.7), (0, 2))
+    figsize = _calculate_figsize(num_rows, num_cols, (14.7, 10), (0, 2))
     fig, axes = plt.subplots(
         subplot_kw=dict(projection=ccrs.PlateCarree()),
         nrows=num_rows,
@@ -90,12 +90,12 @@ def _add_plot_text(ax, data, score, ltr):
     end_date = datetime.strptime(
         " ".join(data["header"]["End time"][0:2]), "%Y-%m-%d %H:%M"
     )
-    ax.set_title(f"{subplot_title}: {score}")
+    ax.set_title(f"{subplot_title}: {score}, LT: {ltr}")
     # pylint: disable=line-too-long
     plt.text(
         0.5,
         -0.1,
-        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} ({ltr}) -Min: {min_value} mm at station {min_station} +Max: {max_value} mm at station {max_station}""",  # noqa: E501
+        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} -Min: {min_value} mm at station {min_station} +Max: {max_value} mm at station {max_station}""",  # noqa: E501
         horizontalalignment="center",
         verticalalignment="center",
         transform=ax.transAxes,
@@ -447,10 +447,9 @@ def _add_text(
 ):
     """Add footer and title to plot."""
     footer = f"""Model: {header_dict['Model version']} |
-    Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]}
-     ({lt_range}) | Min: {min_value} {header_dict['Unit']}
+    Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]} | Min: {min_value} {header_dict['Unit']}
      @ {min_station} | Max: {max_value} {header_dict['Unit']} @ {max_station}
-     | © MeteoSwiss"""
+     | © MeteoSwiss"""  # noqa: E501
 
     plt.suptitle(
         footer,
@@ -464,7 +463,7 @@ def _add_text(
         },
     )
 
-    title = f"{variable}: {score}"
+    title = f"{variable}: {score}, LT: {lt_range}"
     ax.set_title(title, fontsize=15, fontweight="bold")
 
     return ax

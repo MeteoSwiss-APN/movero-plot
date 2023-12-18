@@ -23,7 +23,6 @@ from .utils.parse_plot_synop_ch import total_score_range
 def collect_relevant_files(
     input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
 ):
-    print("SDJIWJHCJ ", lt_ranges)
     corresponding_files_dict = {}
     extracted_model_data = {}
     # for dbg purposes:
@@ -63,7 +62,6 @@ def collect_relevant_files(
                         inplace=True,
                     )
                     # add information to dict
-                    print("MODELLLLLLL ", model)
                     if lt_range not in corresponding_files_dict:
                         corresponding_files_dict[lt_range] = {}
 
@@ -226,8 +224,6 @@ def _plot_and_save_scores(
     ltr_models_data,
     debug=False,
 ):
-    print("PARAMETER ", parameter)
-
     for ltr, models_data in ltr_models_data.items():
         fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
         headers = [data["header"] for data in models_data.values()]
@@ -249,15 +245,11 @@ def _plot_and_save_scores(
         model_info = (
             f" {list(models_data.keys())[0]}" if len(models_data.keys()) == 1 else ""
         )
-        x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} -
-        {total_end_date.strftime("%Y-%m-%d %H:%M")}"""
+        x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")}"""  # noqa: E501
         filename = base_filename
         for idx, score_setup in enumerate(plot_scores_setup):
-            title = title_base + ",".join(score_setup) + model_info
+            title = title_base + ",".join(score_setup) + model_info + f"LT: {ltr}"
             ax = subplot_axes[idx % 2]
-            print(
-                "SCORE SETUP ", score_setup, ltr_models_data.keys(), models_data.keys()
-            )
             for model_idx, data in enumerate(models_data.values()):
                 model_plot_color = PlotSettings.modelcolors[model_idx]
                 header = data["header"]
@@ -294,6 +286,16 @@ def _plot_and_save_scores(
 
             if idx % 2 == 1 or idx == len(plot_scores_setup) - 1:
                 _clear_empty_axes_if_necessary(subplot_axes, idx)
+                fig.suptitle(
+                    sup_title,
+                    horizontalalignment="center",
+                    verticalalignment="top",
+                    fontdict={
+                        "size": 6,
+                        "color": "k",
+                    },
+                    bbox={"facecolor": "none", "edgecolor": "grey"},
+                )
                 fig.savefig(f"{output_dir}/{filename}.png")
                 plt.close()
                 filename = base_filename
@@ -316,7 +318,20 @@ def _generate_timeseries_plots(
         if len(model_versions) == 1
         else f"time_scores_{parameter}"
     )
-    sup_title = ""
+    headers = [
+        data["header"] for data in models_data[next(iter(models_data.keys()))].values()
+    ]
+    total_start_date = min(
+        datetime.strptime(header["Start time"][0], "%Y-%m-%d") for header in headers
+    )
+
+    total_end_date = max(
+        datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
+    )
+    # pylint: disable=line-too-long
+    period_info = f"""Period: {total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")} | © MeteoSwiss"""  # noqa: E501
+    # pylint: enable=line-too-long
+    sup_title = f"{parameter}: " + period_info
     # plot regular scores
     _plot_and_save_scores(
         output_dir,

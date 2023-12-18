@@ -321,7 +321,7 @@ def _generate_total_scores_plots(
     output_dir,
     debug,
 ):
-    """Generate Total Scores Plot."""
+    """Generate Total Score Plots."""
     model_plot_colors = PlotSettings.modelcolors
     model_versions = list(models_data.keys())
     custom_lines = [
@@ -355,11 +355,10 @@ def _generate_total_scores_plots(
         if len(model_versions) > 1
         else f"Model: {headers[0]['Model version'][0]} | \n"
     )
-    sup_title = (
-        model_info
-        + f"""Period: {total_start_date.strftime("%Y-%m-%d")} -
-        {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
-    )
+    # pylint: disable=line-too-long
+    period_info = f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""  # noqa: E501
+    # pylint: enable=line-too-long
+    sup_title = model_info + period_info
     if debug:
         print("Try to generate total score plots.")
     # plot regular scores

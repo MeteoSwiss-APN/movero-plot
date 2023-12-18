@@ -182,8 +182,7 @@ def _plot_and_save_scores(
             f" {list(models_data.keys())[0]}" if len(models_data.keys()) == 1 else ""
         )
 
-        x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} -
-        {total_end_date.strftime("%Y-%m-%d %H:%M")}"""
+        x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")}"""  # noqa: E501
         filename = base_filename
         for idx, score_setup in enumerate(plot_scores_setup):
             title = title_base + ",".join(score_setup) + model_info
