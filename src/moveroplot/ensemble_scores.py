@@ -186,6 +186,8 @@ def _plot_and_save_scores(
                 for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
                     filename += f"_{ltr}"
                     ax = subplot_axes[ltr_idx]
+                    ax.set_xlabel("RANK")
+                    ax.set_title(f"{parameter}, LT: {ltr}")
                     for model_idx, data in enumerate(model_data.values()):
                         model_plot_color = PlotSettings.modelcolors[model_idx]
                         model_ranks = sorted(
@@ -197,7 +199,6 @@ def _plot_and_save_scores(
                             key=lambda x: int("".join(filter(str.isdigit, x))),
                         )
                         ranks = data["df"]["Total"][model_ranks].reset_index(drop=True)
-                        ax.set_xlabel(f"RANK, LT: {ltr}")
                         ax.bar(
                             np.arange(len(model_ranks)) + model_idx * 0.25,
                             ranks,
@@ -210,17 +211,19 @@ def _plot_and_save_scores(
             fig, subplot_axes = _initialize_plots(
                 len(score_setup), len(models_data.keys()), (6, 6)
             )
-            filename += f"_REL_DIA_{'_'.join(models_data.keys())}"
             for score_idx, score in enumerate(score_setup):
+                filename += f"_{score}"
+                print("SCORE ", score)
                 threshold = re.search(r"\(.*?\)", score).group()
                 for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
+                    print("LTR LTR ", ltr)
                     ax = subplot_axes[score_idx][ltr_idx]
                     ax.set_ylabel("Observed Relative Frequency")
-                    ax.set_xlabel(f"Forecast Probability, LT: {ltr}")
+                    ax.set_xlabel("Forecast Probability")
                     ax.set_xlim(0, 1)
                     ax.set_ylim(0, 1)
                     [unit] = model_data[next(iter(model_data.keys()))]["header"]["Unit"]
-                    ax.set_title(f"{parameter} {threshold[1:-1]} {unit}")
+                    ax.set_title(f"{parameter} {threshold[1:-1]} {unit}, LT: {ltr}")
                     sample_subplot = _add_sample_subplot(fig, ax)
 
                     for model_idx, data in enumerate(model_data.values()):
@@ -254,6 +257,7 @@ def _plot_and_save_scores(
                         ],
                     )
                     sample_subplot.set_yticks(np.round([max(nbin_values)], -3))
+            filename += f"_{'_'.join(models_data.keys())}"
         else:
             fig, subplot_axes = _initialize_plots(
                 2 if len(score_setup) > 1 else 1,
@@ -353,10 +357,10 @@ def _generate_ensemble_scores_plots(
     total_end_date = max(
         datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
     )
-
-    sup_title = f"""{parameter}\n
-    Period: {total_start_date.strftime("%Y-%m-%d")} -
-    {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""
+    # pylint: disable=line-too-long
+    sup_title = f"""{parameter}
+    Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""  # noqa: E501
+    # pylint: enable=line-too-long
     if debug:
         print("Generating ensemble plots.")
     _plot_and_save_scores(

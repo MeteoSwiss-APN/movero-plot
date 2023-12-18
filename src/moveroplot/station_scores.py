@@ -80,6 +80,9 @@ def _initialize_plots(labels: list, scores: list):
 
 def _add_plot_text(ax, data, score, ltr):
     [subplot_title] = data["header"]["Model version"]
+    ax.set_title(f"{subplot_title}: {score}, LT: {ltr}")
+    if score not in data["df"].index:
+        return
     min_value = data["df"].loc[score].min()
     min_station = data["df"].loc[score].idxmin()
     max_value = data["df"].loc[score].max()
@@ -90,7 +93,7 @@ def _add_plot_text(ax, data, score, ltr):
     end_date = datetime.strptime(
         " ".join(data["header"]["End time"][0:2]), "%Y-%m-%d %H:%M"
     )
-    ax.set_title(f"{subplot_title}: {score}, LT: {ltr}")
+
     # pylint: disable=line-too-long
     plt.text(
         0.5,
@@ -262,10 +265,7 @@ def collect_relevant_files(
                     in_lt_ranges = lt_range in lt_ranges
 
                 if in_lt_ranges:
-                    print("FILE PATH", file_path, file_prefix, in_lt_ranges)
-
                     loaded_atab = Atab(file=file_path, sep=" ")
-
                     header = loaded_atab.header
                     df = loaded_atab.data
                     # clean df
@@ -343,9 +343,12 @@ def _add_features(ax):
 def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     # dataframes have two different structures
     param = check_params(param[0])
-    if score in station_score_range.index:
+    if param in station_score_range.columns and score in station_score_range.index:
         param_score_range = station_score_range[param].loc[score]
-    elif score in cat_station_score_range[param].set_index("scores").index:
+    elif (
+        param in cat_station_score_range.columns
+        and score in cat_station_score_range[param].set_index("scores").index
+    ):
         param_score_range = (
             cat_station_score_range[param].set_index("scores").loc[score]
         )
@@ -353,7 +356,8 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         param_score_range = {"min": None, "max": None}
     lower_bound = param_score_range["min"]
     upper_bound = param_score_range["max"]
-
+    if score not in data.index:
+        return
     plot_data = data.loc[["lon", "lat", score]].astype(float)
     nan_data = plot_data.loc[:, plot_data.isna().any()]
     plot_data = plot_data.dropna(axis="columns")

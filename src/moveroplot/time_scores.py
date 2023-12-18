@@ -277,7 +277,7 @@ def _plot_and_save_scores(
                 plt.close()
                 filename = base_filename + f"_{ltr}"
                 fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
-                current_plot_idx += current_plot_idx % 4
+                current_plot_idx += current_plot_idx % 2
 
             title = title_base + ",".join(score_setup) + model_info + f" LT: {ltr}"
             ax = subplot_axes[current_plot_idx % 2]
