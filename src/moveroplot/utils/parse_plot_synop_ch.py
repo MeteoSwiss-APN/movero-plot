@@ -22,7 +22,7 @@ from pprint import pprint
 import pandas as pd
 
 verbose = False
-path = Path(Path.cwd() / "src/moveroplot/utils/plot_synop_ch")
+path = Path(__file__).with_name("plot_synop_ch")
 
 # open plot_synop_ch file
 with open(path, "r") as f:  # pylint: disable=unspecified-encoding
