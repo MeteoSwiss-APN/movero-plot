@@ -246,7 +246,28 @@ def _plot_and_save_scores(
 ):
     filename = base_filename
     fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
+
+    pattern = re.search(r"\(.*?\)", next(iter(plot_scores_setup))[0])
+    prev_threshold = None
+    if pattern is not None:
+        prev_threshold = pattern.group()
+    current_threshold = prev_threshold
+    print("PREV THRESH ", prev_threshold)
+    current_plot_idx = 0
     for idx, score_setup in enumerate(plot_scores_setup):
+        prev_threshold = current_threshold
+        pattern = re.search(r"\(.*?\)", next(iter(score_setup)))
+        current_threshold = pattern.group() if pattern is not None else None
+        different_threshold = prev_threshold != current_threshold
+        if different_threshold:
+            _save_figure(
+                output_dir, filename, sup_title, fig, subplot_axes, current_plot_idx - 1
+            )
+            fig, subplot_axes = _initialize_plots(
+                models_color_lines, models_data.keys()
+            )
+            filename = base_filename
+            current_plot_idx += current_plot_idx % 4
         for model_idx, data in enumerate(models_data.values()):
             model_plot_color = PlotSettings.modelcolors[model_idx]
             # sorted lead time ranges
@@ -257,8 +278,7 @@ def _plot_and_save_scores(
             header = data[ltr_sorted[-1]]["header"]
             unit = header["Unit"][0]
             # get ax, to add plot to
-            ax = subplot_axes[idx % 4]
-            # ax.set_xlim(x_int[0], x_int[-1])
+            ax = subplot_axes[current_plot_idx % 4]
             y_label = ",".join(score_setup)
             ax.set_ylabel(f"{y_label.upper()} ({unit})")
 
@@ -304,14 +324,18 @@ def _plot_and_save_scores(
         )
 
         # save filled figure & re-set necessary for next iteration
-        full_figure = idx > 0 and (idx + 1) % 4 == 0
+        full_figure = current_plot_idx > 0 and (current_plot_idx + 1) % 4 == 0
         last_plot = idx == len(plot_scores_setup) - 1
         if full_figure or last_plot:
-            _save_figure(output_dir, filename, sup_title, fig, subplot_axes, idx)
+            _save_figure(
+                output_dir, filename, sup_title, fig, subplot_axes, current_plot_idx
+            )
             fig, subplot_axes = _initialize_plots(
                 models_color_lines, models_data.keys()
             )
             filename = base_filename
+
+        current_plot_idx += 1
 
 
 def _generate_total_scores_plots(
