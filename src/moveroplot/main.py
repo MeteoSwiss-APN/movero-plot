@@ -147,7 +147,7 @@ def main(
     )
     print("PLOT SETUP ", plot_setup)
     # 1. INITIALISE STATION SCORES PLOTTING PIPELINE
-    if plot_type == "station":
+    if "station" in plot_type:
         _station_scores_pipeline(
             plot_setup=plot_setup,
             lt_ranges=lt_ranges,
@@ -158,7 +158,7 @@ def main(
             debug=debug,
         )
     # 2. INITIALISE TIME SERIES PLOTTING PIPELINE
-    if plot_type == "time":
+    if "time" in plot_type:
         _time_scores_pipeline(
             plot_setup=plot_setup,
             lt_ranges=lt_ranges,
@@ -169,7 +169,7 @@ def main(
             debug=debug,
         )
     # 3. INITIALISE DYURNAL CYCLE PLOTTING PIPELINE
-    if plot_type == "daytime":
+    if "daytime" in plot_type:
         _daytime_scores_pipeline(
             plot_setup=plot_setup,
             lt_ranges=lt_ranges,
@@ -180,7 +180,7 @@ def main(
             debug=debug,
         )
     # 4. INITIALIS TOTAL SCORES PLOTTING PIPELINE
-    if plot_type == "total":
+    if "total" in plot_type:
         _total_scores_pipeline(
             plot_setup=plot_setup,
             lt_ranges=lt_ranges,
@@ -191,7 +191,7 @@ def main(
             debug=debug,
         )
 
-    if plot_type == "ensemble":
+    if "ensemble" in plot_type:
         _ensemble_scores_pipeline(
             plot_setup=plot_setup,
             lt_ranges=lt_ranges,
