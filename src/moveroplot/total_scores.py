@@ -256,7 +256,6 @@ def _plot_and_save_scores(
     if pattern is not None:
         prev_threshold = pattern.group()
     current_threshold = prev_threshold
-    print("PREV THRESH ", prev_threshold)
     current_plot_idx = 0
     for idx, score_setup in enumerate(plot_scores_setup):
         prev_threshold = current_threshold

@@ -247,7 +247,6 @@ def _plot_and_save_scores(
         )
         x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")}"""  # noqa: E501
         filename = base_filename + f"_{ltr}"
-        print("PLOT SETUPS ", plot_scores_setup)
         pattern = (
             re.search(r"\(.*?\)", next(iter(plot_scores_setup))[0])
             if plot_scores_setup
@@ -284,7 +283,6 @@ def _plot_and_save_scores(
 
             title = title_base + ",".join(score_setup) + model_info + f" LT: {ltr}"
             ax = subplot_axes[current_plot_idx % 2]
-            print("SSS ", score_setup)
             for model_idx, data in enumerate(models_data.values()):
                 model_plot_color = PlotSettings.modelcolors[model_idx]
                 header = data["header"]
