@@ -1,8 +1,6 @@
 # pylint: skip-file
 # relevant imports for parsing pipeline
 # Standard library
-import pprint
-import re
 from datetime import datetime
 from pathlib import Path
 
@@ -19,9 +17,11 @@ import numpy as np
 # > taken from: https://stackoverflow.com/questions/37423997/cartopy-shaded-relief
 from cartopy.io.img_tiles import GoogleTiles
 
+# First-party
+from moveroplot.load_files import load_relevant_files
+
 # Local
 # local
-from .utils.atab import Atab
 from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import cat_station_score_range
 from .utils.parse_plot_synop_ch import station_score_range
@@ -164,7 +164,6 @@ def _generate_station_plots(
 ):
     # initialise filename
     base_filename = f"station_scores_{parameter}"
-
     sup_title = f"PARAMETER: {parameter}"
 
     _plot_and_save_scores(
@@ -223,7 +222,7 @@ def _station_scores_pipeline(
         lt_ranges = "19-24"
     for model_plots in plot_setup["model_versions"]:
         for parameter, scores in plot_setup["parameter"].items():
-            model_data = collect_relevant_files(
+            model_data = load_relevant_files(
                 input_dir,
                 file_prefix,
                 file_postfix,
@@ -231,6 +230,8 @@ def _station_scores_pipeline(
                 model_plots,
                 parameter,
                 lt_ranges,
+                ltr_first=True,
+                transform_func=_station_score_transformation,
             )
             _generate_station_plots(
                 plot_scores=scores,
@@ -241,56 +242,12 @@ def _station_scores_pipeline(
             )
 
 
-def collect_relevant_files(
-    input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
-):
-    corresponding_files_dict = {}
-    extracted_model_data = {}
-    # for dbg purposes:
-    files_list = []
-    for model in model_plots:
-        source_path = Path(f"{input_dir}/{model}")
-        for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
-            if file_path.is_file():
-                ltr_match = re.search(r"(\d{2})-(\d{2})", file_path.name)
-                if ltr_match:
-                    lt_range = ltr_match.group()
-                else:
-                    raise IOError(
-                        f"The filename {file_path.name} does not contain a LT range."
-                    )
-
-                in_lt_ranges = True
-                if lt_ranges:
-                    in_lt_ranges = lt_range in lt_ranges
-
-                if in_lt_ranges:
-                    loaded_atab = Atab(file=file_path, sep=" ")
-                    header = loaded_atab.header
-                    df = loaded_atab.data
-                    # clean df
-                    df = df.replace(float(header["Missing value code"][0]), np.NaN)
-                    df.rename(columns={"ScoreABO": "ABO"}, inplace=True)
-                    df.loc["lon"] = list(filter(None, header["Longitude"]))
-                    df.loc["lat"] = list(filter(None, header["Latitude"]))
-                    # add information to dict
-                    if lt_range not in corresponding_files_dict:
-                        corresponding_files_dict[lt_range] = {}
-
-                    corresponding_files_dict[lt_range][model] = {
-                        "header": header,
-                        "df": df,
-                    }
-
-                    # add path of file to list of relevant files
-                    files_list.append(file_path)
-
-    if debug:
-        print(f"\nFor parameter: {parameter} these files are relevant:\n")
-        pprint(files_list)
-
-    extracted_model_data = corresponding_files_dict
-    return extracted_model_data
+def _station_score_transformation(df, header):
+    df = df.replace(float(header["Missing value code"][0]), np.NaN)
+    df.rename(columns={"ScoreABO": "ABO"}, inplace=True)
+    df.loc["lon"] = list(filter(None, header["Longitude"]))
+    df.loc["lat"] = list(filter(None, header["Latitude"]))
+    return df
 
 
 # PLOTTING PIPELINE FOR STATION SCORES PLOTS

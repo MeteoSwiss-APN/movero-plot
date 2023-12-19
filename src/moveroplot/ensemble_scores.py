@@ -1,9 +1,6 @@
 """Calculate ensemble scores from parsed data."""
 # Standard library
 import re
-from datetime import datetime
-from pathlib import Path
-from pprint import pprint
 from typing import Tuple
 
 # Third-party
@@ -11,66 +8,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 
+# First-party
+from moveroplot.load_files import load_relevant_files
+from moveroplot.plotting import get_total_dates_from_headers
+
 # Local
 from .config.plot_settings import PlotSettings
 from .station_scores import _calculate_figsize
 
 # pylint: disable=no-name-in-module
-from .utils.atab import Atab
+
+
+def _ensemble_score_transformation(df, header):
+    df = df.replace(float(header["Missing value code"][0]), np.NaN)
+    df.set_index(keys="Score", inplace=True)
+    return df
 
 
 # pylint: disable=too-many-arguments,too-many-locals
-def collect_relevant_files(
-    input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
-):
-    corresponding_files_dict = {}
-    extracted_model_data = {}
-    # for dbg purposes:
-    files_list = []
-    for model in model_plots:
-        source_path = Path(f"{input_dir}/{model}")
-        for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
-            if file_path.is_file():
-                ltr_match = re.search(r"(\d{2})-(\d{2})", file_path.name)
-                if ltr_match:
-                    lt_range = ltr_match.group()
-                else:
-                    raise IOError(
-                        f"The filename {file_path.name} does not contain a LT range."
-                    )
-
-                in_lt_ranges = True
-                if lt_ranges:
-                    in_lt_ranges = lt_range in lt_ranges
-
-                if in_lt_ranges:
-                    # extract header & dataframe
-                    loaded_atab = Atab(file=file_path, sep=" ")
-                    header = loaded_atab.header
-                    df = loaded_atab.data
-                    # clean df
-                    df = df.replace(float(header["Missing value code"][0]), np.NaN)
-                    df.set_index(keys="Score", inplace=True)
-
-                    # add information to dict
-                    if lt_range not in corresponding_files_dict:
-                        corresponding_files_dict[lt_range] = {}
-
-                    corresponding_files_dict[lt_range][model] = {
-                        "header": header,
-                        "df": df,
-                    }
-                    # add path of file to list of relevant files
-                    files_list.append(file_path)
-
-    if debug:
-        print(f"\nFor parameter: {parameter} these files are relevant:\n")
-        pprint(files_list)
-
-    extracted_model_data = corresponding_files_dict
-    return extracted_model_data
-
-
 def _ensemble_scores_pipeline(
     plot_setup,
     lt_ranges,
@@ -80,12 +35,13 @@ def _ensemble_scores_pipeline(
     output_dir,
     debug,
 ) -> None:
+    print("\n--- initialising ensemble score pipeline")
     if not lt_ranges:
         lt_ranges = "07-12,13-18,19-24"
     for model_plots in plot_setup["model_versions"]:
         for parameter, scores in plot_setup["parameter"].items():
             model_data = {}
-            model_data = collect_relevant_files(
+            model_data = load_relevant_files(
                 input_dir,
                 file_prefix,
                 file_postfix,
@@ -93,6 +49,8 @@ def _ensemble_scores_pipeline(
                 model_plots,
                 parameter,
                 lt_ranges,
+                ltr_first=True,
+                transform_func=_ensemble_score_transformation,
             )
             _generate_ensemble_scores_plots(
                 plot_scores=scores,
@@ -213,10 +171,8 @@ def _plot_and_save_scores(
             )
             for score_idx, score in enumerate(score_setup):
                 filename += f"_{score}"
-                print("SCORE ", score)
                 threshold = re.search(r"\(.*?\)", score).group()
                 for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
-                    print("LTR LTR ", ltr)
                     ax = subplot_axes[score_idx][ltr_idx]
                     ax.set_ylabel("Observed Relative Frequency")
                     ax.set_xlabel("Forecast Probability")
@@ -343,20 +299,10 @@ def _generate_ensemble_scores_plots(
     ]
 
     # initialise filename
-    base_filename = (
-        f"ensemble_scores_{parameter}"
-        if len(model_versions) == 1
-        else f"ensemble_scores_{parameter}"
-    )
+    base_filename = f"ensemble_scores_{parameter}"
 
     headers = [data["header"] for data in models_data[next(iter(models_data))].values()]
-    total_start_date = min(
-        datetime.strptime(header["Start time"][0], "%Y-%m-%d") for header in headers
-    )
-
-    total_end_date = max(
-        datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
-    )
+    total_start_date, total_end_date = get_total_dates_from_headers(headers)
     # pylint: disable=line-too-long
     sup_title = f"""{parameter}
     Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""  # noqa: E501

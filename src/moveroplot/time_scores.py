@@ -1,9 +1,6 @@
 # pylint: skip-file
 # Standard library
 import re
-from datetime import datetime
-from pathlib import Path
-from pprint import pprint
 
 # Third-party
 import matplotlib.dates as mdates
@@ -14,71 +11,25 @@ from matplotlib.lines import Line2D
 
 # First-party
 from moveroplot.config.plot_settings import PlotSettings
+from moveroplot.load_files import load_relevant_files
+from moveroplot.plotting import get_total_dates_from_headers
 
 # Local
-from .utils.atab import Atab
 from .utils.parse_plot_synop_ch import total_score_range
 
 
-def collect_relevant_files(
-    input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
-):
-    corresponding_files_dict = {}
-    extracted_model_data = {}
-    # for dbg purposes:
-    files_list = []
-    for model in model_plots:
-        source_path = Path(f"{input_dir}/{model}")
-        for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
-            if file_path.is_file():
-                ltr_match = re.search(r"(\d{2})-(\d{2})", file_path.name)
-                if ltr_match:
-                    lt_range = ltr_match.group()
-                else:
-                    raise IOError(
-                        f"The filename {file_path.name} does not contain a LT range."
-                    )
-
-                in_lt_ranges = True
-                if lt_ranges:
-                    in_lt_ranges = lt_range in lt_ranges
-
-                if in_lt_ranges:
-                    # extract header & dataframe
-                    loaded_atab = Atab(file=file_path, sep=" ")
-                    header = loaded_atab.header
-                    df = loaded_atab.data
-                    # clean df
-                    df = df.replace(float(header["Missing value code"][0]), np.NaN)
-                    df["timestamp"] = pd.to_datetime(
-                        df[["YYYY", "MM", "DD", "hh", "mm"]]
-                        .astype(str)
-                        .agg("-".join, axis=1),
-                        format="%Y-%m-%d-%H-%M",
-                    )
-                    df.drop(
-                        ["YYYY", "MM", "DD", "hh", "mm", "lt_hh", "lt_mm"],
-                        axis=1,
-                        inplace=True,
-                    )
-                    # add information to dict
-                    if lt_range not in corresponding_files_dict:
-                        corresponding_files_dict[lt_range] = {}
-
-                    corresponding_files_dict[lt_range][model] = {
-                        "header": header,
-                        "df": df,
-                    }
-
-                    # add path of file to list of relevant files
-                    files_list.append(file_path)
-
-    if debug:
-        print(f"\nFor parameter: {parameter} these files are relevant:\n")
-        pprint(files_list)
-
-    extracted_model_data = corresponding_files_dict
-    return extracted_model_data
+def _time_score_transformation(df, header):
+    df = df.replace(float(header["Missing value code"][0]), np.NaN)
+    df["timestamp"] = pd.to_datetime(
+        df[["YYYY", "MM", "DD", "hh", "mm"]].astype(str).agg("-".join, axis=1),
+        format="%Y-%m-%d-%H-%M",
+    )
+    df.drop(
+        ["YYYY", "MM", "DD", "hh", "mm", "lt_hh", "lt_mm"],
+        axis=1,
+        inplace=True,
+    )
+    return df
 
 
 # enter directory / read station_scores files / call plotting pipeline
@@ -115,7 +66,7 @@ def _time_scores_pipeline(
 
     for model_plots in plot_setup["model_versions"]:
         for parameter, scores in plot_setup["parameter"].items():
-            model_data = collect_relevant_files(
+            model_data = load_relevant_files(
                 input_dir,
                 file_prefix,
                 file_postfix,
@@ -123,6 +74,8 @@ def _time_scores_pipeline(
                 model_plots,
                 parameter,
                 lt_ranges,
+                ltr_first=True,
+                transform_func=_time_score_transformation,
             )
 
             _generate_timeseries_plots(
@@ -227,20 +180,7 @@ def _plot_and_save_scores(
     for ltr, models_data in ltr_models_data.items():
         fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
         headers = [data["header"] for data in models_data.values()]
-        total_start_date = min(
-            [
-                datetime.strptime(
-                    " ".join(header["Start time"][0:3:2]), "%Y-%m-%d %H:%M"
-                )
-                for header in headers
-            ]
-        )
-        total_end_date = max(
-            [
-                datetime.strptime(" ".join(header["End time"][0:2]), "%Y-%m-%d %H:%M")
-                for header in headers
-            ]
-        )
+        total_start_date, total_end_date = get_total_dates_from_headers(headers)
         title_base = f"{parameter.upper()}: "
         model_info = (
             f" {list(models_data.keys())[0]}" if len(models_data.keys()) == 1 else ""
@@ -355,13 +295,7 @@ def _generate_timeseries_plots(
     headers = [
         data["header"] for data in models_data[next(iter(models_data.keys()))].values()
     ]
-    total_start_date = min(
-        datetime.strptime(header["Start time"][0], "%Y-%m-%d") for header in headers
-    )
-
-    total_end_date = max(
-        datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
-    )
+    total_start_date, total_end_date = get_total_dates_from_headers(headers)
     # pylint: disable=line-too-long
     period_info = f"""Period: {total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")} | © MeteoSwiss"""  # noqa: E501
     # pylint: enable=line-too-long
@@ -374,7 +308,7 @@ def _generate_timeseries_plots(
         plot_scores["regular_scores"],
         sup_title,
         models_data,
-        debug=False,
+        debug=debug,
     )
 
     _plot_and_save_scores(
@@ -384,5 +318,5 @@ def _generate_timeseries_plots(
         plot_scores["cat_scores"],
         sup_title,
         models_data,
-        debug=False,
+        debug=debug,
     )

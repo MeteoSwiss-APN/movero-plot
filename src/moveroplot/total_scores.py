@@ -1,9 +1,6 @@
 """Calculate total scores from parsed data."""
 # Standard library
 import re
-from datetime import datetime
-from pathlib import Path
-from pprint import pprint
 
 # Third-party
 import matplotlib.pyplot as plt
@@ -12,9 +9,10 @@ from matplotlib.lines import Line2D
 
 # Local
 from .config.plot_settings import PlotSettings
+from .load_files import load_relevant_files
+from .plotting import get_total_dates_from_headers
 
 # pylint: disable=no-name-in-module
-from .utils.atab import Atab
 from .utils.parse_plot_synop_ch import total_score_range
 
 # pylint: enable=no-name-in-module
@@ -28,74 +26,13 @@ plt.rcParams.update(
 )
 
 
+def _total_score_transformation(df, header):
+    df = df.replace(float(header["Missing value code"][0]), np.NaN)
+    df.set_index(keys="Score", inplace=True)
+    return df
+
+
 # pylint: disable=too-many-arguments,too-many-locals
-def collect_relevant_files(
-    input_dir, file_prefix, file_postfix, debug, model_plots, parameter, lt_ranges
-):
-    """Collect all data from each model.
-
-    Args:
-        file_prefix (str): prefix of files we're looking for (i.e. total_scores)
-        file_postfix (str): postfix of files we're looking for (i.e. .dat)
-        debug (bool): add debug messages command prompt
-        source_path (Path): path to directory, where source files are
-        parameter (str): parameter of interest
-
-    Returns:
-        dict: dictionary conrains all available lead time range dataframes for parameter
-    # collect the files to this parameter in the corresponding files dict.
-    # the keys in this dict are the available lead time ranges for the current parameter.
-
-    """  # noqa: E501
-    corresponding_files_dict = {}
-    extracted_model_data = {}
-
-    # for dbg purposes:
-    files_list = []
-    for model in model_plots:
-        source_path = Path(f"{input_dir}/{model}")
-        corresponding_files_dict = {}
-        for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
-            if file_path.is_file():
-                ltr_match = re.search(r"(\d{2})-(\d{2})", file_path.name)
-                if ltr_match:
-                    lt_range = ltr_match.group()
-                else:
-                    raise IOError(
-                        f"The filename {file_path.name} does not contain a LT range."
-                    )
-
-                in_lt_ranges = True
-                if lt_ranges:
-                    in_lt_ranges = lt_range in lt_ranges
-
-                if in_lt_ranges:
-                    # extract header & dataframe
-                    loaded_atab = Atab(file=file_path, sep=" ")
-                    header = loaded_atab.header
-                    df = loaded_atab.data
-
-                    # clean df
-                    df = df.replace(float(header["Missing value code"][0]), np.NaN)
-                    df.set_index(keys="Score", inplace=True)
-                    # add information to dict
-                    corresponding_files_dict[lt_range] = {
-                        # 'path':file_path,
-                        "header": header,
-                        "df": df,
-                    }
-
-                    # add path of file to list of relevant files
-                    files_list.append(file_path)
-        extracted_model_data[model] = corresponding_files_dict
-    if debug:
-        print(f"\nFor parameter: {parameter} these files are relevant:\n")
-        pprint(files_list)
-
-    # print("EXTRACTED MODEL DATA IN TOTAL SCORES ", extracted_model_data)
-    return extracted_model_data
-
-
 # enter directory / read total_scores files / call plotting pipeline
 # pylint: disable=pointless-string-statement,too-many-arguments,too-many-locals
 def _total_scores_pipeline(
@@ -132,7 +69,7 @@ def _total_scores_pipeline(
     for model_plots in plot_setup["model_versions"]:
         for parameter, scores in plot_setup["parameter"].items():
             model_data = {}
-            model_data = collect_relevant_files(
+            model_data = load_relevant_files(
                 input_dir,
                 file_prefix,
                 file_postfix,
@@ -140,6 +77,8 @@ def _total_scores_pipeline(
                 model_plots,
                 parameter,
                 lt_ranges,
+                ltr_first=False,
+                transform_func=_total_score_transformation,
             )
             _generate_total_scores_plots(
                 plot_scores=scores,
@@ -159,14 +98,8 @@ def _set_ylim(param, score, ax, debug):  # pylint: disable=unused-argument
     if regular_param and regular_scores:
         lower_bound = total_score_range[param]["min"].loc[score]
         upper_bound = total_score_range[param]["max"].loc[score]
-        # if debug:
-        #     print(
-        #         f"found limits for {param}/{score} --> {lower_bound}/{upper_bound}"
-        # )
         if lower_bound != upper_bound:
             ax.set_ylim(lower_bound, upper_bound)
-
-    # TODO: add computation of y-lims for cat & ens scores
 
 
 def _customise_ax(parameter, scores, x_ticks, grid, ax):
@@ -368,14 +301,7 @@ def _generate_total_scores_plots(
         ]
         for data in models_data.values()
     ]
-
-    total_start_date = min(
-        datetime.strptime(header["Start time"][0], "%Y-%m-%d") for header in headers
-    )
-
-    total_end_date = max(
-        datetime.strptime(header["End time"][0], "%Y-%m-%d") for header in headers
-    )
+    total_start_date, total_end_date = get_total_dates_from_headers(headers)
 
     model_info = (
         ""
