@@ -7,7 +7,7 @@ To setup the project, follow the instructions in [CONTRIBUTING.md](CONTRIBUTING.
 ### Usage
 The primary command for moveroplot follows the structure
 ```bash
-moveroplot [OPTIONS] MODEL_VERSION/S
+moveroplot [OPTIONS] MODEL_VERSION(S)
 ```
 To see the available options, run:
 ```bash
@@ -46,18 +46,23 @@ Options:
 
 ```
 
-> [time=Wed, Mar 2, 2022 2:21 PM]
-**Command so far to create all plots for model v. C-1E-CTR_ch:**
-
-
-
+Example Command plotting Station, Time, Total and Daytime Scores:
 ```
-python plot_synop.py C-1E-CTR_ch
---plot_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL
---plot_scores ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS
---plot_cat_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1
+moveroplot C-1E_ch/C-2E_ch --lt_ranges 07-12,19-24,61-72 --input_dir /scratch/osm/movero/wd/2022s4 --plot_type station,time,daytime,total
+--plot_cat_params TOT_PREC12,TOT_PREC6,CLCT,T_2M,TD_2M,FF_10M,VMAX_10M6
 --plot_cat_thresh 0.1,1,10:0.2,1,5:0.2,0.5,2:2.5,6.5:0,15,25:0,15,25:-5,5,15:-5,5,15:2.5,5,10:2.5,5,10:5,12.5,20:5,12.5,20
 --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
+--plot_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,FF_10M_KAL,VMAX_10M6,VMAX_10M1,DD_10M,PS,PMSL
+--plot_scores ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS
+```
+Example Command plotting Ensemble Scores:
+```
+moveroplot C-1E_ch/C-2E_ch --lt_ranges 07-12,19-24,61-72 --input_dir /scratch/osm/movero/wd/2022s4 --plot_type ensemble
+--plot_ens_params TOT_PREC12,TOT_PREC6,CLCT,T_2M,TD_2M,FF_10M,VMAX_10M6
+--plot_ens_scores OUTLIERS,RANK,RPS,RPS_REF
+--plot_ens_cat_params TOT_PREC12,TOT_PREC6,CLCT,T_2M,TD_2M,FF_10M,VMAX_10M6
+--plot_ens_cat_thresh 0.1,0.2,2.5,0,0,2.5,5
+--plot_ens_cat_scores REL,RES,BS,BS_REF,BSS,BSSD,REL_DIA
 ```
 
 `plot_synop.py` parses these user inputs into a _parameter dictionary_. Each provided parameter is one key in this dictionary. For every key, a list of corresponding scores is assigned.
