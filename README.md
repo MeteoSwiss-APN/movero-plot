@@ -1,8 +1,8 @@
 # MOVERO PLOTS
 ## 0. GENERAL
 ### 0.1 Task Description / Overview
-> **_Task_**: Replace the IDL plot scripts for the verification plots with Python scripts. 
-> There is a number of different plots, which need to be created. For each type of plot a number of scripts is necessary. 
+> **_Task_**: Replace the IDL plot scripts for the verification plots with Python scripts.
+> There is a number of different plots, which need to be created. For each type of plot a number of scripts is necessary.
 
 These plots need to be implemented:
 1. Time Series of verification scores
@@ -42,7 +42,7 @@ Options:
   --season [2020s4|2021s1|2021s2|2021s3|2021s4]
                                   Specify the season of interest. Def: 2021s4
   --help                          Show this message and exit.
-  
+
 ```
 
 > [time=Wed, Mar 2, 2022 2:21 PM]
@@ -59,9 +59,9 @@ python plot_synop.py C-1E-CTR_ch
 --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
 ```
 
-`plot_synop.py` parses these user inputs into a _parameter dictionary_. Each provided parameter is one key in this dictionary. For every key, a list of corresponding scores is assigned. 
+`plot_synop.py` parses these user inputs into a _parameter dictionary_. Each provided parameter is one key in this dictionary. For every key, a list of corresponding scores is assigned.
 ![**Parameters Dictitonary**](https://i.imgur.com/kdQrufu.png)
-Afterwards this `params_dict` is passed to separate plotting pipelines. There, the source files are retrieved, parsed and plotted. Ultimately, all plots are placed in the `<output_dir>/<plot_type>/` directory. 
+Afterwards this `params_dict` is passed to separate plotting pipelines. There, the source files are retrieved, parsed and plotted. Ultimately, all plots are placed in the `<output_dir>/<plot_type>/` directory.
 
 ## 1. SPATIAL VERIFICATION
 <!-- ![alt text](http://i.imgur.com/8o44hib.png) -->
@@ -98,10 +98,9 @@ ___
 ## 4. TOTAL SCORES DEP. ON LEAD-TIME RANGES
 
 > Remark: how are scores assigned to subplots?
->  
+>
 > die Reihenfolge in --plot_scores ist entscheidend. Es kommen immer 4 plots auf eine Seite für die normalen Scores. Die --plot_cat_scores beginnen auf jeden Fall auf einer neuen Seite, und jeder Threshold beginnt wieder auf einer neuen Seite.
 
 ###### Example: Old vs. New Station Scores Plot
 ![](https://i.imgur.com/RViAUU4.png)
 ![](https://i.imgur.com/2d69BoT.png)
-
