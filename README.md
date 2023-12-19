@@ -56,6 +56,7 @@ moveroplot C-1E_ch/C-2E_ch --lt_ranges 07-12,19-24,61-72 --input_dir /scratch/os
 --plot_scores ME,MMOD/MOBS,MAE,STDE,RMSE,COR,NOBS
 ```
 Example Command plotting Ensemble Scores:
+```
 moveroplot C-1E_ch/C-2E_ch --lt_ranges 07-12,19-24,61-72 --input_dir /scratch/osm/movero/wd/2022s4 --plot_type ensemble
 --plot_ens_params TOT_PREC12,TOT_PREC6,CLCT,T_2M,TD_2M,FF_10M,VMAX_10M6 
 --plot_ens_scores OUTLIERS,RANK,RPS,RPS_REF
