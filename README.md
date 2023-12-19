@@ -1,47 +1,48 @@
-# MOVERO PLOTS
-## 0. GENERAL
-### 0.1 Task Description / Overview
-> **_Task_**: Replace the IDL plot scripts for the verification plots with Python scripts.
-> There is a number of different plots, which need to be created. For each type of plot a number of scripts is necessary.
-
-These plots need to be implemented:
-1. Time Series of verification scores
-2. Diurnal cycle of verification scores
-3. Total scores depending on lead-time ranges
-4. Numeric values of total scores
+# MOVEROPlOT
+Moveroplot is a Python-based tool to visualize/post-process verification results.
+## Getting Started
+To setup the project, follow the instructions in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 
-
-### 0.2 Usage
-The entry point for this package is a script called [plot_synop](src/movero/plot_synop.py). By executing `python plot_synop.py --help`, one can see the required and optional command line inputs:
+### Usage
+The primary command for moveroplot follows the structure
+```bash
+moveroplot [OPTIONS] MODEL_VERSION/S
 ```
-Usage: plot_synop.py [OPTIONS] MODEL_VERSION
-
-  Entry Point for the MOVERO Plotting Pipeline.
-
-  The only input argument is the MODEL_VERSION argument. Pass this along with any number
-  of  options. These usually have a default value or are not necessary.
-
+To see the available options, run:
+```bash
+moveroplot -h
+```
+```
+The following options are listed below:
 Options:
-  --debug                         Add debug comments to command prompt.
-  --lt_ranges TEXT                Specify the lead time range(s) of interest.
-                                  Def: 19-24
-  --plot_params TEXT              Specify parameters to plot.
-  --plot_scores TEXT              Specify scores to plot.
-  --plot_cat_params TEXT          Specify categorical parameters to plot.
-  --plot_cat_thresh TEXT          Specify categorical scores thresholds to
-                                  plot.
-  --plot_cat_scores TEXT          Specify categorical scores to plot.
-  --plot_ens_params TEXT          Specify ens parameters to plot.
-  --plot_ens_thresh TEXT          Specify ens scores thresholds to plot.
-  --plot_ens_scores TEXT          Specify ens scores thresholds to plot.
-  --input_dir PATH                Specify input directory.
-  --output_dir TEXT               Specify output directory. Def: plots
-  --relief                        Add relief to maps.
-  --grid                          Add grid to plots.
-  --season [2020s4|2021s1|2021s2|2021s3|2021s4]
-                                  Specify the season of interest. Def: 2021s4
-  --help                          Show this message and exit.
+  --plot_type TEXT            Specify the type of plot to generate: [total,
+                              time, station, daytime, ensemble].
+  --debug                     Add debug comments to command prompt.
+  --lt_ranges TEXT            Specify the lead time ranges of interest. Def:
+                              19-24
+  --plot_params TEXT          Specify parameters to plot.
+  --plot_scores TEXT          Specify scores to plot.
+  --plot_cat_params TEXT      Specify categorical parameters to plot.
+  --plot_cat_thresh TEXT      Specify categorical scores thresholds to plot.
+  --plot_cat_scores TEXT      Specify categorical scores to plot.
+  --plot_ens_params TEXT      Specify parameters to ensemble plots.
+  --plot_ens_scores TEXT      Specify scores to ensemble plots.
+  --plot_ens_cat_params TEXT  Specify categorical parameters to ensemble
+                              plots.
+  --plot_ens_cat_scores TEXT  Specify categorical scores to ensemble plots.
+  --plot_ens_cat_thresh TEXT  Specify categorical scores thresholds to
+                              ensemble plots.
+  --input_dir PATH            Specify input directory.
+  --output_dir TEXT           Specify output directory. Def: plots
+  --colors TEXT               Specify the plot color for each model version
+                              using matploblib's color coding
+  --relief                    Add relief to maps.
+  --grid                      Add grid to plots.
+  -V, --version               Show the version and exit.
+  -v, --verbose               Increase verbosity; specify multiple times for
+                              more.
+  -h, --help                  Show this message and exit.
 
 ```
 
