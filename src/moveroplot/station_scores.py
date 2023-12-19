@@ -60,14 +60,14 @@ def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 
 def _initialize_plots(labels: list, scores: list):
     num_cols = len(labels)
     num_rows = len(scores)
-    figsize = _calculate_figsize(num_rows, num_cols, (14.7, 10), (0, 2))
+    figsize = _calculate_figsize(num_rows, num_cols, (7.3, 5), (0, 2))
     fig, axes = plt.subplots(
         subplot_kw=dict(projection=ccrs.PlateCarree()),
         nrows=num_rows,
         ncols=num_cols,
         tight_layout=True,
         figsize=figsize,
-        dpi=500,
+        dpi=100,
         squeeze=False,
     )
     for ax in axes.ravel():
@@ -233,6 +233,9 @@ def _station_scores_pipeline(
                 ltr_first=True,
                 transform_func=_station_score_transformation,
             )
+            if not model_data:
+                print(f"No matching files found with given ltr {lt_ranges}")
+                return
             _generate_station_plots(
                 plot_scores=scores,
                 models_data=model_data,
@@ -468,7 +471,7 @@ def _generate_map_plot(
                 max_station = station
 
         # plotting pipeline
-        fig = plt.figure(figsize=(14.7, 10), dpi=500)
+        fig = plt.figure(figsize=(14.7, 10), dpi=100)
         if relief:
             ax = plt.axes(projection=ShadedReliefESRI().crs)
         else:

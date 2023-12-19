@@ -80,6 +80,9 @@ def _total_scores_pipeline(
                 ltr_first=False,
                 transform_func=_total_score_transformation,
             )
+            if not model_data:
+                print(f"No matching files found with given ltr {lt_ranges}")
+                return
             _generate_total_scores_plots(
                 plot_scores=scores,
                 models_data=model_data,

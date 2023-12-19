@@ -77,7 +77,9 @@ def _time_scores_pipeline(
                 ltr_first=True,
                 transform_func=_time_score_transformation,
             )
-
+            if not model_data:
+                print(f"No matching files found with given ltr {lt_ranges}")
+                return
             _generate_timeseries_plots(
                 plot_scores=scores,
                 models_data=model_data,
