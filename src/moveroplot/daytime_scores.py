@@ -184,7 +184,11 @@ def _plot_and_save_scores(
 
         x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")}"""  # noqa: E501
         filename = base_filename + f"_{ltr}"
-        pattern = re.search(r"\(.*?\)", next(iter(plot_scores_setup))[0])
+        pattern = (
+            re.search(r"\(.*?\)", next(iter(plot_scores_setup))[0])
+            if plot_scores_setup
+            else None
+        )
         prev_threshold = None
         if pattern is not None:
             prev_threshold = pattern.group()

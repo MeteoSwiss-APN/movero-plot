@@ -247,7 +247,11 @@ def _plot_and_save_scores(
     filename = base_filename
     fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
 
-    pattern = re.search(r"\(.*?\)", next(iter(plot_scores_setup))[0])
+    pattern = (
+        re.search(r"\(.*?\)", next(iter(plot_scores_setup))[0])
+        if plot_scores_setup
+        else None
+    )
     prev_threshold = None
     if pattern is not None:
         prev_threshold = pattern.group()

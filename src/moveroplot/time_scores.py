@@ -245,11 +245,14 @@ def _plot_and_save_scores(
         model_info = (
             f" {list(models_data.keys())[0]}" if len(models_data.keys()) == 1 else ""
         )
-        print("SCORE SETUP ", plot_scores_setup)
         x_label_base = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")}"""  # noqa: E501
         filename = base_filename + f"_{ltr}"
-
-        pattern = re.search(r"\(.*?\)", next(iter(plot_scores_setup))[0])
+        print("PLOT SETUPS ", plot_scores_setup)
+        pattern = (
+            re.search(r"\(.*?\)", next(iter(plot_scores_setup))[0])
+            if plot_scores_setup
+            else None
+        )
         prev_threshold = None
         if pattern is not None:
             prev_threshold = pattern.group()
