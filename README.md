@@ -8,6 +8,7 @@ To setup the project, follow the instructions in [CONTRIBUTING.md](CONTRIBUTING.
 The primary command for moveroplot follows the structure
 ```bash
 moveroplot [OPTIONS] MODEL_VERSION(S)
+moveroplot [OPTIONS] MODEL_VERSION(S)
 ```
 To see the available options, run:
 ```bash
