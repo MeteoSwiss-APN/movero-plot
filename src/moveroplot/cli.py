@@ -37,7 +37,7 @@ from .main import main
 @click.option(
     "--lt_ranges",
     type=str,
-    # multiple=True,
+    default="19-24",
     help="Specify the lead time ranges of interest. Def: 19-24",
 )
 @click.option("--plot_params", type=str, help="Specify parameters to plot.")
