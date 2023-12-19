@@ -93,7 +93,7 @@ def _parse_inputs(
     regular_ens_params_dict = {}
     ens_cat_params_dict = {}
     plot_setup["parameter"] = {}
-    if plot_type in ["total", "time", "station", "daytime"]:
+    if any(p_type in plot_type for p_type in ["total", "time", "station", "daytime"]):
         if not any(
             [
                 plot_params and plot_scores,
@@ -139,7 +139,7 @@ def _parse_inputs(
             if debug:
                 print("Categorical Parameter Dict: ")
                 pprint(cat_params_dict)
-    if plot_type == "ensemble":
+    if "ensemble" in plot_type:
         if not any(
             [
                 plot_ens_params and plot_ens_scores,
