@@ -331,24 +331,25 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         rasterized=True,
         transform=ccrs.PlateCarree(),
     )
-    max_idx = plot_data.loc[score].idxmax()
-    min_idx = plot_data.loc[score].idxmin()
-    ax.scatter(
-        x=[plot_data[max_idx].loc["lon"]],
-        y=[plot_data[max_idx].loc["lat"]],
-        marker="+",
-        color="black",
-        s=80,
-        transform=ccrs.PlateCarree(),
-    )
-    ax.scatter(
-        x=[plot_data[min_idx].loc["lon"]],
-        y=[plot_data[min_idx].loc["lat"]],
-        marker="_",
-        color="black",
-        s=80,
-        transform=ccrs.PlateCarree(),
-    )
+    if len(plot_data.loc[score]) != 0:
+        max_idx = plot_data.loc[score].idxmax()
+        min_idx = plot_data.loc[score].idxmin()
+        ax.scatter(
+            x=[plot_data[max_idx].loc["lon"]],
+            y=[plot_data[max_idx].loc["lat"]],
+            marker="+",
+            color="black",
+            s=80,
+            transform=ccrs.PlateCarree(),
+        )
+        ax.scatter(
+            x=[plot_data[min_idx].loc["lon"]],
+            y=[plot_data[min_idx].loc["lat"]],
+            marker="_",
+            color="black",
+            s=80,
+            transform=ccrs.PlateCarree(),
+        )
     cax = fig.add_axes(
         [
             ax.get_position().x1 + 0.005,
