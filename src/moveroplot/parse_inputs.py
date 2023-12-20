@@ -48,6 +48,11 @@ def _parse_inputs(
         plot_ens_params (str): string w/ ens plot parameters. Separated by comma.
         plot_ens_thresh (str): string w/ ens scores. Separated by comma.
         plot_ens_scores (str): string w/ ens scores thresholds. Separated by coma.
+        plot_ens_cat_params (str): string w/ categorical ens plot parameters. Separated by comma.
+        plot_ens_cat_thresh (str): string w/ categorical ens scores. Separated by comma.
+        plot_ens_cat_scores (str): string w/ categorical ens scores thresholds. Separated by comma.
+        plotcolors (str): custom colors for each model version using matplotlib codes, separated by comma
+        plot_type (str): string which defines the plot types (station, ensemble, time, daytime, total)
 
     Returns:
         dict: Dictionary w/ all relevant parameters as keys.
@@ -63,7 +68,7 @@ def _parse_inputs(
     # Check if the model versions are in the input dir
     all_model_versions = re.split(r"[,/]", model_versions)
     input_dir = Path(input_dir)
-    model_directories = set([x.name for x in input_dir.iterdir() if x.is_dir()])
+    model_directories = {x.name for x in input_dir.iterdir() if x.is_dir()}
     if not set(all_model_versions).issubset(model_directories):
         not_in_dir = set(all_model_versions) - model_directories
         raise ValueError(
@@ -186,17 +191,19 @@ def _parse_inputs(
                     ens_cat_scores.append(["REL_DIA"])
                 else:
                     ens_cat_scores.append(score_set)
-            ens_cat_params_dict = {cat_param: [] for cat_param in ens_cat_params}
+            ens_cat_params_dict = {}
             for param, threshs in zip(ens_cat_params, plot_ens_cat_thresh.split(":")):
                 param_thresh_combs = [
                     thresholds.split("/") for thresholds in threshs.split(",")
                 ]
                 for thresh_comb in param_thresh_combs:
                     for score_comb in ens_cat_scores:
-                        _temp_scores = list()
-                        for thresh, score in itertools.product(score_comb, thresh_comb):
-                            _temp_scores.append(f"{thresh}({score})")
-                        ens_cat_params_dict[param].append(_temp_scores)
+                        ens_cat_params_dict.setdefault(param, []).extend(
+                            f"{thresh}({score})"
+                            for thresh, score in itertools.product(
+                                score_comb, thresh_comb
+                            )
+                        )
 
     all_keys = (
         set(regular_params_dict)

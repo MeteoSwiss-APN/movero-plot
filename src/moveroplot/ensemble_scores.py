@@ -40,7 +40,6 @@ def _ensemble_scores_pipeline(
         lt_ranges = "07-12,13-18,19-24"
     for model_plots in plot_setup["model_versions"]:
         for parameter, scores in plot_setup["parameter"].items():
-            model_data = {}
             model_data = load_relevant_files(
                 input_dir,
                 file_prefix,
@@ -75,7 +74,7 @@ def _initialize_plots(
         ncols=num_cols,
         tight_layout=True,
         figsize=figsize,
-        dpi=500,
+        dpi=100,
         squeeze=False,
     )
     fig.tight_layout(w_pad=6, h_pad=4, rect=(0.05, 0.05, 0.90, 0.85))
@@ -112,9 +111,7 @@ def _add_boundary_line(ax, points):
 
 def _get_bin_values(data: dict, prefix: str, threshold: str):
     indices = [
-        index
-        for index in list(data["df"]["Total"].index)
-        if f"{prefix}{threshold}" in index
+        index for index in data["df"]["Total"].index if f"{prefix}{threshold}" in index
     ]
     return data["df"]["Total"][indices]
 

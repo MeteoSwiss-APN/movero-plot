@@ -20,9 +20,15 @@ from .utils.parse_plot_synop_ch import total_score_range
 
 def _time_score_transformation(df, header):
     df = df.replace(float(header["Missing value code"][0]), np.NaN)
+    names = {
+        "YYYY": "year",
+        "MM": "month",
+        "DD": "day",
+        "hh": "hour",
+        "mm": "minute",
+    }
     df["timestamp"] = pd.to_datetime(
-        df[["YYYY", "MM", "DD", "hh", "mm"]].astype(str).agg("-".join, axis=1),
-        format="%Y-%m-%d-%H-%M",
+        df[["YYYY", "MM", "DD", "hh", "mm"]].rename(columns=names)
     )
     df.drop(
         ["YYYY", "MM", "DD", "hh", "mm", "lt_hh", "lt_mm"],
