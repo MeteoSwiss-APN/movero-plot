@@ -87,8 +87,6 @@ def _add_plot_text(ax, data, score, ltr):
     min_station = data["df"].loc[score].idxmin()
     max_value = data["df"].loc[score].max()
     max_station = data["df"].loc[score].idxmax()
-    start_date = datetime(9999, 1, 1, hour=0, minute=0)
-    end_date = datetime(9999, 1, 1, hour=0, minute=0)
     try:
         start_date = datetime.strptime(
             " ".join(data["header"]["Start time"][0:3:2]), "%Y-%m-%d %H:%M"
@@ -96,7 +94,9 @@ def _add_plot_text(ax, data, score, ltr):
         end_date = datetime.strptime(
             " ".join(data["header"]["End time"][0:2]), "%Y-%m-%d %H:%M"
         )
-    finally:
+    except ValueError:
+        start_date = datetime(9999, 1, 1, hour=0, minute=0)
+        end_date = datetime(9999, 1, 1, hour=0, minute=0)
         print("Found invalid date format.")
 
     # pylint: disable=line-too-long
