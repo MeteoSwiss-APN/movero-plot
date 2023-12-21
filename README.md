@@ -46,7 +46,7 @@ Options:
   -h, --help                  Show this message and exit.
 
 ```
-`moveroplot` efficiently processes user inputs to construct a `plot_setup` dictionary, which is pivotal in organizing the plotting process. 
+`moveroplot` efficiently processes user inputs to construct a `plot_setup` dictionary, which is pivotal in organizing the plotting process.
 This dictionary is structured with two primary keys: 'model_versions' and 'parameter'.
 * 'model_versions': This key maps to a list encompassing the model versions to plot.
 * 'parameter': This key connects to a nested dictionary. Within this nested structure, each parameter serves as a key linked to its corresponding scores to plot.
@@ -54,7 +54,7 @@ This dictionary is structured with two primary keys: 'model_versions' and 'param
 To offer a clearer understanding, the image below illustrates the potential parameters and their associated scores and their thresholds:
 ![**Parameters Dictitonary**](https://i.imgur.com/kdQrufu.png)
 
-In the subsequent stages, `plot_setup` is channeled into distinct plotting pipelines. There, the source files are retrieved, parsed and plotted. 
+In the subsequent stages, `plot_setup` is channeled into distinct plotting pipelines. There, the source files are retrieved, parsed and plotted.
 Ultimately, all plots are saved in the `<output_dir>/` directory as PNG files.
 
 ### Usage Examples
@@ -83,7 +83,7 @@ moveroplot C-1E_ch/C-2E_ch --lt_ranges 07-12,19-24,61-72 --input_dir /scratch/os
 ### Spatial Verification
 > Relevant File: [station_scores.py](src/moveroplot/station_scores.py)
 ![**Example Station Scores**](img/station_scores_example.png)
-### Time Series of Verification Scores 
+### Time Series of Verification Scores
 > Relevant File: [time_scores.py](src/moveroplot/time_scores.py)
 ![**Example Time Scores**](img/time_scores_example.png)
 ### Diurnal Cycle of Verification Scores
