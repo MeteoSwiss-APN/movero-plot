@@ -167,7 +167,7 @@ def _plot_and_save_scores(
                     subplot_axes[-1].axis("off")
         elif any("REL_DIA" in score for score in score_setup):
             fig, subplot_axes = _initialize_plots(
-                len(score_setup), len(models_data.keys()), (6, 6)
+                len(score_setup), len(models_data.keys()), (6.7, 6)
             )
             for score_idx, score in enumerate(score_setup):
                 filename += f"_{score}"
@@ -178,6 +178,7 @@ def _plot_and_save_scores(
                     ax.set_xlabel("Forecast Probability")
                     ax.set_xlim(0, 1)
                     ax.set_ylim(0, 1)
+                    ax.set_aspect("equal")
                     [unit] = model_data[next(iter(model_data.keys()))]["header"]["Unit"]
                     ax.set_title(f"{parameter} {threshold[1:-1]} {unit}, LT: {ltr}")
                     sample_subplot = _add_sample_subplot(fig, ax)
