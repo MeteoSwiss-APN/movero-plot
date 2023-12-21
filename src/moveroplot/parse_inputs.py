@@ -198,11 +198,13 @@ def _parse_inputs(
                 ]
                 for thresh_comb in param_thresh_combs:
                     for score_comb in ens_cat_scores:
-                        ens_cat_params_dict.setdefault(param, []).extend(
-                            f"{thresh}({score})"
-                            for thresh, score in itertools.product(
-                                score_comb, thresh_comb
-                            )
+                        ens_cat_params_dict.setdefault(param, []).append(
+                            [
+                                f"{score}({thresh})"
+                                for thresh, score in itertools.product(
+                                    thresh_comb, score_comb
+                                )
+                            ]
                         )
 
     all_keys = (
