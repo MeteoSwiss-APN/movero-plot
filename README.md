@@ -1,5 +1,6 @@
-# MOVEROPlOT
-Moveroplot is a Python-based tool to visualize/post-process verification results.
+# MOVEROPLOT
+Moveroplot is a tool for the production of various verification graphics including line graphs, maps, histograms, and reliability diagrams 
+based on verification results produced by Movero.
 ## Getting Started
 To setup the project, follow the instructions in [CONTRIBUTING.md](CONTRIBUTING.md).
 
