@@ -80,30 +80,61 @@ moveroplot C-1E_ch/C-2E_ch --lt_ranges 07-12,19-24,61-72 --input_dir /scratch/os
 
 ## Plotting Pipeline and Output
 ### Plotting Multiple Model Versions
+`moveroplot` offers the option to visualize multiple results from distinct model versions within a single plot or image, depending on the plot type.
+This can be achieved through the use of specific delimiters: a slash (/) signifies combined plotting, while a comma (,) indicates separate plots.
+
+Example:
+> Input: C-1E_ch/C-2E_ch,C-1E_alps
+> 
+> Interpretation: Display results of C-1E_ch and C-2E_ch into one combined plot.
+> Plot the results of C-1E_alps separately.
 
 ### Spatial Verification
 > Relevant File: [station_scores.py](src/moveroplot/station_scores.py)
+>
+> Note: Each station score image is consistent in its LT range.
+> The number of plots per image can vary (model versions along columns, scores along rows).
 > 
+> Note: Invalid Atab files are ignored.
+
 ![**Example Station Scores**](img/station_scores_example.png)
+
 ### Time Series of Verification Scores
 > Relevant File: [time_scores.py](src/moveroplot/time_scores.py)
+>
+> Remark: The order specified in --plot_scores and --plot_cat_scores is crucial. Two plots are assigned per page. Each threshold and parameter initialize a new page.
+>
+> Remark: Model versions and scores can be displayed in the same plot using `/` in the input.
 > 
 ![**Example Time Scores**](img/time_scores_example.png)
+
 ### Diurnal Cycle of Verification Scores
 > Relevant File: [daytime_scores.py](src/moveroplot/daytime_scores.py)
-> 
+>
+> Remark: The order specified in --plot_scores and --plot_cat_scores is crucial. Two plots are assigned per page. Each threshold and parameter initialize a new page.
+>
+> Remark: Model versions and scores can be displayed in the same plot using `/` in the input
 ![**Example Daytime Scores**](img/daytime_scores_example.png)
+
 ### Total scores for all lead times
 > Relevant File: [total_scores.py](src/moveroplot/total_scores.py)
 >
-> Remark: how are scores assigned to subplots?
+> Remark: The order specified in --plot_scores and --plot_cat_scores is crucial. Four plots are assigned per page. Each threshold and parameter initialize a new page.
 >
-> die Reihenfolge in --plot_scores ist entscheidend. Es kommen immer 4 plots auf eine Seite für die normalen Scores. Die --plot_cat_scores beginnen auf jeden Fall auf einer neuen Seite, und jeder Threshold beginnt wieder auf einer neuen Seite.
-
+> Remark: Model versions and scores can be displayed in the same plot using `/` in the input
+> 
 ![**Example Total Scores**](img/total_scores_example.png)
+
 ### Ensemble scores
 > Relevant File: [ensemble_scores.py](src/moveroplot/ensemble_scores.py)
-#### Regular Plots
+> 
+> Remark: The order specified in --plot_ens_scores and --plot_ens_cat_scores is crucial. Each threshold and parameter initialize a new page.
+>
+> Remark: Model versions and scores can be displayed in the same plot using `/` in the input.
+>
+> Remark: RANK, REL_DIA and line plots are saved in separate images.
+
+#### Regular Line Plots
 ![**Example Regular Ensemble Scores**](img/ensemble_scores_OUTLIERS_example.png)
 #### RANK
 ![**Example RANK**](img/ensemble_scores_RANK_example.png)
