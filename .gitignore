@@ -1,6 +1,3 @@
-# remove images
-*.png
-
 # remove scratch files
 # C extensions
 scratch.py
