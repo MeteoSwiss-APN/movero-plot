@@ -78,62 +78,30 @@ moveroplot C-1E_ch/C-2E_ch --lt_ranges 07-12,19-24,61-72 --input_dir /scratch/os
 ```
 
 ## Plotting Pipeline and Output
+### Plotting Multiple Model Versions
 
 ### Spatial Verification
+> Relevant File: [station_scores.py](src/moveroplot/station_scores.py)
 ![**Example Station Scores**](img/station_scores_example.png)
 ### Time Series of Verification Scores 
+> Relevant File: [time_scores.py](src/moveroplot/time_scores.py)
 ![**Example Time Scores**](img/time_scores_example.png)
 ### Diurnal Cycle of Verification Scores
+> Relevant File: [daytime_scores.py](src/moveroplot/daytime_scores.py)
 ![**Example Daytime Scores**](img/daytime_scores_example.png)
 ### Total scores for all lead times
+> Relevant File: [total_scores.py](src/moveroplot/total_scores.py)
+>
+> Remark: how are scores assigned to subplots?
+>
+> die Reihenfolge in --plot_scores ist entscheidend. Es kommen immer 4 plots auf eine Seite für die normalen Scores. Die --plot_cat_scores beginnen auf jeden Fall auf einer neuen Seite, und jeder Threshold beginnt wieder auf einer neuen Seite.
+
 ![**Example Total Scores**](img/total_scores_example.png)
 ### Ensemble scores
+> Relevant File: [ensemble_scores.py](src/moveroplot/ensemble_scores.py)
 #### Regular Plots
 ![**Example Regular Ensemble Scores**](img/ensemble_scores_OUTLIERS_example.png)
 #### RANK
 ![**Example RANK**](img/ensemble_scores_RANK_example.png)
 #### Reliability Diagram
 ![**Example REAL DIA**](img/ensemble_scores_REL_DIA_example.png)
-
-
-### 1. SPATIAL VERIFICATION
-<!-- ![alt text](http://i.imgur.com/8o44hib.png) -->
-
-> Relevant File: [station_score.py](src/movero/station_scores.py)
-
-The spatial verification plots feature a map, where all stations have are marked with a coloured dot. The colour of this dot corresponds to a colour-bar on the right side of the map. The smaller the deviation from the centre of the colourbar, the better. One can see directly, if & where the model performed well, or rather less so.
-
-###### Example: Old Station Score Plot
-<img src="https://i.imgur.com/LA2zev4.png)" alt="drawing" width="300"/>
-
-###### Example: New Station Scores Plot
-<img src="https://i.imgur.com/SiHcvpW.jpg" alt="drawing" width="300"/>
-
----
-
-
-### 2. TIME SERIES OF VERIFICATION SCORES
-> Relevant File: [time_scores.py](src/movero/time_scores.py)
-
-###### Example: Old vs. New Station Scores Plot
-![](https://i.imgur.com/g9t612p.png)
-![](https://i.imgur.com/mlwMtTY.png)
-
----
-## 3. DIURNAL CYCLYE OF VERIFICATION SCORES
-> Relevant File: [daytime_scores.py](src/movero/daytime_scores.py)
-###### Example: Old vs. New Station Scores Plot
-![](https://i.imgur.com/FGSW1My.png)
-![](https://i.imgur.com/pSNKEF4.png)
-
-
-___
-## 4. TOTAL SCORES DEP. ON LEAD-TIME RANGES
-
-> Remark: how are scores assigned to subplots?
->
-> die Reihenfolge in --plot_scores ist entscheidend. Es kommen immer 4 plots auf eine Seite für die normalen Scores. Die --plot_cat_scores beginnen auf jeden Fall auf einer neuen Seite, und jeder Threshold beginnt wieder auf einer neuen Seite.
-
-###### Example: Old vs. New Station Scores Plot
-![](https://i.imgur.com/RViAUU4.png)
-![](https://i.imgur.com/2d69BoT.png)
