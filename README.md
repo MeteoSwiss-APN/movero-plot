@@ -82,12 +82,15 @@ moveroplot C-1E_ch/C-2E_ch --lt_ranges 07-12,19-24,61-72 --input_dir /scratch/os
 
 ### Spatial Verification
 > Relevant File: [station_scores.py](src/moveroplot/station_scores.py)
+> 
 ![**Example Station Scores**](img/station_scores_example.png)
 ### Time Series of Verification Scores
 > Relevant File: [time_scores.py](src/moveroplot/time_scores.py)
+> 
 ![**Example Time Scores**](img/time_scores_example.png)
 ### Diurnal Cycle of Verification Scores
 > Relevant File: [daytime_scores.py](src/moveroplot/daytime_scores.py)
+> 
 ![**Example Daytime Scores**](img/daytime_scores_example.png)
 ### Total scores for all lead times
 > Relevant File: [total_scores.py](src/moveroplot/total_scores.py)
