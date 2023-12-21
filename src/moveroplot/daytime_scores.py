@@ -11,7 +11,7 @@ import numpy as np
 from matplotlib.lines import Line2D
 
 # First-party
-from moveroplot.config.plot_settings import PlotSettings
+import moveroplot.config.plot_settings as plot_settings
 from moveroplot.load_files import load_relevant_files
 from moveroplot.plotting import get_total_dates_from_headers
 
@@ -84,7 +84,7 @@ def _initialize_plots(labels: list):
         nrows=2, ncols=1, tight_layout=True, figsize=(10, 10), dpi=200
     )
     custom_lines = [
-        Line2D([0], [0], color=PlotSettings.modelcolors[i], lw=2)
+        Line2D([0], [0], color=plot_settings.modelcolors[i], lw=2)
         for i in range(len(labels))
     ]
     fig.legend(
@@ -151,7 +151,7 @@ def _plot_and_save_scores(
             title = title_base + ",".join(score_setup) + model_info
             ax = subplot_axes[current_plot_idx % 2]
             for model_idx, data in enumerate(models_data.values()):
-                model_plot_color = PlotSettings.modelcolors[model_idx]
+                model_plot_color = plot_settings.modelcolors[model_idx]
                 header = data["header"]
                 unit = header["Unit"][0]
                 y_label = ",".join(score_setup)
@@ -180,7 +180,7 @@ def _plot_and_save_scores(
                         x_datetimes,
                         score_values,
                         color=model_plot_color,
-                        linestyle=PlotSettings.line_styles[score_idx],
+                        linestyle=plot_settings.line_styles[score_idx],
                         fillstyle="none",
                         label=f"{score.upper()}",
                         marker="D",

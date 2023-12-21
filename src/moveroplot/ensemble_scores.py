@@ -9,11 +9,11 @@ import numpy as np
 from matplotlib.lines import Line2D
 
 # First-party
+from moveroplot.config import plot_settings
 from moveroplot.load_files import load_relevant_files
 from moveroplot.plotting import get_total_dates_from_headers
 
 # Local
-from .config.plot_settings import PlotSettings
 from .station_scores import _calculate_figsize
 
 # pylint: disable=no-name-in-module
@@ -147,7 +147,7 @@ def _plot_and_save_scores(
                     ax.set_xlabel("RANK")
                     ax.set_title(f"{parameter}, LT: {ltr}")
                     for model_idx, data in enumerate(model_data.values()):
-                        model_plot_color = PlotSettings.modelcolors[model_idx]
+                        model_plot_color = plot_settings.modelcolors[model_idx]
                         model_ranks = sorted(
                             [
                                 index
@@ -184,7 +184,7 @@ def _plot_and_save_scores(
                     sample_subplot = _add_sample_subplot(fig, ax)
 
                     for model_idx, data in enumerate(model_data.values()):
-                        model_plot_color = PlotSettings.modelcolors[model_idx]
+                        model_plot_color = plot_settings.modelcolors[model_idx]
                         fbin_values = _get_bin_values(data, "FBIN", threshold)
                         obin_values = _get_bin_values(data, "OBIN", threshold)
                         nbin_values = _get_bin_values(data, "NBIN", threshold)
@@ -238,7 +238,7 @@ def _plot_and_save_scores(
                 for model_idx, model_name in enumerate(
                     models_data[next(iter(ltr_sorted))].keys()
                 ):
-                    model_plot_color = PlotSettings.modelcolors[model_idx]
+                    model_plot_color = plot_settings.modelcolors[model_idx]
                     y_values = [
                         models_data[ltr][model_name]["df"]["Total"].loc[score]
                         for ltr in ltr_sorted
@@ -292,7 +292,7 @@ def _generate_ensemble_scores_plots(
     debug,
 ):
     """Generate Ensemble Score Plots."""
-    model_plot_colors = PlotSettings.modelcolors
+    model_plot_colors = plot_settings.modelcolors
     model_versions = list(models_data[next(iter(models_data))].keys())
     custom_lines = [
         Line2D([0], [0], color=model_plot_colors[i], lw=2)

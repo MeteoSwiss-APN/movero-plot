@@ -7,8 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 
+# First-party
+from moveroplot.config import plot_settings
+
 # Local
-from .config.plot_settings import PlotSettings
 from .load_files import load_relevant_files
 from .plotting import get_total_dates_from_headers
 
@@ -208,7 +210,7 @@ def _plot_and_save_scores(
             filename = base_filename
             current_plot_idx += current_plot_idx % 4
         for model_idx, data in enumerate(models_data.values()):
-            model_plot_color = PlotSettings.modelcolors[model_idx]
+            model_plot_color = plot_settings.modelcolors[model_idx]
             # sorted lead time ranges
             ltr_sorted = sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))
             x_int = list(range(len(ltr_sorted)))
@@ -235,7 +237,7 @@ def _plot_and_save_scores(
                     x_int,
                     y_values,
                     color=model_plot_color,
-                    linestyle=PlotSettings.line_styles[score_idx],
+                    linestyle=plot_settings.line_styles[score_idx],
                     marker="D",
                     fillstyle="none",
                     label=f"{score_setup[0].upper()}",
@@ -285,7 +287,7 @@ def _generate_total_scores_plots(
     debug,
 ):
     """Generate Total Score Plots."""
-    model_plot_colors = PlotSettings.modelcolors
+    model_plot_colors = plot_settings.modelcolors
     model_versions = list(models_data.keys())
     custom_lines = [
         Line2D([0], [0], color=model_plot_colors[i], lw=2)

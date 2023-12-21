@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 # Local
+# pylint: disable=no-name-in-module
 from .utils.atab import Atab
 
 

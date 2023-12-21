@@ -6,8 +6,8 @@ import re
 from pathlib import Path
 from pprint import pprint
 
-# Local
-from .config.plot_settings import PlotSettings
+# First-party
+import moveroplot.config.plot_settings as plot_settings
 
 invalid_ensemble_paramter = ["DD_10M", "PS", "PMSL"]
 
@@ -85,7 +85,7 @@ def _parse_inputs(
             number of models to plot ({len(color_list)} < {len(all_model_versions)})
             """
             )
-        PlotSettings.modelcolors = color_list
+        plot_settings.modelcolors = color_list
     plot_models_setup = [
         model_combinations.split("/")
         for model_combinations in model_versions.split(",")
