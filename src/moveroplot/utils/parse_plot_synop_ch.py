@@ -15,7 +15,6 @@
 # pylint: enable=pointless-string-statement
 # pylint: disable=using-constant-test
 # Standard library
-import importlib.resources as pkg_resources
 from pathlib import Path
 from pprint import pprint
 
@@ -25,11 +24,9 @@ import pandas as pd
 verbose = False
 path = Path(__file__).with_name("plot_synop_ch")
 
-# open plot_synop_ch file
-# with open(path, "r") as f:
-#    lines = [line.strip() for line in f.readlines()]
 # pylint: disable=unspecified-encoding
-with pkg_resources.open_text("moveroplot", "plot_synop_ch") as f:
+# open plot_synop_ch file
+with open(path, "r") as f:
     lines = [line.strip() for line in f.readlines()]
 
 # VERIFICATION SCORES; DATAFRAMES FOR SCORE RANGES AND COLOUR TABLE
