@@ -1,5 +1,5 @@
 # MOVEROPLOT
-Moveroplot is a tool for the production of various verification graphics including line graphs, maps, histograms, and reliability diagrams 
+Moveroplot is a tool for the production of various verification graphics including line graphs, maps, histograms, and reliability diagrams
 based on verification results produced by Movero.
 ## Getting Started
 To setup the project, follow the instructions in [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -85,7 +85,7 @@ This can be achieved through the use of specific delimiters: a slash (/) signifi
 
 Example:
 > Input: C-1E_ch/C-2E_ch,C-1E_alps
-> 
+>
 > Interpretation: Display results of C-1E_ch and C-2E_ch into one combined plot.
 > Plot the results of C-1E_alps separately.
 
@@ -94,7 +94,7 @@ Example:
 >
 > Note: Each station score image is consistent in its LT range.
 > The number of plots per image can vary (model versions along columns, scores along rows).
-> 
+>
 > Note: Invalid Atab files are ignored.
 
 ![**Example Station Scores**](img/station_scores_example.png)
@@ -105,7 +105,7 @@ Example:
 > Remark: The order specified in --plot_scores and --plot_cat_scores is crucial. Two plots are assigned per page. Each threshold and parameter initialize a new page.
 >
 > Remark: Model versions and scores can be displayed in the same plot using `/` in the input.
-> 
+>
 ![**Example Time Scores**](img/time_scores_example.png)
 
 ### Diurnal Cycle of Verification Scores
@@ -122,12 +122,12 @@ Example:
 > Remark: The order specified in --plot_scores and --plot_cat_scores is crucial. Four plots are assigned per page. Each threshold and parameter initialize a new page.
 >
 > Remark: Model versions and scores can be displayed in the same plot using `/` in the input
-> 
+>
 ![**Example Total Scores**](img/total_scores_example.png)
 
 ### Ensemble scores
 > Relevant File: [ensemble_scores.py](src/moveroplot/ensemble_scores.py)
-> 
+>
 > Remark: The order specified in --plot_ens_scores and --plot_ens_cat_scores is crucial. Each threshold and parameter initialize a new page.
 >
 > Remark: Model versions and scores can be displayed in the same plot using `/` in the input.
