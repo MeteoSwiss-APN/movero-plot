@@ -116,6 +116,27 @@ def _get_bin_values(data: dict, prefix: str, threshold: str):
     return data["df"]["Total"][indices]
 
 
+def _customize_figure(fig, sup_title, models_color_lines, labels):
+    fig.suptitle(
+        sup_title,
+        horizontalalignment="center",
+        verticalalignment="top",
+        fontdict={
+            "size": 6,
+            "color": "k",
+        },
+        bbox={"facecolor": "none", "edgecolor": "grey"},
+    )
+
+    fig.legend(
+        models_color_lines,
+        labels,
+        loc="upper right",
+        ncol=1,
+        frameon=False,
+    )
+
+
 # pylint: disable=too-many-branches,too-many-statements
 def _plot_and_save_scores(
     output_dir,
@@ -133,88 +154,95 @@ def _plot_and_save_scores(
         custom_sup_title = sup_title
         filename = base_filename
         if "RANK" in score_setup:
+            [score] = score_setup
             custom_sup_title = f"RANK: {sup_title}"
-            filename += "_RANK"
-            for score_idx, score in enumerate(score_setup):
-                fig, subplot_axes = _initialize_plots(
-                    2 if len(models_data.keys()) > 1 else 1,
-                    (len(models_data.keys()) + 1) // 2,
-                )
-                subplot_axes = subplot_axes.ravel()
-                for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
-                    filename += f"_{ltr}"
-                    ax = subplot_axes[ltr_idx]
-                    ax.set_xlabel("RANK")
-                    ax.set_title(f"{parameter}, LT: {ltr}")
-                    for model_idx, data in enumerate(model_data.values()):
-                        model_plot_color = plot_settings.modelcolors[model_idx]
-                        model_ranks = sorted(
-                            [
-                                index
-                                for index in data["df"]["Total"].index
-                                if "RANK" in index
-                            ],
-                            key=lambda x: int("".join(filter(str.isdigit, x))),
-                        )
-                        ranks = data["df"]["Total"][model_ranks].reset_index(drop=True)
-                        ax.bar(
-                            np.arange(len(model_ranks)) + model_idx * 0.25,
-                            ranks,
-                            width=0.25,
-                            color=model_plot_color,
-                        )
-                if len(models_data.keys()) > 2 and len(models_data.keys()) % 2 == 1:
-                    subplot_axes[-1].axis("off")
-        elif any("REL_DIA" in score for score in score_setup):
-            fig, subplot_axes = _initialize_plots(
-                len(score_setup), len(models_data.keys()), (6.7, 6)
-            )
-            for score_idx, score in enumerate(score_setup):
-                filename += f"_{score}"
-                threshold = re.search(r"\(.*?\)", score).group()
-                for ltr_idx, (ltr, model_data) in enumerate(models_data.items()):
-                    ax = subplot_axes[score_idx][ltr_idx]
-                    ax.set_ylabel("Observed Relative Frequency")
-                    ax.set_xlabel("Forecast Probability")
-                    ax.set_xlim(0, 1)
-                    ax.set_ylim(0, 1)
-                    ax.set_aspect("equal")
-                    [unit] = model_data[next(iter(model_data.keys()))]["header"]["Unit"]
-                    ax.set_title(f"{parameter} {threshold[1:-1]} {unit}, LT: {ltr}")
-                    sample_subplot = _add_sample_subplot(fig, ax)
-
-                    for model_idx, data in enumerate(model_data.values()):
-                        model_plot_color = plot_settings.modelcolors[model_idx]
-                        fbin_values = _get_bin_values(data, "FBIN", threshold)
-                        obin_values = _get_bin_values(data, "OBIN", threshold)
-                        nbin_values = _get_bin_values(data, "NBIN", threshold)
-                        of_value = _get_bin_values(data, "OF", threshold)
-                        ax.plot(
-                            fbin_values,
-                            obin_values,
-                            color=model_plot_color,
-                            marker="D",
-                            fillstyle="none",
-                        )
-
-                        sample_subplot.bar(
-                            np.arange(len(nbin_values)) + model_idx * 0.25,
-                            nbin_values,
-                            width=0.25,
-                            color=model_plot_color,
-                        )
-
-                    _add_boundary_line(ax, [0, 1])
-                    _add_boundary_line(ax, [of_value, of_value])
-                    _add_boundary_line(
-                        ax,
+            for ltr, model_data in models_data.items():
+                fig, subplot_axes = _initialize_plots(1, 1)
+                filename = f"{base_filename}_RANK_{ltr}"
+                [ax] = subplot_axes.ravel()
+                ax.set_xlabel("RANK")
+                ax.set_title(f"{parameter}, LT: {ltr}")
+                for model_idx, data in enumerate(model_data.values()):
+                    model_plot_color = plot_settings.modelcolors[model_idx]
+                    model_ranks = sorted(
                         [
-                            (1 - np.tan(np.pi / 8)) * of_value,
-                            of_value + (1 - of_value) * np.tan(np.pi / 8),
+                            index
+                            for index in data["df"]["Total"].index
+                            if "RANK" in index
                         ],
+                        key=lambda x: int("".join(filter(str.isdigit, x))),
                     )
-                    sample_subplot.set_yticks(np.round([max(nbin_values)], -3))
-            filename += f"_{'_'.join(models_data.keys())}"
+                    ranks = data["df"]["Total"][model_ranks].reset_index(drop=True)
+                    ax.bar(
+                        np.arange(len(model_ranks)) + model_idx * 0.25,
+                        ranks,
+                        width=0.25,
+                        color=model_plot_color,
+                    )
+                _customize_figure(
+                    fig,
+                    custom_sup_title,
+                    models_color_lines,
+                    list(models_data[next(iter(models_data.keys()))].keys()),
+                )
+
+                fig.savefig(f"{output_dir}/{filename}.png")
+                plt.close()
+        elif any("REL_DIA" in score for score in score_setup):
+            [score] = score_setup
+            threshold = re.search(r"\(.*?\)", score).group()
+            for ltr, model_data in models_data.items():
+                fig, subplot_axes = _initialize_plots(1, 1, (6.7, 6))
+                [ax] = subplot_axes.ravel()
+                filename = f"{base_filename}_{score}_{ltr}"
+                ax.set_ylabel("Observed Relative Frequency")
+                ax.set_xlabel("Forecast Probability")
+                ax.set_xlim(0, 1)
+                ax.set_ylim(0, 1)
+                ax.set_aspect("equal")
+                [unit] = model_data[next(iter(model_data.keys()))]["header"]["Unit"]
+                ax.set_title(f"{parameter} {threshold[1:-1]} {unit}, LT: {ltr}")
+                sample_subplot = _add_sample_subplot(fig, ax)
+
+                for model_idx, data in enumerate(model_data.values()):
+                    model_plot_color = plot_settings.modelcolors[model_idx]
+                    fbin_values = _get_bin_values(data, "FBIN", threshold)
+                    obin_values = _get_bin_values(data, "OBIN", threshold)
+                    nbin_values = _get_bin_values(data, "NBIN", threshold)
+                    of_value = _get_bin_values(data, "OF", threshold)
+                    ax.plot(
+                        fbin_values,
+                        obin_values,
+                        color=model_plot_color,
+                        marker="D",
+                        fillstyle="none",
+                    )
+
+                    sample_subplot.bar(
+                        np.arange(len(nbin_values)) + model_idx * 0.25,
+                        nbin_values,
+                        width=0.25,
+                        color=model_plot_color,
+                    )
+
+                _add_boundary_line(ax, [0, 1])
+                _add_boundary_line(ax, [of_value, of_value])
+                _add_boundary_line(
+                    ax,
+                    [
+                        (1 - np.tan(np.pi / 8)) * of_value,
+                        of_value + (1 - of_value) * np.tan(np.pi / 8),
+                    ],
+                )
+                sample_subplot.set_yticks(np.round([max(nbin_values)], -3))
+                _customize_figure(
+                    fig,
+                    custom_sup_title,
+                    models_color_lines,
+                    list(models_data[next(iter(models_data.keys()))].keys()),
+                )
+                fig.savefig(f"{output_dir}/{filename}.png")
+                plt.close()
         else:
             fig, subplot_axes = _initialize_plots(
                 2 if len(score_setup) > 1 else 1,
@@ -261,27 +289,14 @@ def _plot_and_save_scores(
             if len(score_setup) > 2 and len(score_setup) % 2 == 1:
                 subplot_axes[-1].axis("off")
 
-        fig.suptitle(
-            custom_sup_title,
-            horizontalalignment="center",
-            verticalalignment="top",
-            fontdict={
-                "size": 6,
-                "color": "k",
-            },
-            bbox={"facecolor": "none", "edgecolor": "grey"},
-        )
-
-        fig.legend(
-            models_color_lines,
-            list(models_data[next(iter(models_data.keys()))].keys()),
-            loc="upper right",
-            ncol=1,
-            frameon=False,
-        )
-
-        fig.savefig(f"{output_dir}/{filename}.png")
-        plt.close()
+            _customize_figure(
+                fig,
+                custom_sup_title,
+                models_color_lines,
+                list(models_data[next(iter(models_data.keys()))].keys()),
+            )
+            fig.savefig(f"{output_dir}/{filename}.png")
+            plt.close()
 
 
 def _generate_ensemble_scores_plots(
