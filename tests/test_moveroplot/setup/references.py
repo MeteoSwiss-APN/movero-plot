@@ -1,0 +1,150 @@
+"""Plot_setup references for tests."""
+# Standard library
+from typing import Any
+from typing import Dict
+
+DEFAULT_PLOT_SETUP: Dict[str, Any] = {
+    "model_versions": [["C-1E_ch", "C-1E-CTR_ch"], ["C-2E_alps"]],
+    "parameter": {
+        "VMAX_10M6": {
+            "regular_scores": [],
+            "cat_scores": [
+                ["FBI(5)"],
+                ["MF(5)", "POD(5)"],
+                ["FAR(5)"],
+                ["THS(5)"],
+                ["ETS(5)"],
+            ],
+            "regular_ens_scores": [["OUTLIERS"], ["RANK"], ["RPS"], ["RPS_REF"]],
+            "ens_cat_scores": [
+                ["REL(5)"],
+                ["RES(5)"],
+                ["BS(5)"],
+                ["BS_REF(5)"],
+                ["BSS(5)"],
+                ["BSSD(5)"],
+                ["REL_DIA(5)"],
+            ],
+        },
+        "TOT_PREC6": {
+            "regular_scores": [["ME"], ["MMOD", "MOBS"], ["MAE"]],
+            "cat_scores": [
+                ["FBI(0.2)"],
+                ["MF(0.2)", "POD(0.2)"],
+                ["FAR(0.2)"],
+                ["THS(0.2)"],
+                ["ETS(0.2)"],
+            ],
+            "regular_ens_scores": [["OUTLIERS"], ["RANK"], ["RPS"], ["RPS_REF"]],
+            "ens_cat_scores": [
+                ["REL(0.2)"],
+                ["RES(0.2)"],
+                ["BS(0.2)"],
+                ["BS_REF(0.2)"],
+                ["BSS(0.2)"],
+                ["BSSD(0.2)"],
+                ["REL_DIA(0.2)"],
+            ],
+        },
+        "T_2M": {
+            "regular_scores": [["ME"], ["MMOD", "MOBS"], ["MAE"]],
+            "cat_scores": [
+                ["FBI(0)"],
+                ["MF(0)", "POD(0)"],
+                ["FAR(0)"],
+                ["THS(0)"],
+                ["ETS(0)"],
+            ],
+            "regular_ens_scores": [["OUTLIERS"], ["RANK"], ["RPS"], ["RPS_REF"]],
+            "ens_cat_scores": [
+                ["REL(0)"],
+                ["RES(0)"],
+                ["BS(0)"],
+                ["BS_REF(0)"],
+                ["BSS(0)"],
+                ["BSSD(0)"],
+                ["REL_DIA(0)"],
+            ],
+        },
+        "FF_10M": {
+            "regular_scores": [],
+            "cat_scores": [
+                ["FBI(2.5)"],
+                ["MF(2.5)", "POD(2.5)"],
+                ["FAR(2.5)"],
+                ["THS(2.5)"],
+                ["ETS(2.5)"],
+            ],
+            "regular_ens_scores": [["OUTLIERS"], ["RANK"], ["RPS"], ["RPS_REF"]],
+            "ens_cat_scores": [
+                ["REL(2.5)"],
+                ["RES(2.5)"],
+                ["BS(2.5)"],
+                ["BS_REF(2.5)"],
+                ["BSS(2.5)"],
+                ["BSSD(2.5)"],
+                ["REL_DIA(2.5)"],
+            ],
+        },
+        "CLCT": {
+            "regular_scores": [["ME"], ["MMOD", "MOBS"], ["MAE"]],
+            "cat_scores": [
+                ["FBI(2.5)"],
+                ["MF(2.5)", "POD(2.5)"],
+                ["FAR(2.5)"],
+                ["THS(2.5)"],
+                ["ETS(2.5)"],
+            ],
+            "regular_ens_scores": [["OUTLIERS"], ["RANK"], ["RPS"], ["RPS_REF"]],
+            "ens_cat_scores": [
+                ["REL(2.5)"],
+                ["RES(2.5)"],
+                ["BS(2.5)"],
+                ["BS_REF(2.5)"],
+                ["BSS(2.5)"],
+                ["BSSD(2.5)"],
+                ["REL_DIA(2.5)"],
+            ],
+        },
+        "TOT_PREC12": {
+            "regular_scores": [["ME"], ["MMOD", "MOBS"], ["MAE"]],
+            "cat_scores": [
+                ["FBI(0.1)"],
+                ["MF(0.1)", "POD(0.1)"],
+                ["FAR(0.1)"],
+                ["THS(0.1)"],
+                ["ETS(0.1)"],
+            ],
+            "regular_ens_scores": [["OUTLIERS"], ["RANK"], ["RPS"], ["RPS_REF"]],
+            "ens_cat_scores": [
+                ["REL(0.1)"],
+                ["RES(0.1)"],
+                ["BS(0.1)"],
+                ["BS_REF(0.1)"],
+                ["BSS(0.1)"],
+                ["BSSD(0.1)"],
+                ["REL_DIA(0.1)"],
+            ],
+        },
+        "TD_2M": {
+            "regular_scores": [["ME"], ["MMOD", "MOBS"], ["MAE"]],
+            "cat_scores": [
+                ["FBI(0)"],
+                ["MF(0)", "POD(0)"],
+                ["FAR(0)"],
+                ["THS(0)"],
+                ["ETS(0)"],
+            ],
+            "regular_ens_scores": [["OUTLIERS"], ["RANK"], ["RPS"], ["RPS_REF"]],
+            "ens_cat_scores": [
+                ["REL(0)"],
+                ["RES(0)"],
+                ["BS(0)"],
+                ["BS_REF(0)"],
+                ["BSS(0)"],
+                ["BSSD(0)"],
+                ["REL_DIA(0)"],
+            ],
+        },
+    },
+}

@@ -46,12 +46,14 @@ python plot_synop.py C-1E_ch --plot_params CLCT --plot_scores MMOD/MOBS
 """  # noqa: E501
 # Standard library
 from pathlib import Path
+from typing import Optional
 
 # Third-party
 from click import Context
 
 # Local
 from .daytime_scores import _daytime_scores_pipeline
+from .ensemble_scores import _ensemble_scores_pipeline
 
 # local
 from .parse_inputs import _parse_inputs
@@ -67,24 +69,27 @@ def main(
     ctx: Context,
     *,
     # legacy inputs
-    model_version: str,
+    model_versions: str,
     debug: bool,
     lt_ranges: tuple,
     # Parameters / Scores / Thresholds
-    plot_params: str,
-    plot_scores: str,
-    plot_cat_params: str,
-    plot_cat_thresh: str,
-    plot_cat_scores: str,
-    plot_ens_params: str,
-    plot_ens_thresh: str,
-    plot_ens_scores: str,
+    plot_params: Optional[str],
+    plot_scores: Optional[str],
+    plot_cat_params: Optional[str],
+    plot_cat_thresh: Optional[str],
+    plot_cat_scores: Optional[str],
+    plot_ens_params: Optional[str],
+    plot_ens_scores: Optional[str],
+    plot_ens_cat_params: Optional[str],
+    plot_ens_cat_thresh: Optional[str],
+    plot_ens_cat_scores: Optional[str],
     # new inputs
     input_dir: Path,
-    output_dir: str,
+    output_dir: Path,
     relief: bool,
     grid: bool,
-    season: str,
+    colors: Optional[str],
+    plot_type: str,
 ):
     """Entry Point for the MOVERO Plotting Pipeline.
 
@@ -96,7 +101,7 @@ def main(
 
     python plot_synop.py C-1E-CTR_ch
 
-    --plot_params TOT_PREC12,TOT_PREC6,TOT_PREC1,CLCT,
+    --plot_params TOT_PREC12,TOT_PREC6,CLCT,
                     GLOB,DURSUN12,DURSUN1,T_2M,T_2M_KAL,
                     TD_2M,TD_2M_KAL,RELHUM_2M,FF_10M,
                     FF_10M_KAL,VMAX_10M6,VMAX_10M1,
@@ -115,82 +120,85 @@ def main(
 
     --plot_cat_scores FBI,MF/OF,POD,FAR,THS,ETS
     """  # noqa: E501
-    # -1. DEFINE PLOTS
-    station_scores = False
-    time_scores = False
-    daytime_scores = False
-    total_scores = True
+    # -1. Check plot type input
+    if plot_type is None:
+        raise ValueError("ERROR: No plot type argument --plot_type.")
+
+    if not Path(output_dir).exists():
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+
     # 0. PARSE USER INPUT
-    params_dict = _parse_inputs(
+    plot_setup = _parse_inputs(
         debug,
+        input_dir,
+        model_versions,
         plot_params,
         plot_scores,
         plot_cat_params,
         plot_cat_thresh,
         plot_cat_scores,
         plot_ens_params,
-        plot_ens_thresh,
         plot_ens_scores,
+        plot_ens_cat_params,
+        plot_ens_cat_thresh,
+        plot_ens_cat_scores,
+        colors,
+        plot_type,
     )
+    print("PLOT SETUP ", plot_setup)
     # 1. INITIALISE STATION SCORES PLOTTING PIPELINE
-    if station_scores:
+    if "station" in plot_type:
         _station_scores_pipeline(
-            params_dict=params_dict,
+            plot_setup=plot_setup,
             lt_ranges=lt_ranges,
             file_prefix="station_scores",
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            season=season,  # 2021s4
-            model_version=model_version,  # C-1E-CTR_ch
-            relief=relief,
             debug=debug,
         )
     # 2. INITIALISE TIME SERIES PLOTTING PIPELINE
-    if time_scores:
+    if "time" in plot_type:
         _time_scores_pipeline(
-            params_dict=params_dict,
+            plot_setup=plot_setup,
             lt_ranges=lt_ranges,
             file_prefix="time_scores",
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            season=season,
-            model_version=model_version,
-            grid=grid,
             debug=debug,
         )
     # 3. INITIALISE DYURNAL CYCLE PLOTTING PIPELINE
-    if daytime_scores:
+    if "daytime" in plot_type:
         _daytime_scores_pipeline(
-            params_dict=params_dict,
+            plot_setup=plot_setup,
             lt_ranges=lt_ranges,
             file_prefix="daytime_scores",
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            season=season,
-            model_version=model_version,
-            grid=grid,
             debug=debug,
         )
     # 4. INITIALIS TOTAL SCORES PLOTTING PIPELINE
-    if total_scores:
+    if "total" in plot_type:
         _total_scores_pipeline(
-            params_dict=params_dict,
-            plot_scores=plot_scores,
-            plot_params=plot_params,
-            plot_cat_scores=plot_cat_scores,
-            plot_cat_params=plot_cat_params,
-            plot_cat_thresh=plot_cat_thresh,
-            # TODO: add plot_ens params/scores/threshs
+            plot_setup=plot_setup,
+            lt_ranges=lt_ranges,
             file_prefix="total_scores",
             file_postfix=".dat",
             input_dir=input_dir,
             output_dir=output_dir,
-            season=season,
-            model_version=model_version,
-            grid=grid,
+            debug=debug,
+        )
+
+    if "ensemble" in plot_type:
+        _ensemble_scores_pipeline(
+            plot_setup=plot_setup,
+            lt_ranges=lt_ranges,
+            file_prefix="total_scores",
+            file_postfix=".dat",
+            input_dir=input_dir,
+            output_dir=output_dir,
             debug=debug,
         )
     print("\n--- Done.")

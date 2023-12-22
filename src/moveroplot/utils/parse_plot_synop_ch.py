@@ -22,10 +22,11 @@ from pprint import pprint
 import pandas as pd
 
 verbose = False
-path = Path(Path.cwd() / "src/moveroplot/utils/plot_synop_ch")
+path = Path(__file__).with_name("plot_synop_ch")
 
+# pylint: disable=unspecified-encoding
 # open plot_synop_ch file
-with open(path, "r") as f:  # pylint: disable=unspecified-encoding
+with open(path, "r") as f:
     lines = [line.strip() for line in f.readlines()]
 
 # VERIFICATION SCORES; DATAFRAMES FOR SCORE RANGES AND COLOUR TABLE
@@ -264,11 +265,9 @@ if True:
     # ['param1_scores', 'param1_min', 'param1_max',
     # 'param2_scores', 'param2_min', 'param2_max',...]
     cat_station_score_range = cat_station_score_range[cat_columns_tmp]
-
     # now that the columns are in the correct order,
     # create subcolumns (scores, min, max) for each parameter
     cat_station_score_range.columns = cat_columns  # type: ignore
-
     if verbose:
         print("\n Categorical Station Score Ranges")
         pprint(cat_station_score_range)

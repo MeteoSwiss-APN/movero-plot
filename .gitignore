@@ -1,5 +1,6 @@
 # remove images
 *.png
+!img/*
 
 # remove scratch files
 # C extensions
