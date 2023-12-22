@@ -261,6 +261,12 @@ def _plot_and_save_scores(
             )
             x_int = list(range(len(ltr_sorted)))
             for score_idx, score in enumerate(score_setup):
+                print(
+                    "SCORE IN ENS ",
+                    score,
+                    models_data.keys(),
+                    [models_data[ltr].keys() for ltr in ltr_sorted],
+                )
                 ax = subplot_axes[score_idx]
                 filename += f"_{score}"
                 for model_idx, model_name in enumerate(
@@ -269,11 +275,17 @@ def _plot_and_save_scores(
                     model_plot_color = plot_settings.modelcolors[model_idx]
                     y_values = [
                         models_data[ltr][model_name]["df"]["Total"].loc[score]
+                        if model_name in models_data[ltr].keys()
+                        else None
                         for ltr in ltr_sorted
                     ]
+                    filtered_x_int = [
+                        x for x, y in zip(x_int, y_values) if y is not None
+                    ]
+                    filtered_y_values = [y for y in y_values if y is not None]
                     ax.plot(
-                        x_int,
-                        y_values,
+                        filtered_x_int,
+                        filtered_y_values,
                         color=model_plot_color,
                         marker="D",
                         fillstyle="none",
