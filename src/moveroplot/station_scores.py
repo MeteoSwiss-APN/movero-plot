@@ -73,7 +73,7 @@ def _initialize_plots(labels: list, scores: list):
     for ax in axes.ravel():
         ax.set_extent([5.3, 11.2, 45.4, 48.2])
         _add_features(ax)
-    fig.tight_layout(w_pad=8, h_pad=2, rect=[0.05, 0.05, 0.90, 0.90])
+    fig.tight_layout(w_pad=8, h_pad=2, rect=(0.05, 0.05, 0.90, 0.90))
     plt.subplots_adjust(bottom=0.15)
     return fig, axes
 
