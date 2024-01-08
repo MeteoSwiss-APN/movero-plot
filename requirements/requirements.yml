@@ -8,6 +8,7 @@ dependencies:
   - click >= 6.0
   - matplotlib>=3.7
   - pandas=2.1
+  - pandas-stubs=2.1
   # development
   - anaconda-client
   - black>=22.10
