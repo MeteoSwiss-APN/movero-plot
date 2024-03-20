@@ -89,7 +89,7 @@ def _add_plot_text(ax, data, score, ltr):
     max_station = data["df"].loc[score].idxmax()
     try:
         start_date = datetime.strptime(
-            " ".join(data["header"]["Start time"][0:3:2]), "%Y-%m-%d %H:%M"
+            " ".join(data["header"]["Start time"][0:2]), "%Y-%m-%d %H:%M"
         )
         end_date = datetime.strptime(
             " ".join(data["header"]["End time"][0:2]), "%Y-%m-%d %H:%M"

@@ -27,9 +27,6 @@ class Atab:
         """
         # Check consistency
         supported_seps = [" ", ";"]
-        # TODO: perhaps add r"\s+" to support multiple spaces.
-        # There was a problem w/ parsing the header for
-        # the station scores files. (lon, lat rows)
         if sep not in supported_seps:
             raise RuntimeError(
                 f"""Separator {sep} not supported.
@@ -53,7 +50,7 @@ class Atab:
         self._parse_header()
 
         # Parse the data section
-        args: Dict[str, Any] = {"skiprows": self.n_header_lines, "parse_dates": True}
+        args: Dict[str, Any] = {"skiprows": self.n_header_lines, "parse_dates": False}
         if self.sep == " ":
             args["delim_whitespace"] = True
         else:
@@ -104,26 +101,22 @@ class Atab:
         while len(lines) > 0:
             line = lines.pop(0)
             elements = line.strip().split(":", maxsplit=1)
+
             # Treat first line separately
             if idx == 0:
-                # Extract format from header (ATAB odr XLS_TABLE)
+                # Extract format from header (ATAB or XLS_TABLE)
                 self.header["Format"] = elements[0].strip(self.sep)
-                line = lines.pop(0)
-                elements = line.strip().split(":", maxsplit=1)
-                key = elements[0]
-                self.header[key] = "".join(elements[1:]).strip(self.sep).split(self.sep)
-
                 idx += 1
                 continue
 
             # Stop extraction of header information if line contains no ":"
             if len(elements) == 1:
-                self.n_header_lines = idx + 1
+                self.n_header_lines = idx
                 break
 
             # Store header information
             key = elements[0]
-            self.header[key] = "".join(elements[1:]).strip(self.sep).split(self.sep)
+            self.header[key] = "".join(elements[1:]).strip(self.sep).split()
             idx += 1
 
         # # Check if all mandatory keys are in the header

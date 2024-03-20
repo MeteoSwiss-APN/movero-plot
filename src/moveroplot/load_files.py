@@ -13,7 +13,8 @@ from .utils.atab import Atab
 # pylint: disable=too-many-arguments,too-many-locals
 def is_valid_data(header):
     try:
-        datetime.strptime(" ".join(header["Start time"][0:3:2]), "%Y-%m-%d %H:%M")
+        # %z not supported in datetime of Python 3.11
+        datetime.strptime(" ".join(header["Start time"][0:2]), "%Y-%m-%d %H:%M")
         datetime.strptime(" ".join(header["End time"][0:2]), "%Y-%m-%d %H:%M")
         return True
     except ValueError:
@@ -37,7 +38,7 @@ def load_relevant_files(
         source_path = Path(f"{input_dir}/{model}")
         for file_path in source_path.glob(f"{file_prefix}*{parameter}{file_postfix}"):
             if file_path.is_file():
-                ltr_match = re.search(r"(\d{2})-(\d{2})", file_path.name)
+                ltr_match = re.search(r"(\d{2,3})(-\d{2,3})*", file_path.name)
                 if ltr_match:
                     lt_range = ltr_match.group()
                 else:
