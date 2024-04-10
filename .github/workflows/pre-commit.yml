@@ -1,4 +1,4 @@
-name: Run pre-commit in blueprint
+name: Run pre-commit in moveroplot
 
 on:
   push:
@@ -15,12 +15,12 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
-        python-version: 3.11.7
-    - uses: conda-incubator/setup-miniconda@v2
+        python-version: "3.11"
+    - uses: conda-incubator/setup-miniconda@v3
       with:
         miniconda-version: "latest"
         channels: conda-forge
