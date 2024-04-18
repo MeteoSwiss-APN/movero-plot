@@ -1,4 +1,4 @@
-name: Run pre-commit in blueprint
+name: Run pre-commit in moveroplot
 
 on:
   push:
@@ -9,26 +9,26 @@ on:
     - main
 
 jobs:
-  blueprint-pre-commit:
+  moveroplot-pre-commit:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -l {0}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
-        python-version: 3.11.0
-    - uses: conda-incubator/setup-miniconda@v2
+        python-version: "3.11"
+    - uses: conda-incubator/setup-miniconda@v3
       with:
         miniconda-version: "latest"
         channels: conda-forge
         channel-priority: flexible
         show-channel-urls: true
-    - name: Create env from unpinned reqs
+    - name: Create env from pinned reqs
       run: |
-        conda env create --name dev_env --file requirements/requirements.yml
+        conda env create --name dev_env --file requirements/environment.yml
     - name: Install project into env
       run: |
         conda run --name dev_env pip install --no-deps .
