@@ -163,11 +163,11 @@ def _plot_and_save_scores(
                     x_int = list(data["df"]["hh"])
                     score_values = data["df"][score].to_list()
                     if 0 not in x_int:
-                        # bound_x_values = x_int[:: -len(x_int) + 1] # len=1: stride 0 not allowed
-                        bound_x_values = [x_int[i] for i in (-1,0)]
+                        # x_int[:: -len(x_int) + 1] does not work for len=1
+                        bound_x_values = [x_int[i] for i in (-1, 0)]
                         bound_x_values[0] -= 24
                         score_value0 = np.interp(
-                            0, bound_x_values, [score_values[i] for i in (-1,0)]
+                            0, bound_x_values, [score_values[i] for i in (-1, 0)]
                         )
                         x_int = [0] + x_int + [24]
                         score_values = [score_value0] + score_values + [score_value0]
