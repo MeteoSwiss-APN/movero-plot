@@ -292,7 +292,8 @@ def _generate_timeseries_plots(
     output_dir,
     debug,
 ):
-    model_versions = list(models_data.keys())
+    # flat list of unique keys of dicts within models_data dict
+    model_versions = list({k for d in models_data.values() for k in d.keys()})
 
     # initialise filename
     base_filename = (

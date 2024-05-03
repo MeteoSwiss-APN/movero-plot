@@ -13,7 +13,6 @@ This section describes the installation for users. If you intend to contribute, 
 git clone --depth 1 --branch <tag> https://github.com/MeteoSwiss-APN/movero-plot
 ```
 
-
 2. Create a virtual environment:
 
 ```bash
