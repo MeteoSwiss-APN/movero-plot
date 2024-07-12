@@ -122,7 +122,12 @@ def _initialize_plots(labels: list):
         nrows=2, ncols=1, tight_layout=True, figsize=(10, 10), dpi=200
     )
     custom_lines = [
-        Line2D([0], [0], color=plot_settings.modelcolors[i % len(plot_settings.modelcolors)], lw=2)
+        Line2D(
+            [0],
+            [0],
+            color=plot_settings.modelcolors[i % len(plot_settings.modelcolors)],
+            lw=2,
+        )
         for i in range(len(labels))
     ]
     fig.legend(
