@@ -86,6 +86,16 @@ def _parse_inputs(
             """
             )
         plot_settings.modelcolors = color_list
+    else:
+        if len(all_model_versions) > len(plot_settings.modelcolors):
+            raise ValueError(
+                f"""
+            The number of model versions is larger than the
+            number of predefined colors for plotting
+            ({len(all_model_versions)} > {len(plot_settings.modelcolors)})
+            """
+            )
+
     plot_models_setup = [
         model_combinations.split("/")
         for model_combinations in model_versions.split(",")
