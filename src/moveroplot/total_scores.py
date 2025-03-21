@@ -242,6 +242,10 @@ def _plot_and_save_scores(
                     fillstyle="none",
                     label=f"{score_setup[0].upper()}",
                 )
+                if score == "ME":
+                    ax.axhline(y=0, color="black", linestyle="--", linewidth=0.5)
+                if score.startswith("FBI"):
+                    ax.axhline(y=1, color="black", linestyle="--", linewidth=0.5)
 
             # Generate a legend if two scores in one subplot
             if len(score_setup) > 1:
