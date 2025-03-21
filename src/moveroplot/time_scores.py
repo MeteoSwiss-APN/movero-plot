@@ -250,6 +250,10 @@ def _plot_and_save_scores(
                         fillstyle="none",
                         label=f"{score.upper()}",
                     )
+                    if score == "ME":
+                        ax.axhline(y=0, color="black", linestyle="--", linewidth=0.5)
+                    if score.startswith("FBI"):
+                        ax.axhline(y=1, color="black", linestyle="--", linewidth=0.5)
                     ax.tick_params(axis="both", which="major", labelsize=8)
                     ax.tick_params(axis="both", which="minor", labelsize=6)
                     ax.autoscale(axis="y")
