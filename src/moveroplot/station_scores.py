@@ -551,6 +551,36 @@ def _determine_cmap_and_bounds(
             cmap = 'RdBu_r'
             lower_bound = -5
             upper_bound = 5
+            
+        elif score in ['MMOD', 'MOBS']:
+            cmap = 'coolwarm'
+            lower_bound = -15
+            upper_bound = 30
+            
+        elif score in ['MAE', 'STDE', 'RMSE']:
+            cmap = 'RdBuYl_r'
+            lower_bound = 0
+            upper_bound = 5
+            
+        elif score in ['COR']:
+            cmap = 'RdBuYl_r'
+            lower_bound = 0.5
+            upper_bound = 1
+            
+        elif score in ['NOBS']:
+            cmap = 'viridis'
+            lower_bound = 0
+            upper_bound = 1
+            
+        elif score.startswith('FBI'):
+            cmap = 'RdBu_r'
+            lower_bound = 0.1
+            upper_bound = 9
+            
+        elif score.startswith(('MF', 'POD', 'FAR', 'THS', 'ETS')):
+            cmap = 'RdBuYl_r'
+            lower_bound = 0
+            upper_bound = 1
         
         # Go to default values if param and score is not specified
         else:
@@ -564,11 +594,15 @@ def _determine_cmap_and_bounds(
         lower_bound = param_score_range["min"]
         upper_bound = param_score_range["max"]
         
+    print(param)
+    print(score)
+        
     # Check if parameter range is outside of limit --> adjust
-    while (abs(lower_bound) <= abs(param_score_range["min"])) or (abs(upper_bound) <= abs(param_score_range["max"])):
-        if abs(lower_bound) <= abs(param_score_range["min"]):
-            lower_bound -= 1
-        if abs(upper_bound) <= abs(param_score_range["max"]):
-            upper_bound += 1
+    if param_score_range["min"] is not None and param_score_range["max"] is not None:
+        while (abs(lower_bound) <= abs(param_score_range["min"])) or (abs(upper_bound) <= abs(param_score_range["max"])):
+            if abs(lower_bound) <= abs(param_score_range["min"]):
+                lower_bound -= 1
+            if abs(upper_bound) <= abs(param_score_range["max"]):
+                upper_bound += 1
             
     return cmap, lower_bound, upper_bound
