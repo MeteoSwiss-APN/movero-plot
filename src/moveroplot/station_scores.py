@@ -8,6 +8,7 @@ from pathlib import Path
 import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+from netCDF4 import Dataset
 
 # relevant imports for plotting pipeline
 import matplotlib.pyplot as plt
@@ -303,6 +304,11 @@ def _add_features(ax):
         color="#97b6e1",
     )
     # ax.add_image(ShadedReliefESRI(), 8)
+    
+    #add ICON-CH1-EPS topography on COSMO-1E grid
+    icon_ch1_eps_topo = Dataset("/users/oprusers/osm/opr.emme/data/topo_i1e_on_c1e_grid.nc")
+    ax.contourf(icon_ch1_eps_topo["x_1"][:].data,icon_ch1_eps_topo["y_1"][:].data,
+    icon_ch1_eps_topo["HSURF"][0,...].data,cmap='gray_r',levels=np.arange(0,4450,50),extend='both',alpha=0.5)
 
 
 def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
