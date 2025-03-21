@@ -325,13 +325,15 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         )
     else:
         param_score_range = {"min": None, "max": None}
-    lower_bound = param_score_range["min"]
-    upper_bound = param_score_range["max"]
+
     if score not in data.index:
         return
     plot_data = data.loc[["lon", "lat", score]].astype(float)
     nan_data = plot_data.loc[:, plot_data.isna().any()]
     plot_data = plot_data.dropna(axis="columns")
+            
+    cmap,lower_bound,upper_bound = _determine_cmap_and_bounds(param, score, param_score_range)
+    
     sc = ax.scatter(
         x=list(plot_data.loc["lon"]),
         y=list(plot_data.loc["lat"]),
@@ -339,6 +341,9 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         c=list(plot_data.loc[score]),
         vmin=lower_bound,
         vmax=upper_bound,
+        cmap=cmap,
+        edgecolors="black",
+        linewidth=0.4,
         rasterized=True,
         transform=ccrs.PlateCarree(),
     )
@@ -531,3 +536,39 @@ def _generate_map_plot(
         plt.close(fig)
 
     return
+
+
+def _determine_cmap_and_bounds(
+    param,
+    score,
+    param_score_range,
+):
+    """Set cmap and plotting bounds depending on param and score."""
+    
+    if param.startswith('T_2M'):
+        
+        if score in ['ME']:
+            cmap = 'RdBu_r'
+            lower_bound = -5
+            upper_bound = 5
+        
+        # Go to default values if param and score is not specified
+        else:
+            cmap = 'viridis'
+            lower_bound = param_score_range["min"]
+            upper_bound = param_score_range["max"]
+    
+    # Go to default values if param and score is not specified   
+    else:
+        cmap = 'viridis'
+        lower_bound = param_score_range["min"]
+        upper_bound = param_score_range["max"]
+        
+    # Check if parameter range is outside of limit --> adjust
+    while (abs(lower_bound) <= abs(param_score_range["min"])) or (abs(upper_bound) <= abs(param_score_range["max"])):
+        if abs(lower_bound) <= abs(param_score_range["min"]):
+            lower_bound -= 1
+        if abs(upper_bound) <= abs(param_score_range["max"]):
+            upper_bound += 1
+            
+    return cmap, lower_bound, upper_bound
