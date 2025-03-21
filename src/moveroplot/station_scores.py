@@ -62,7 +62,7 @@ def _initialize_plots(labels: list, scores: list):
     num_rows = len(scores)
     figsize = _calculate_figsize(num_rows, num_cols, (7.3, 5), (0, 2))
     fig, axes = plt.subplots(
-        subplot_kw=dict(projection=ccrs.PlateCarree()),
+        subplot_kw=dict(projection=ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)),
         nrows=num_rows,
         ncols=num_cols,
         tight_layout=True,
@@ -71,7 +71,7 @@ def _initialize_plots(labels: list, scores: list):
         squeeze=False,
     )
     for ax in axes.ravel():
-        ax.set_extent([5.3, 11.2, 45.4, 48.2])
+        ax.set_extent([5.3, 11.2, 45.4, 48.2], crs=ccrs.PlateCarree())
         _add_features(ax)
     fig.tight_layout(w_pad=8, h_pad=2, rect=(0.05, 0.05, 0.90, 0.90))
     plt.subplots_adjust(bottom=0.15)
@@ -273,17 +273,17 @@ def _add_features(ax):
 
     # add grid & labels to map
     """  # noqa: E501
-    gl = ax.gridlines(
-        crs=ccrs.PlateCarree(),
-        draw_labels=True,
-        linewidth=0.5,
-        color="k",
-        alpha=0.3,
-        linestyle="-.",
-        rasterized=True,
-    )  # define grid line properties
-    gl.top_labels = False
-    gl.right_labels = False
+    #gl = ax.gridlines(
+    #    crs=ccrs.PlateCarree(),
+    #    draw_labels=True,
+    #    linewidth=0.5,
+    #    color="k",
+    #    alpha=0.3,
+    #    linestyle="-.",
+    #    rasterized=True,
+    #)  # define grid line properties
+    #gl.top_labels = False
+    #gl.right_labels = False
 
     ax.add_feature(cfeature.LAND, rasterized=True, color="white")  # color="#FFFAF0"
     ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True)
@@ -481,16 +481,16 @@ def _generate_map_plot(
         if relief:
             ax = plt.axes(projection=ShadedReliefESRI().crs)
         else:
-            ax = plt.axes(projection=ccrs.PlateCarree())
+            ax = plt.axes(projection=ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43))
 
         # make sure, aspect ratio of map & figure match
         ax.set_aspect("auto")
 
         # cut map to model_version (taken from pytrajplot)
         if "ch" in model_version:
-            ax.set_extent([5.3, 11.2, 45.4, 48.2])
+            ax.set_extent([5.3, 11.2, 45.4, 48.2], crs=ccrs.PlateCarree())
         if "alps" in model_version:
-            ax.set_extent([0.7, 16.5, 42.3, 50])
+            ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
 
         if relief:
             # add relief
