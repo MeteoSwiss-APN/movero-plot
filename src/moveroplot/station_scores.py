@@ -333,7 +333,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     nan_data = plot_data.loc[:, plot_data.isna().any()]
     plot_data = plot_data.dropna(axis="columns")
             
-    cmap,param_score_range = _determine_cmap_and_bounds(param, score, plot_data.loc[score], param_score_range)
+    cmap,param_score_range = _determine_cmap_and_bounds(param, score, param_score_range)
     
     if score.startswith("FBI"):
         norm = mcolors.TwoSlopeNorm(vmin=param_score_range["min"], vmax=param_score_range["max"], vcenter=1)
@@ -553,7 +553,6 @@ def _generate_map_plot(
 def _determine_cmap_and_bounds(
     param,
     score,
-    plot_data,
     param_score_range,
 ):
     """Set cmap and plotting bounds depending on param and score."""
@@ -596,34 +595,6 @@ def _determine_cmap_and_bounds(
     # Go to default values if param and score is not specified   
     else:
         cmap = "viridis"
-    
-    print(param)    
-    print(score)
-    print(param_score_range["min"])
-    print(param_score_range["max"])
-        
-    # Check if parameter range is outside of limit --> adjust
-    if param_score_range["min"] is not None and param_score_range["max"] is not None:
-        while (abs(param_score_range["min"]) <= abs(plot_data.min())) or (abs(param_score_range["max"]) <= abs(plot_data.max())):
-            if abs(param_score_range["min"]) <= abs(plot_data.min()):
-                param_score_range["min"] -= 1
-            if abs(param_score_range["max"]) <= abs(plot_data.max()):
-                param_score_range["max"] += 1
-                
-    # Enforce some hard limits for certain scores
-    if score.startswith("FBI"):
-        
-        param_score_range["min"] = 0.1 if param_score_range["min"] < 0.1 else param_score_range["min"]
-        param_score_range["max"] = 10 if param_score_range["max"] > 10 else param_score_range["max"]
-
-    if score.startswith(("MAE", "STDE", "RMSE", "NOBS", "THS", "ETS")):
-        
-        param_score_range["min"] = 0 if param_score_range["min"] < 0 else param_score_range["min"]
-        
-    if score.startswith(("COR", "MF", "OF", "POD", "FAR", "THS", "ETS")):
-        
-        param_score_range["min"] = 0 if param_score_range["min"] < 0 else param_score_range["min"]
-        param_score_range["max"] = 1 if param_score_range["max"] > 1 else param_score_range["max"]
     
             
     return cmap, param_score_range
