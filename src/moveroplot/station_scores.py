@@ -214,7 +214,7 @@ def _station_scores_pipeline(
         lt_ranges (list): lead time ranges, for which plots should be generated (i.e. 01-06, 07-12,...). part of the file name
         parameters (list): parameters, for which plots should be generated (i.e. CLCT, DD_10M, FF_10M, PMSL,...). part of file name
         file_prefix (str): prefix of files (i.e. station_scores)
-        file_postfix (str): postfix of files (i.e. '.dat')
+        file_postfix (str): postfix of files (i.e. ".dat")
         input_dir (str): directory to seasons (i.e. /scratch/osm/movero/wd)
         output_dir (str): output directory (i.e. plots/)
         model_version (str): model_version of interest (i.e. C-1E_ch)
@@ -309,7 +309,7 @@ def _add_features(ax):
     #add ICON-CH1-EPS topography on COSMO-1E grid
     icon_ch1_eps_topo = Dataset("/users/oprusers/osm/opr/data/topo_i1e_on_c1e_grid.nc")
     ax.contourf(icon_ch1_eps_topo["x_1"][:].data,icon_ch1_eps_topo["y_1"][:].data,
-    icon_ch1_eps_topo["HSURF"][0,...].data,cmap='gray_r',levels=np.arange(0,4450,50),extend='both',alpha=0.5)
+    icon_ch1_eps_topo["HSURF"][0,...].data,cmap="gray_r",levels=np.arange(0,4450,50),extend="both",alpha=0.5)
 
 
 def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
@@ -439,9 +439,9 @@ def _add_text(
     max_station,
 ):
     """Add footer and title to plot."""
-    footer = f"""Model: {header_dict['Model version']} |
-    Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]} | Min: {min_value} {header_dict['Unit']}
-     @ {min_station} | Max: {max_value} {header_dict['Unit']} @ {max_station}
+    footer = f"""Model: {header_dict["Model version"]} |
+    Period: {header_dict["Start time"][0]} - {header_dict["End time"][0]} | Min: {min_value} {header_dict["Unit"]}
+     @ {min_station} | Max: {max_value} {header_dict["Unit"]} @ {max_station}
      | © MeteoSwiss"""  # noqa: E501
 
     plt.suptitle(
@@ -558,46 +558,49 @@ def _determine_cmap_and_bounds(
 ):
     """Set cmap and plotting bounds depending on param and score."""
     
-    if param.startswith('T_2M'):
+    if param.startswith(("T_2M", "FF", "VMAX", "DD", "PS", "PMSL")):
         
-        if score in ['ME']:
-            cmap = 'RdBu_r'
+        if score in ["ME"]:
+            cmap = "RdBu_r"
             
-        elif score in ['MMOD']:
-            cmap = 'jet'
+        elif score in ["MMOD"]:
+            cmap = "jet"
             
-        elif score in ['MOBS']:
-            cmap = 'jet'
-            param_score_range["min"] = -15
-            param_score_range["max"] = 30
+        elif score in ["MOBS"]:
+            cmap = "jet"
+            param_score_range = station_score_range[param].loc["MMOD"]
             
-        elif score in ['MAE', 'STDE', 'RMSE']:
-            cmap = 'Spectral'
+        elif score in ["MAE", "STDE", "RMSE"]:
+            cmap = "Spectral"
             
-        elif score in ['COR']:
-            cmap = 'Spectral'
+        elif score in ["COR"]:
+            cmap = "Spectral"
             
-        elif score in ['NOBS']:
-            cmap = 'viridis'
+        elif score in ["NOBS"]:
+            cmap = "viridis"
             
-        elif score.startswith('FBI'):
-            cmap = 'RdBu_r'
+        elif score.startswith("FBI"):
+            cmap = "RdBu_r"
             
-        elif score.startswith(('MF', 'POD', 'FAR', 'THS', 'ETS')):
-            cmap = 'Spectral'
+        elif score.startswith(("MF", "POD", "FAR", "THS", "ETS")):
+            cmap = "Spectral"
             
-        elif score.startswith('OF'):
-            cmap = 'Spectral'
-            param_score_range["min"] = 0
-            param_score_range["max"] = 1
+        elif score.startswith("OF"):
+            cmap = "Spectral"
+            param_score_range = cat_station_score_range[param].set_index("scores").loc[score.replace("OF", "MF")]
         
         # Go to default values if param and score is not specified
         else:
-            cmap = 'viridis'
+            cmap = "viridis"
     
     # Go to default values if param and score is not specified   
     else:
-        cmap = 'viridis'
+        cmap = "viridis"
+    
+    print(param)    
+    print(score)
+    print(param_score_range["min"])
+    print(param_score_range["max"])
         
     # Check if parameter range is outside of limit --> adjust
     if param_score_range["min"] is not None and param_score_range["max"] is not None:
@@ -608,16 +611,16 @@ def _determine_cmap_and_bounds(
                 param_score_range["max"] += 1
                 
     # Enforce some hard limits for certain scores
-    if score.startswith('FBI'):
+    if score.startswith("FBI"):
         
         param_score_range["min"] = 0.1 if param_score_range["min"] < 0.1 else param_score_range["min"]
         param_score_range["max"] = 10 if param_score_range["max"] > 10 else param_score_range["max"]
 
-    if score.startswith(('MAE', 'STDE', 'RMSE', 'NOBS', 'THS', 'ETS')):
+    if score.startswith(("MAE", "STDE", "RMSE", "NOBS", "THS", "ETS")):
         
         param_score_range["min"] = 0 if param_score_range["min"] < 0 else param_score_range["min"]
         
-    if score.startswith(('COR', 'MF', 'OF', 'POD', 'FAR', 'THS', 'ETS')):
+    if score.startswith(("COR", "MF", "OF", "POD", "FAR", "THS", "ETS")):
         
         param_score_range["min"] = 0 if param_score_range["min"] < 0 else param_score_range["min"]
         param_score_range["max"] = 1 if param_score_range["max"] > 1 else param_score_range["max"]
