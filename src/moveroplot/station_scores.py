@@ -12,6 +12,7 @@ from netCDF4 import Dataset
 
 # relevant imports for plotting pipeline
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import numpy as np
 
 # class to add relief to map
@@ -103,7 +104,7 @@ def _add_plot_text(ax, data, score, ltr):
     # pylint: disable=line-too-long
     plt.text(
         0.5,
-        -0.1,
+        -0.03,
         f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} -Min: {min_value} mm at station {min_station} +Max: {max_value} mm at station {max_station}""",  # noqa: E501
         horizontalalignment="center",
         verticalalignment="center",
@@ -332,16 +333,20 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     nan_data = plot_data.loc[:, plot_data.isna().any()]
     plot_data = plot_data.dropna(axis="columns")
             
-    cmap,lower_bound,upper_bound = _determine_cmap_and_bounds(param, score, param_score_range)
+    cmap,param_score_range = _determine_cmap_and_bounds(param, score, plot_data.loc[score], param_score_range)
+    
+    if score.startswith("FBI"):
+        norm = mcolors.TwoSlopeNorm(vmin=param_score_range["min"], vmax=param_score_range["max"], vcenter=1)
     
     sc = ax.scatter(
         x=list(plot_data.loc["lon"]),
         y=list(plot_data.loc["lat"]),
         marker="o",
         c=list(plot_data.loc[score]),
-        vmin=lower_bound,
-        vmax=upper_bound,
+        vmin=param_score_range["min"] if not score.startswith("FBI") else None,
+        vmax=param_score_range["max"] if not score.startswith("FBI") else None,
         cmap=cmap,
+        norm=norm if score.startswith("FBI") else None,
         edgecolors="black",
         linewidth=0.4,
         rasterized=True,
@@ -375,6 +380,13 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         ]
     )
     cbar = plt.colorbar(sc, cax=cax)
+    
+    # Only modify ticks for the FBI case
+    if score.startswith("FBI"):
+        custom_ticks = [0.1, 0.3, 0.5, 0.7, 0.9, 1, 2, 4, 6, 8, 10]
+        cbar.set_ticks(custom_ticks)
+        cbar.ax.set_yticklabels([str(tick) for tick in custom_ticks])
+        
     cbar.set_label(unit, rotation=270, labelpad=10)
     ax.scatter(
         x=list(nan_data.loc["lon"]),
@@ -541,6 +553,7 @@ def _generate_map_plot(
 def _determine_cmap_and_bounds(
     param,
     score,
+    plot_data,
     param_score_range,
 ):
     """Set cmap and plotting bounds depending on param and score."""
@@ -549,60 +562,65 @@ def _determine_cmap_and_bounds(
         
         if score in ['ME']:
             cmap = 'RdBu_r'
-            lower_bound = -5
-            upper_bound = 5
             
-        elif score in ['MMOD', 'MOBS']:
-            cmap = 'coolwarm'
-            lower_bound = -15
-            upper_bound = 30
+        elif score in ['MMOD']:
+            cmap = 'jet'
+            
+        elif score in ['MOBS']:
+            cmap = 'jet'
+            param_score_range["min"] = -15
+            param_score_range["max"] = 30
             
         elif score in ['MAE', 'STDE', 'RMSE']:
-            cmap = 'RdBuYl_r'
-            lower_bound = 0
-            upper_bound = 5
+            cmap = 'Spectral'
             
         elif score in ['COR']:
-            cmap = 'RdBuYl_r'
-            lower_bound = 0.5
-            upper_bound = 1
+            cmap = 'Spectral'
             
         elif score in ['NOBS']:
             cmap = 'viridis'
-            lower_bound = 0
-            upper_bound = 1
             
         elif score.startswith('FBI'):
             cmap = 'RdBu_r'
-            lower_bound = 0.1
-            upper_bound = 9
             
         elif score.startswith(('MF', 'POD', 'FAR', 'THS', 'ETS')):
-            cmap = 'RdBuYl_r'
-            lower_bound = 0
-            upper_bound = 1
+            cmap = 'Spectral'
+            
+        elif score.startswith('OF'):
+            cmap = 'Spectral'
+            param_score_range["min"] = 0
+            param_score_range["max"] = 1
         
         # Go to default values if param and score is not specified
         else:
             cmap = 'viridis'
-            lower_bound = param_score_range["min"]
-            upper_bound = param_score_range["max"]
     
     # Go to default values if param and score is not specified   
     else:
         cmap = 'viridis'
-        lower_bound = param_score_range["min"]
-        upper_bound = param_score_range["max"]
-        
-    print(param)
-    print(score)
         
     # Check if parameter range is outside of limit --> adjust
     if param_score_range["min"] is not None and param_score_range["max"] is not None:
-        while (abs(lower_bound) <= abs(param_score_range["min"])) or (abs(upper_bound) <= abs(param_score_range["max"])):
-            if abs(lower_bound) <= abs(param_score_range["min"]):
-                lower_bound -= 1
-            if abs(upper_bound) <= abs(param_score_range["max"]):
-                upper_bound += 1
+        while (abs(param_score_range["min"]) <= abs(plot_data.min())) or (abs(param_score_range["max"]) <= abs(plot_data.max())):
+            if abs(param_score_range["min"]) <= abs(plot_data.min()):
+                param_score_range["min"] -= 1
+            if abs(param_score_range["max"]) <= abs(plot_data.max()):
+                param_score_range["max"] += 1
+                
+    # Enforce some hard limits for certain scores
+    if score.startswith('FBI'):
+        
+        param_score_range["min"] = 0.1 if param_score_range["min"] < 0.1 else param_score_range["min"]
+        param_score_range["max"] = 10 if param_score_range["max"] > 10 else param_score_range["max"]
+
+    if score.startswith(('MAE', 'STDE', 'RMSE', 'NOBS', 'THS', 'ETS')):
+        
+        param_score_range["min"] = 0 if param_score_range["min"] < 0 else param_score_range["min"]
+        
+    if score.startswith(('COR', 'MF', 'OF', 'POD', 'FAR', 'THS', 'ETS')):
+        
+        param_score_range["min"] = 0 if param_score_range["min"] < 0 else param_score_range["min"]
+        param_score_range["max"] = 1 if param_score_range["max"] > 1 else param_score_range["max"]
+    
             
-    return cmap, lower_bound, upper_bound
+    return cmap, param_score_range
