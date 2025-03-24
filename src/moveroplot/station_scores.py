@@ -333,7 +333,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     nan_data = plot_data.loc[:, plot_data.isna().any()]
     plot_data = plot_data.dropna(axis="columns")
             
-    cmap,param_score_range = _determine_cmap_and_bounds(param, score, param_score_range)
+    cmap,param_score_range = _determine_cmap_and_bounds(param, score, plot_data.loc[score], param_score_range)
     
     if score.startswith("FBI"):
         norm = mcolors.TwoSlopeNorm(vmin=param_score_range["min"], vmax=param_score_range["max"], vcenter=1)
@@ -553,6 +553,7 @@ def _generate_map_plot(
 def _determine_cmap_and_bounds(
     param,
     score,
+    plot_data,
     param_score_range,
 ):
     """Set cmap and plotting bounds depending on param and score."""
@@ -577,6 +578,8 @@ def _determine_cmap_and_bounds(
             
         elif score in ["NOBS"]:
             cmap = "viridis"
+            param_score_range["min"] = 0
+            param_score_range["max"] = np.ceil(plot_data.max())
             
         elif score.startswith("FBI"):
             cmap = "RdBu_r"
@@ -595,6 +598,5 @@ def _determine_cmap_and_bounds(
     # Go to default values if param and score is not specified   
     else:
         cmap = "viridis"
-    
             
     return cmap, param_score_range
