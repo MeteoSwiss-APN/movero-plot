@@ -287,12 +287,11 @@ def _add_features(ax):
     #gl.top_labels = False
     #gl.right_labels = False
 
-    ax.add_feature(cfeature.LAND, rasterized=True, color="white")  # color="#FFFAF0"
-    ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True)
-    ax.add_feature(cfeature.BORDERS, linestyle="--", alpha=1, rasterized=True)
-    ax.add_feature(cfeature.OCEAN, rasterized=True)
-    ax.add_feature(cfeature.LAKES, alpha=0.5, rasterized=True)
-    ax.add_feature(cfeature.RIVERS, alpha=0.5, rasterized=True)
+    ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True,zorder=10)
+    ax.add_feature(cfeature.BORDERS, linestyle="--", alpha=1, rasterized=True,zorder=10)
+    ax.add_feature(cfeature.OCEAN, rasterized=True,zorder=10)
+    ax.add_feature(cfeature.LAKES, alpha=0.5, rasterized=True,zorder=10)
+    ax.add_feature(cfeature.RIVERS, alpha=0.5, rasterized=True,zorder=10)
     ax.add_feature(
         cartopy.feature.NaturalEarthFeature(
             category="physical",
@@ -303,6 +302,7 @@ def _add_features(ax):
         alpha=0.5,
         rasterized=True,
         color="#97b6e1",
+        zorder=10
     )
     # ax.add_image(ShadedReliefESRI(), 8)
     
@@ -314,7 +314,10 @@ def _add_features(ax):
 
 def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     # dataframes have two different structures
-    param = check_params(param[0])
+    
+    # Workaround since check_params does not work for ATHD_S
+    param = "ATHD_S" if param[0] == "ATHD_S" else check_params(param[0])
+
     if param in station_score_range.columns and score in station_score_range.index:
         param_score_range = station_score_range[param].loc[score]
     elif (
@@ -350,6 +353,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         edgecolors="black",
         linewidth=0.4,
         rasterized=True,
+        zorder=80,
         transform=ccrs.PlateCarree(),
     )
     if len(plot_data.loc[score]) != 0:
@@ -361,6 +365,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
             marker="+",
             color="black",
             s=80,
+            zorder=100,
             transform=ccrs.PlateCarree(),
         )
         ax.scatter(
@@ -369,6 +374,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
             marker="_",
             color="black",
             s=80,
+            zorder=100,
             transform=ccrs.PlateCarree(),
         )
     cax = fig.add_axes(
@@ -383,7 +389,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     
     # Only modify ticks for the FBI case
     if score.startswith("FBI"):
-        custom_ticks = [0.1, 0.3, 0.5, 0.7, 0.9, 1, 2, 4, 6, 8, 10]
+        custom_ticks = [0.3, 0.5, 0.7, 0.9, 1, 2, 3] if param.startswith("CLCT") else [0.1, 0.3, 0.5, 0.7, 0.9, 1, 2, 4, 6, 8, 10]
         cbar.set_ticks(custom_ticks)
         cbar.ax.set_yticklabels([str(tick) for tick in custom_ticks])
         
@@ -556,47 +562,51 @@ def _determine_cmap_and_bounds(
     plot_data,
     param_score_range,
 ):
-    """Set cmap and plotting bounds depending on param and score."""
+    """Set cmap depending on param and score and and plotting bounds for some variables."""
     
-    if param.startswith(("T_2M", "FF", "VMAX", "DD", "PS", "PMSL")):
-        
-        if score in ["ME"]:
-            cmap = "RdBu_r"
-            
-        elif score in ["MMOD"]:
-            cmap = "jet"
-            
-        elif score in ["MOBS"]:
-            cmap = "jet"
-            param_score_range = station_score_range[param].loc["MMOD"]
-            
-        elif score in ["MAE", "STDE", "RMSE"]:
-            cmap = "Spectral"
-            
-        elif score in ["COR"]:
-            cmap = "Spectral"
-            
-        elif score in ["NOBS"]:
-            cmap = "viridis"
-            param_score_range["min"] = 0
-            param_score_range["max"] = np.ceil(plot_data.max())
-            
-        elif score.startswith("FBI"):
-            cmap = "RdBu_r"
-            
-        elif score.startswith(("MF", "POD", "FAR", "THS", "ETS")):
-            cmap = "Spectral"
-            
-        elif score.startswith("OF"):
-            cmap = "Spectral"
-            param_score_range = cat_station_score_range[param].set_index("scores").loc[score.replace("OF", "MF")]
-        
-        # Go to default values if param and score is not specified
-        else:
-            cmap = "viridis"
-    
-    # Go to default values if param and score is not specified   
+    # Colormaps that depend on parameter and score
+    if param is not None:
+        if param.startswith(("T_2M", "FF", "VMAX", "DD", "PS", "PMSL")):
+            if score.startswith(("ME", "FBI")):
+                cmap = "RdBu_r"
+                
+        elif param.startswith(("CLCT", "GLOB", "DURSUN", "ATHD_S")):
+            if score.startswith(("ME", "FBI")):
+                cmap = "PuOr"
+                
+        elif param.startswith(("TOT_PREC", "RELHUM", "TD")):
+            if score.startswith(("ME", "FBI")):
+                cmap = "BrBG"
+                
+    # Go to default if parameter is not defined           
     else:
         cmap = "viridis"
+    
+    # Colormaps that depend on score only
+    if score in ["MMOD"]:
+        cmap = "jet"
+        
+    elif score in ["MOBS"]:
+        cmap = "jet"
+        if param is not None:
+            param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif score in ["MAE", "STDE", "RMSE"]:
+        cmap = "Spectral"
+        
+    elif score in ["COR"]:
+        cmap = "Spectral"
+        
+    elif score in ["NOBS"]:
+        cmap = "viridis"
+        param_score_range["min"] = 0
+        param_score_range["max"] = np.ceil(plot_data.max())
+        
+    elif score.startswith(("MF", "POD", "FAR", "THS", "ETS")):
+        cmap = "Spectral"
+        
+    elif score.startswith("OF"):
+        cmap = "Spectral"
+        param_score_range = cat_station_score_range[param].set_index("scores").loc[score.replace("OF", "MF")]
             
     return cmap, param_score_range
