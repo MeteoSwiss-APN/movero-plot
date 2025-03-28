@@ -588,7 +588,9 @@ def _determine_cmap_and_bounds(
         
     elif score in ["MOBS"]:
         cmap = "jet"
-        if param is not None:
+
+        # Workaround as ATHD_S is not in utils/plot_synop_ch
+        if param != 'ATHD_S':
             param_score_range = station_score_range[param].loc["MMOD"]
         
     elif score in ["MAE", "STDE", "RMSE"]:
@@ -607,6 +609,11 @@ def _determine_cmap_and_bounds(
         
     elif score.startswith("OF"):
         cmap = "Spectral"
-        param_score_range = cat_station_score_range[param].set_index("scores").loc[score.replace("OF", "MF")]
+        
+        # Only set range of OF to range of MF if it is defined in lookup table
+        if score.replace("OF", "MF") in cat_station_score_range[param].set_index("scores").index:
+            param_score_range = cat_station_score_range[param].set_index("scores").loc[score.replace("OF", "MF")]
+        else:
+            param_score_range = {"min": None, "max": None}
             
     return cmap, param_score_range
