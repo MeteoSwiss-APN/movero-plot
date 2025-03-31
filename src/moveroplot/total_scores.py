@@ -97,32 +97,32 @@ def _total_scores_pipeline(
 
 
 # PLOTTING PIPELINE FOR TOTAL SCORES PLOTS
-def _set_ylim(param, score, ax, debug):  # pylint: disable=unused-argument
-    # define limits for yaxis if available
-    #regular_param  = any(re.search(param, col[0]) and col[1] == "min" for col in total_score_range.columns)
-    #regular_scores = score in total_score_range.index
-    #
-    #if regular_param and regular_scores:
-    #    
-    #    # Find the actual column name that contains param
-    #    actual_param = [col[0] for col in total_score_range.columns if re.search(param, col[0]) and col[1] == "min"][0]
-    #    
-    #    lower_bound = total_score_range[actual_param]["min"].loc[score]
-    #    upper_bound = total_score_range[actual_param]["max"].loc[score]
-    #    if lower_bound != upper_bound:
-    #        ax.set_ylim(lower_bound, upper_bound)
+def _set_ylim(param, score, ax, y_values, debug):  # pylint: disable=unused-argument
+    """Set the y-axis limits for the given parameter and score."""
     
-    # Get actual parameter name if it exists
-    actual_param = [col[0] for col in total_score_range.columns if re.search(param, col[0])][0]
-    
-    # Check if parameter is in total_score_range and score is in index
+    # Find the actual parameter
+    actual_param = None
+    for col in total_score_range.columns:
+        if col[0] != "*":
+            if param in col[0] or col[0].replace('*', '') in param:
+                actual_param = col[0]
+    if not actual_param:
+        for col in cat_total_score_range.columns:
+            if col[0] != "*":
+                if param in col[0] or col[0].replace('*', '') in param:
+                    actual_param = col[0]
+
+    # First, check for actual_param in total_score_range (MultiIndex columns)
     if actual_param in total_score_range.columns and score in total_score_range.index:
         
-        lower_bound = total_score_range.loc[score, "min"]
-        upper_bound = total_score_range.loc[score, "max"]
-        ax.set_ylim(lower_bound, upper_bound)
-    
-    # Check if parameter is in cat_total_score_range
+        # Extract the 'min' and 'max' columns for the given param
+        min_col = (actual_param, "min")
+        max_col = (actual_param, "max")
+
+        lower_bound = total_score_range.loc[score, min_col]
+        upper_bound = total_score_range.loc[score, max_col]
+
+    # Second, check for actual_param in cat_total_score_range (Simple column structure)
     elif actual_param in cat_total_score_range.columns:
         
         # Filter for the given score in the categorial score range (score is not the index, but a column)
@@ -131,7 +131,26 @@ def _set_ylim(param, score, ax, debug):  # pylint: disable=unused-argument
         if not filtered.empty:
             lower_bound = filtered["min"].values[0]
             upper_bound = filtered["max"].values[0]
-            ax.set_ylim(lower_bound, upper_bound)
+        
+        # Put zero if score not found  
+        else:
+            lower_bound = 0
+            upper_bound = 0
+    
+    # Put zero if param not found     
+    else:
+        lower_bound = 0
+        upper_bound = 0
+            
+    # Check the data range and return to default if outside of the range
+    y_values_min, y_values_max = min(y_values), max(y_values)
+
+    # If the data range exceeds the set limits, reset to auto
+    if y_values_min < lower_bound or y_values_max > upper_bound:
+        ax.set_ylim(auto=True)
+    else:
+        ax.set_ylim(lower_bound, upper_bound)
+
 
 def _customise_ax(parameter, scores, x_ticks, grid, ax):
     """Apply cosmetics to current ax.
@@ -255,7 +274,7 @@ def _plot_and_save_scores(
             for score_idx, score in enumerate(score_setup):
                 if model_idx == 0:
                     filename += f"{score}_"
-                _set_ylim(param=parameter, score=score_setup[0], ax=ax, debug=debug)
+                _set_ylim(param=parameter, score=score_setup[0], ax=ax, y_values=[data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted], debug=debug)
                 y_values = [data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted]
                 ax.plot(
                     x_int,
