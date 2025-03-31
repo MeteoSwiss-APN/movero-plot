@@ -16,6 +16,8 @@ from .plotting import get_total_dates_from_headers
 
 # pylint: disable=no-name-in-module
 from .utils.parse_plot_synop_ch import total_score_range
+from .utils.parse_plot_synop_ch import cat_total_score_range
+
 
 # pylint: enable=no-name-in-module
 
@@ -97,15 +99,39 @@ def _total_scores_pipeline(
 # PLOTTING PIPELINE FOR TOTAL SCORES PLOTS
 def _set_ylim(param, score, ax, debug):  # pylint: disable=unused-argument
     # define limits for yaxis if available
-    regular_param = (param, "min") in total_score_range.columns
-    regular_scores = score in total_score_range.index
+    #regular_param  = any(re.search(param, col[0]) and col[1] == "min" for col in total_score_range.columns)
+    #regular_scores = score in total_score_range.index
+    #
+    #if regular_param and regular_scores:
+    #    
+    #    # Find the actual column name that contains param
+    #    actual_param = [col[0] for col in total_score_range.columns if re.search(param, col[0]) and col[1] == "min"][0]
+    #    
+    #    lower_bound = total_score_range[actual_param]["min"].loc[score]
+    #    upper_bound = total_score_range[actual_param]["max"].loc[score]
+    #    if lower_bound != upper_bound:
+    #        ax.set_ylim(lower_bound, upper_bound)
+    
+    # Get actual parameter name if it exists
+    actual_param = [col[0] for col in total_score_range.columns if re.search(param, col[0])][0]
+    
+    # Check if parameter is in total_score_range and score is in index
+    if actual_param in total_score_range.columns and score in total_score_range.index:
+        
+        lower_bound = total_score_range.loc[score, "min"]
+        upper_bound = total_score_range.loc[score, "max"]
+        ax.set_ylim(lower_bound, upper_bound)
+    
+    # Check if parameter is in cat_total_score_range
+    elif actual_param in cat_total_score_range.columns:
+        
+        # Filter for the given score in the categorial score range (score is not the index, but a column)
+        filtered = cat_total_score_range[actual_param][cat_total_score_range[actual_param]["scores"] == score]
 
-    if regular_param and regular_scores:
-        lower_bound = total_score_range[param]["min"].loc[score]
-        upper_bound = total_score_range[param]["max"].loc[score]
-        if lower_bound != upper_bound:
+        if not filtered.empty:
+            lower_bound = filtered["min"].values[0]
+            upper_bound = filtered["max"].values[0]
             ax.set_ylim(lower_bound, upper_bound)
-
 
 def _customise_ax(parameter, scores, x_ticks, grid, ax):
     """Apply cosmetics to current ax.
@@ -131,8 +157,6 @@ def _customise_ax(parameter, scores, x_ticks, grid, ax):
     steps = len(x_ticks) // 5
     skip_indices = slice(None, None, steps) if steps > 0 else slice(None)
     ax.set_xticks(range(len(x_ticks))[skip_indices], x_ticks[skip_indices])
-    ax.autoscale(axis="y")
-
 
 def _clear_empty_axes_if_necessary(subplot_axes, idx):
     # remove empty ``axes`` instances
@@ -242,6 +266,8 @@ def _plot_and_save_scores(
                     fillstyle="none",
                     label=f"{score_setup[0].upper()}",
                 )
+                                
+                # Add reference lines for ME and FBI scores
                 if score == "ME":
                     ax.axhline(y=0, color="black", linestyle="--", linewidth=0.5)
                 if score.startswith("FBI"):
