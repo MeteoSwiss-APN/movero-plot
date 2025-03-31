@@ -17,6 +17,7 @@ from .plotting import get_total_dates_from_headers
 # pylint: disable=no-name-in-module
 from .utils.parse_plot_synop_ch import total_score_range
 from .utils.parse_plot_synop_ch import cat_total_score_range
+from .utils.set_ylims import set_ylim
 
 
 # pylint: enable=no-name-in-module
@@ -97,61 +98,6 @@ def _total_scores_pipeline(
 
 
 # PLOTTING PIPELINE FOR TOTAL SCORES PLOTS
-def _set_ylim(param, score, ax, y_values, debug):  # pylint: disable=unused-argument
-    """Set the y-axis limits for the given parameter and score."""
-    
-    # Find the actual parameter
-    actual_param = None
-    for col in total_score_range.columns:
-        if col[0] != "*":
-            if param in col[0] or col[0].replace('*', '') in param:
-                actual_param = col[0]
-    if not actual_param:
-        for col in cat_total_score_range.columns:
-            if col[0] != "*":
-                if param in col[0] or col[0].replace('*', '') in param:
-                    actual_param = col[0]
-
-    # First, check for actual_param in total_score_range (MultiIndex columns)
-    if actual_param in total_score_range.columns and score in total_score_range.index:
-        
-        # Extract the 'min' and 'max' columns for the given param
-        min_col = (actual_param, "min")
-        max_col = (actual_param, "max")
-
-        lower_bound = total_score_range.loc[score, min_col]
-        upper_bound = total_score_range.loc[score, max_col]
-
-    # Second, check for actual_param in cat_total_score_range (Simple column structure)
-    elif actual_param in cat_total_score_range.columns:
-        
-        # Filter for the given score in the categorial score range (score is not the index, but a column)
-        filtered = cat_total_score_range[actual_param][cat_total_score_range[actual_param]["scores"] == score]
-
-        if not filtered.empty:
-            lower_bound = filtered["min"].values[0]
-            upper_bound = filtered["max"].values[0]
-        
-        # Put zero if score not found  
-        else:
-            lower_bound = 0
-            upper_bound = 0
-    
-    # Put zero if param not found     
-    else:
-        lower_bound = 0
-        upper_bound = 0
-            
-    # Check the data range and return to default if outside of the range
-    y_values_min, y_values_max = min(y_values), max(y_values)
-
-    # If the data range exceeds the set limits, reset to auto
-    if y_values_min < lower_bound or y_values_max > upper_bound:
-        ax.set_ylim(auto=True)
-    else:
-        ax.set_ylim(lower_bound, upper_bound)
-
-
 def _customise_ax(parameter, scores, x_ticks, grid, ax):
     """Apply cosmetics to current ax.
 
@@ -274,7 +220,8 @@ def _plot_and_save_scores(
             for score_idx, score in enumerate(score_setup):
                 if model_idx == 0:
                     filename += f"{score}_"
-                _set_ylim(param=parameter, score=score_setup[0], ax=ax, y_values=[data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted], debug=debug)
+                set_ylim(param=parameter, score_range=total_score_range, cat_score_range=cat_total_score_range, score=score_setup[0], 
+                         ax=ax, y_values=[data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted])
                 y_values = [data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted]
                 ax.plot(
                     x_int,
