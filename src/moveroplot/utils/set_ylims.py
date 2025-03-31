@@ -4,16 +4,23 @@ def set_ylim(param, score, score_range, cat_score_range, ax, y_values):  # pylin
     
     
     # Find the actual parameter
-    actual_param = None
+    actual_param_candidates = []
     for col in score_range.columns:
+        
+        # *Exclude the '*' columns
         if col[0] != "*":
             if param in col[0] or col[0].replace('*', '') in param:
-                actual_param = col[0]
-    if not actual_param:
+                actual_param_candidates.append(col[0])
+    if not actual_param_candidates:
         for col in cat_score_range.columns:
             if col[0] != "*":
                 if param in col[0] or col[0].replace('*', '') in param:
-                    actual_param = col[0]
+                    actual_param_candidates.append(col[0])
+                    
+    if actual_param_candidates:
+        actual_param = max(actual_param_candidates, key=lambda x: (param in x, len(set(param) & set(x))), default=None)
+    else:
+        actual_param = None
 
     # First, check for actual_param in score_range (MultiIndex columns)
     if actual_param in score_range.columns and score in score_range.index:
@@ -47,9 +54,19 @@ def set_ylim(param, score, score_range, cat_score_range, ax, y_values):  # pylin
             
     # Check the data range and return to default if outside of the range
     y_values_min, y_values_max = min(y_values), max(y_values)
-
+    
     # If the data range exceeds the set limits, reset to auto
-    if y_values_min < lower_bound or y_values_max > upper_bound:
+    if (lower_bound == 0 and upper_bound == 0) or (y_values_min <= lower_bound and y_values_max >= upper_bound):
         ax.autoscale(axis="y")
+
+    elif y_values_min <= lower_bound:
+        ax.autoscale(axis="y")
+        ax.set_ylim(None, upper_bound)
+        
+    elif y_values_max >= upper_bound:
+        ax.autoscale(axis="y")
+        ax.set_ylim(lower_bound, None)
+
     else:
+        ax.autoscale(axis="y")
         ax.set_ylim(lower_bound, upper_bound)
