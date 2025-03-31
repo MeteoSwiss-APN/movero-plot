@@ -50,6 +50,6 @@ def set_ylim(param, score, score_range, cat_score_range, ax, y_values):  # pylin
 
     # If the data range exceeds the set limits, reset to auto
     if y_values_min < lower_bound or y_values_max > upper_bound:
-        ax.set_ylim(auto=True)
+        ax.autoscale(axis="y")
     else:
         ax.set_ylim(lower_bound, upper_bound)
