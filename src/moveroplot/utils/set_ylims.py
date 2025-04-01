@@ -16,9 +16,9 @@ def set_ylim(param, score, score_range, cat_score_range, ax, y_values):  # pylin
             if col[0] != "*":
                 if param in col[0] or col[0].replace('*', '') in param:
                     actual_param_candidates.append(col[0])
-                    
+                                        
     if actual_param_candidates:
-        actual_param = max(actual_param_candidates, key=lambda x: (param in x, len(set(param) & set(x))), default=None)
+        actual_param = max(actual_param_candidates,key=lambda x: (x == param, param in x, len(set(param) & set(x))))
     else:
         actual_param = None
 
@@ -52,7 +52,7 @@ def set_ylim(param, score, score_range, cat_score_range, ax, y_values):  # pylin
         lower_bound = 0
         upper_bound = 0
             
-    # Check the data range and return to default if outside of the range
+    # Get the data range
     y_values_min, y_values_max = min(y_values), max(y_values)
     
     # If the data range exceeds the set limits, reset to auto
