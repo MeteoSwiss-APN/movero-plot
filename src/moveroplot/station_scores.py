@@ -328,10 +328,18 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
             cat_station_score_range[param].set_index("scores").loc[score]
         )
     else:
-        param_score_range = {"min": None, "max": None}
-
+        
+        # Set default range for the FBI score that is not defined in the lookup table
+        if score.startswith("FBI"):
+            param_score_range = {"min": 0.3, "max": 3} if param.startswith("CLCT") else {"min": 0.1, "max": 10}
+        
+        # Set default range for all other scores that are not defined in the lookup table  
+        else:
+            param_score_range = {"min": None, "max": None}
+        
     if score not in data.index:
         return
+    
     plot_data = data.loc[["lon", "lat", score]].astype(float)
     nan_data = plot_data.loc[:, plot_data.isna().any()]
     plot_data = plot_data.dropna(axis="columns")
