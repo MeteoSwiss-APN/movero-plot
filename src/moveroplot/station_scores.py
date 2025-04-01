@@ -7,6 +7,7 @@ from pathlib import Path
 # Third-party
 import cartopy
 import cartopy.crs as ccrs
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import cartopy.feature as cfeature
 from netCDF4 import Dataset
 
@@ -275,17 +276,15 @@ def _add_features(ax):
 
     # add grid & labels to map
     """  # noqa: E501
-    #gl = ax.gridlines(
-    #    crs=ccrs.PlateCarree(),
-    #    draw_labels=True,
-    #    linewidth=0.5,
-    #    color="k",
-    #    alpha=0.3,
-    #    linestyle="-.",
-    #    rasterized=True,
-    #)  # define grid line properties
-    #gl.top_labels = False
-    #gl.right_labels = False
+    gl = ax.gridlines(draw_labels=True,ls='--',lw=0.5,x_inline=False,y_inline=False)
+    gl.top_labels = True
+    gl.left_labels = True
+    gl.bottom_labels = False
+    gl.right_labels = False
+    gl.xformatter = LONGITUDE_FORMATTER
+    gl.yformatter = LATITUDE_FORMATTER
+    gl.xlabel_style = {'rotation': 0}
+    gl.ylabel_style = {'rotation': 0}
 
     ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True,zorder=10)
     ax.add_feature(cfeature.BORDERS, linestyle="--", alpha=1, rasterized=True,zorder=10)
