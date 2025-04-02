@@ -7,18 +7,19 @@ from pathlib import Path
 # Third-party
 import cartopy
 import cartopy.crs as ccrs
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import cartopy.feature as cfeature
-from netCDF4 import Dataset
+import matplotlib.colors as mcolors
 
 # relevant imports for plotting pipeline
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 import numpy as np
 
 # class to add relief to map
 # > taken from: https://stackoverflow.com/questions/37423997/cartopy-shaded-relief
 from cartopy.io.img_tiles import GoogleTiles
+from cartopy.mpl.gridliner import LATITUDE_FORMATTER
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER
+from netCDF4 import Dataset
 
 # First-party
 from moveroplot.load_files import load_relevant_files
@@ -65,7 +66,9 @@ def _initialize_plots(labels: list, scores: list):
     num_rows = len(scores)
     figsize = _calculate_figsize(num_rows, num_cols, (7.3, 5), (0, 2))
     fig, axes = plt.subplots(
-        subplot_kw=dict(projection=ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)),
+        subplot_kw=dict(
+            projection=ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)
+        ),
         nrows=num_rows,
         ncols=num_cols,
         tight_layout=True,
@@ -276,21 +279,23 @@ def _add_features(ax):
 
     # add grid & labels to map
     """  # noqa: E501
-    gl = ax.gridlines(draw_labels=True,ls='--',lw=0.5,x_inline=False,y_inline=False)
+    gl = ax.gridlines(draw_labels=True, ls="--", lw=0.5, x_inline=False, y_inline=False)
     gl.top_labels = True
     gl.left_labels = True
     gl.bottom_labels = False
     gl.right_labels = False
     gl.xformatter = LONGITUDE_FORMATTER
     gl.yformatter = LATITUDE_FORMATTER
-    gl.xlabel_style = {'rotation': 0}
-    gl.ylabel_style = {'rotation': 0}
+    gl.xlabel_style = {"rotation": 0}
+    gl.ylabel_style = {"rotation": 0}
 
-    ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True,zorder=10)
-    ax.add_feature(cfeature.BORDERS, linestyle="--", alpha=1, rasterized=True,zorder=10)
-    ax.add_feature(cfeature.OCEAN, rasterized=True,zorder=10)
-    ax.add_feature(cfeature.LAKES, alpha=0.5, rasterized=True,zorder=10)
-    ax.add_feature(cfeature.RIVERS, alpha=0.5, rasterized=True,zorder=10)
+    ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True, zorder=10)
+    ax.add_feature(
+        cfeature.BORDERS, linestyle="--", alpha=1, rasterized=True, zorder=10
+    )
+    ax.add_feature(cfeature.OCEAN, rasterized=True, zorder=10)
+    ax.add_feature(cfeature.LAKES, alpha=0.5, rasterized=True, zorder=10)
+    ax.add_feature(cfeature.RIVERS, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(
         cartopy.feature.NaturalEarthFeature(
             category="physical",
@@ -301,19 +306,26 @@ def _add_features(ax):
         alpha=0.5,
         rasterized=True,
         color="#97b6e1",
-        zorder=10
+        zorder=10,
     )
     # ax.add_image(ShadedReliefESRI(), 8)
-    
-    #add ICON-CH1-EPS topography on COSMO-1E grid
+
+    # add ICON-CH1-EPS topography on COSMO-1E grid
     icon_ch1_eps_topo = Dataset("/users/oprusers/osm/opr/data/topo_i1e_on_c1e_grid.nc")
-    ax.contourf(icon_ch1_eps_topo["x_1"][:].data,icon_ch1_eps_topo["y_1"][:].data,
-    icon_ch1_eps_topo["HSURF"][0,...].data,cmap="gray_r",levels=np.arange(0,4450,50),extend="both",alpha=0.5)
+    ax.contourf(
+        icon_ch1_eps_topo["x_1"][:].data,
+        icon_ch1_eps_topo["y_1"][:].data,
+        icon_ch1_eps_topo["HSURF"][0, ...].data,
+        cmap="gray_r",
+        levels=np.arange(0, 4450, 50),
+        extend="both",
+        alpha=0.5,
+    )
 
 
 def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     # dataframes have two different structures
-    
+
     # Workaround since check_params does not work for ATHD_S
     param = "ATHD_S" if param[0] == "ATHD_S" else check_params(param[0])
 
@@ -327,27 +339,34 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
             cat_station_score_range[param].set_index("scores").loc[score]
         )
     else:
-        
         # Set default range for the FBI score that is not defined in the lookup table
         if score.startswith("FBI"):
-            param_score_range = {"min": 0.3, "max": 3} if param.startswith("CLCT") else {"min": 0.1, "max": 10}
-        
-        # Set default range for all other scores that are not defined in the lookup table  
+            param_score_range = (
+                {"min": 0.3, "max": 3}
+                if param.startswith("CLCT")
+                else {"min": 0.1, "max": 10}
+            )
+
+        # Set default range for all other scores that are not defined in the lookup table
         else:
             param_score_range = {"min": None, "max": None}
-        
+
     if score not in data.index:
         return
-    
+
     plot_data = data.loc[["lon", "lat", score]].astype(float)
     nan_data = plot_data.loc[:, plot_data.isna().any()]
     plot_data = plot_data.dropna(axis="columns")
-            
-    cmap,param_score_range = _determine_cmap_and_bounds(param, score, plot_data.loc[score], param_score_range)
-    
+
+    cmap, param_score_range = _determine_cmap_and_bounds(
+        param, score, plot_data.loc[score], param_score_range
+    )
+
     if score.startswith("FBI"):
-        norm = mcolors.TwoSlopeNorm(vmin=param_score_range["min"], vmax=param_score_range["max"], vcenter=1)
-    
+        norm = mcolors.TwoSlopeNorm(
+            vmin=param_score_range["min"], vmax=param_score_range["max"], vcenter=1
+        )
+
     sc = ax.scatter(
         x=list(plot_data.loc["lon"]),
         y=list(plot_data.loc["lat"]),
@@ -393,13 +412,17 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         ]
     )
     cbar = plt.colorbar(sc, cax=cax)
-    
+
     # Only modify ticks for the FBI case
     if score.startswith("FBI"):
-        custom_ticks = [0.3, 0.5, 0.7, 0.9, 1, 2, 3] if param.startswith("CLCT") else [0.1, 0.3, 0.5, 0.7, 0.9, 1, 2, 4, 6, 8, 10]
+        custom_ticks = (
+            [0.3, 0.5, 0.7, 0.9, 1, 2, 3]
+            if param.startswith("CLCT")
+            else [0.1, 0.3, 0.5, 0.7, 0.9, 1, 2, 4, 6, 8, 10]
+        )
         cbar.set_ticks(custom_ticks)
         cbar.ax.set_yticklabels([str(tick) for tick in custom_ticks])
-        
+
     cbar.set_label(unit, rotation=270, labelpad=10)
     ax.scatter(
         x=list(nan_data.loc["lon"]),
@@ -517,7 +540,9 @@ def _generate_map_plot(
         if relief:
             ax = plt.axes(projection=ShadedReliefESRI().crs)
         else:
-            ax = plt.axes(projection=ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43))
+            ax = plt.axes(
+                projection=ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)
+            )
 
         # make sure, aspect ratio of map & figure match
         ax.set_aspect("auto")
@@ -570,57 +595,63 @@ def _determine_cmap_and_bounds(
     param_score_range,
 ):
     """Set cmap depending on param and score and and plotting bounds for some variables."""
-    
     # Colormaps that depend on parameter and score
     if param is not None:
         if param.startswith(("T_2M", "FF", "VMAX", "DD", "PS", "PMSL")):
             if score.startswith(("ME", "FBI")):
                 cmap = "RdBu_r"
-                
+
         elif param.startswith(("CLCT", "GLOB", "DURSUN", "ATHD_S")):
             if score.startswith(("ME", "FBI")):
                 cmap = "PuOr"
-                
+
         elif param.startswith(("TOT_PREC", "RELHUM", "TD")):
             if score.startswith(("ME", "FBI")):
                 cmap = "BrBG"
-                
-    # Go to default if parameter is not defined           
+
+    # Go to default if parameter is not defined
     else:
         cmap = "viridis"
-    
+
     # Colormaps that depend on score only
     if score in ["MMOD"]:
         cmap = "jet"
-        
+
     elif score in ["MOBS"]:
         cmap = "jet"
 
         # Workaround as ATHD_S is not in utils/plot_synop_ch
-        if param != 'ATHD_S':
+        if param != "ATHD_S":
             param_score_range = station_score_range[param].loc["MMOD"]
-        
+
     elif score in ["MAE", "STDE", "RMSE"]:
         cmap = "Spectral"
-        
+
     elif score in ["COR"]:
         cmap = "Spectral"
-        
+
     elif score in ["NOBS"]:
         cmap = "viridis"
         param_score_range["min"] = 0
         param_score_range["max"] = np.ceil(plot_data.max())
-        
+
     elif score.startswith(("MF", "POD", "FAR", "THS", "ETS")):
         cmap = "Spectral"
-        
+
     elif score.startswith("OF"):
         cmap = "Spectral"
-        
+
         # Only set range of OF to range of MF if it is defined in lookup table
-        if score.replace("OF", "MF") in cat_station_score_range[param].set_index("scores").index:
-            param_score_range = cat_station_score_range[param].set_index("scores").loc[score.replace("OF", "MF")]
+        if (
+            score.replace("OF", "MF")
+            in cat_station_score_range[param].set_index("scores").index
+        ):
+            param_score_range = (
+                cat_station_score_range[param]
+                .set_index("scores")
+                .loc[score.replace("OF", "MF")]
+            )
         else:
             param_score_range = {"min": None, "max": None}
-            
+
     return cmap, param_score_range

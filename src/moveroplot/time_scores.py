@@ -15,8 +15,8 @@ from moveroplot.load_files import load_relevant_files
 from moveroplot.plotting import get_total_dates_from_headers
 
 # Local
-from .utils.parse_plot_synop_ch import time_score_range
 from .utils.parse_plot_synop_ch import cat_time_score_range
+from .utils.parse_plot_synop_ch import time_score_range
 from .utils.set_ylims import set_ylim
 
 
@@ -137,6 +137,7 @@ def _initialize_plots(labels: list):
     plt.tight_layout(w_pad=8, h_pad=5, rect=(0.05, 0.05, 0.90, 0.90))
     return fig, [ax0, ax1]
 
+
 def _customise_ax(parameter, scores, x_ticks, grid, ax):
     """Apply cosmetics to current ax.
 
@@ -238,8 +239,14 @@ def _plot_and_save_scores(
                         fillstyle="none",
                         label=f"{score.upper()}",
                     )
-                    set_ylim(param=parameter, score_range=time_score_range, cat_score_range=cat_time_score_range, score=score, 
-                         ax=ax, y_values=score_values[score].values)
+                    set_ylim(
+                        param=parameter,
+                        score_range=time_score_range,
+                        cat_score_range=cat_time_score_range,
+                        score=score,
+                        ax=ax,
+                        y_values=score_values[score].values,
+                    )
                     if score == "ME":
                         ax.axhline(y=0, color="black", linestyle="--", linewidth=0.5)
                     if score.startswith("FBI"):

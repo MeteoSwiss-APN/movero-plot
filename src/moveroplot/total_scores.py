@@ -15,10 +15,9 @@ from .load_files import load_relevant_files
 from .plotting import get_total_dates_from_headers
 
 # pylint: disable=no-name-in-module
-from .utils.parse_plot_synop_ch import total_score_range
 from .utils.parse_plot_synop_ch import cat_total_score_range
+from .utils.parse_plot_synop_ch import total_score_range
 from .utils.set_ylims import set_ylim
-
 
 # pylint: enable=no-name-in-module
 
@@ -123,6 +122,7 @@ def _customise_ax(parameter, scores, x_ticks, grid, ax):
     skip_indices = slice(None, None, steps) if steps > 0 else slice(None)
     ax.set_xticks(range(len(x_ticks))[skip_indices], x_ticks[skip_indices])
 
+
 def _clear_empty_axes_if_necessary(subplot_axes, idx):
     # remove empty ``axes`` instances
     if (idx + 1) % 4 != 0:
@@ -171,6 +171,8 @@ def _plot_and_save_scores(
     models_color_lines,
     debug=False,
 ):
+    if debug:
+        print("Entering plot_and_save_scores.")
     filename = base_filename
     fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
 
@@ -220,8 +222,16 @@ def _plot_and_save_scores(
             for score_idx, score in enumerate(score_setup):
                 if model_idx == 0:
                     filename += f"{score}_"
-                set_ylim(param=parameter, score_range=total_score_range, cat_score_range=cat_total_score_range, score=score_setup[0], 
-                         ax=ax, y_values=[data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted])
+                set_ylim(
+                    param=parameter,
+                    score_range=total_score_range,
+                    cat_score_range=cat_total_score_range,
+                    score=score_setup[0],
+                    ax=ax,
+                    y_values=[
+                        data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted
+                    ],
+                )
                 y_values = [data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted]
                 ax.plot(
                     x_int,
@@ -232,7 +242,7 @@ def _plot_and_save_scores(
                     fillstyle="none",
                     label=f"{score_setup[0].upper()}",
                 )
-                                
+
                 # Add reference lines for ME and FBI scores
                 if score == "ME":
                     ax.axhline(y=0, color="black", linestyle="--", linewidth=0.5)

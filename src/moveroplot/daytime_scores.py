@@ -15,8 +15,9 @@ import moveroplot.config.plot_settings as plot_settings
 from moveroplot.load_files import load_relevant_files
 from moveroplot.plotting import get_total_dates_from_headers
 
-from .utils.parse_plot_synop_ch import daytime_score_range
+# Local
 from .utils.parse_plot_synop_ch import cat_daytime_score_range
+from .utils.parse_plot_synop_ch import daytime_score_range
 from .utils.set_ylims import set_ylim
 
 
@@ -190,8 +191,14 @@ def _plot_and_save_scores(
                         label=f"{score.upper()}",
                         marker="D",
                     )
-                    set_ylim(param=parameter, score_range=daytime_score_range, cat_score_range=cat_daytime_score_range, score=score, 
-                         ax=ax, y_values=score_values)
+                    set_ylim(
+                        param=parameter,
+                        score_range=daytime_score_range,
+                        cat_score_range=cat_daytime_score_range,
+                        score=score,
+                        ax=ax,
+                        y_values=score_values,
+                    )
                     if score == "ME":
                         ax.axhline(y=0, color="black", linestyle="--", linewidth=0.5)
                     if score.startswith("FBI"):
