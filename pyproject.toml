@@ -86,7 +86,7 @@ exclude = ["src/moveroplot/station_scores.py", "tests/test_moveroplot/test_utils
 # See https://blog.wolt.com/engineering/2021/09/30/professional-grade-mypy-configuration/
 # Add external modules w/o type hints here
 module = [
-    "cartopy","cartopy.crs","cartopy.feature","cartopy.io.img_tiles",
+    "cartopy","cartopy.crs","cartopy.feature","cartopy.io.img_tiles",cartopy.mpl.gridliner",
 ]
 ignore_missing_imports = true
 
