@@ -61,7 +61,7 @@ def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 
     return (total_width, total_height)
 
 
-def _initialize_plots(labels: list, scores: list):
+def _initialize_plots(labels: list, scores: list, plot_setup: dict):
     num_cols = len(labels)
     num_rows = len(scores)
     figsize = _calculate_figsize(num_rows, num_cols, (7.3, 5), (0, 2))
@@ -76,8 +76,11 @@ def _initialize_plots(labels: list, scores: list):
         dpi=100,
         squeeze=False,
     )
-    for ax in axes.ravel():
-        ax.set_extent([5.3, 11.2, 45.4, 48.2], crs=ccrs.PlateCarree())
+    for ax in axes.ravel():        
+        if "ch" in plot_setup["model_versions"][0][0]:
+            ax.set_extent([5.3, 11.2, 45.4, 48.2], crs=ccrs.PlateCarree())
+        if "alps" in plot_setup["model_versions"][0][0]:
+            ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
         _add_features(ax)
     fig.tight_layout(w_pad=8, h_pad=2, rect=(0.05, 0.05, 0.90, 0.90))
     plt.subplots_adjust(bottom=0.15)
@@ -125,6 +128,7 @@ def _plot_and_save_scores(
     plot_scores_setup,
     sup_title,
     ltr_models_data,
+    plot_setup,
     debug=False,
 ):
     for ltr, models_data in ltr_models_data.items():
@@ -134,7 +138,7 @@ def _plot_and_save_scores(
         )
         for scores in plot_scores_setup:
             filename = base_filename + ltr_info + model_info
-            fig, subplot_axes = _initialize_plots(models_data.keys(), scores)
+            fig, subplot_axes = _initialize_plots(models_data.keys(), scores, plot_setup=plot_setup)
             for idx, score in enumerate(scores):
                 filename += f"_{score}"
                 for model_idx, data in enumerate(models_data.values()):
@@ -171,6 +175,7 @@ def _generate_station_plots(
     models_data,
     parameter,
     output_dir,
+    plot_setup,
     debug,
 ):
     # initialise filename
@@ -184,6 +189,7 @@ def _generate_station_plots(
         plot_scores["regular_scores"],
         sup_title,
         models_data,
+        plot_setup,
         debug=False,
     )
     _plot_and_save_scores(
@@ -193,6 +199,7 @@ def _generate_station_plots(
         plot_scores["cat_scores"],
         sup_title,
         models_data,
+        plot_setup,
         debug=False,
     )
 
@@ -252,6 +259,7 @@ def _station_scores_pipeline(
                 models_data=model_data,
                 parameter=parameter,
                 output_dir=output_dir,
+                plot_setup=plot_setup,
                 debug=debug,
             )
 
@@ -279,7 +287,7 @@ def _add_features(ax):
 
     # add grid & labels to map
     """  # noqa: E501
-    gl = ax.gridlines(draw_labels=True, ls="--", lw=0.5, x_inline=False, y_inline=False)
+    gl = ax.gridlines(draw_labels=True, ls="--", lw=0.5, x_inline=False, y_inline=False, zorder=11)
     gl.top_labels = True
     gl.left_labels = True
     gl.bottom_labels = False
