@@ -222,16 +222,6 @@ def _plot_and_save_scores(
             for score_idx, score in enumerate(score_setup):
                 if model_idx == 0:
                     filename += f"{score}_"
-                set_ylim(
-                    param=parameter,
-                    score_range=total_score_range,
-                    cat_score_range=cat_total_score_range,
-                    score=score_setup[0],
-                    ax=ax,
-                    y_values=[
-                        data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted
-                    ],
-                )
                 y_values = [data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted]
                 ax.plot(
                     x_int,
@@ -242,7 +232,16 @@ def _plot_and_save_scores(
                     fillstyle="none",
                     label=f"{score_setup[0].upper()}",
                 )
-
+                set_ylim(
+                    param=parameter,
+                    score_range=total_score_range,
+                    cat_score_range=cat_total_score_range,
+                    score=score_setup[0],
+                    ax=ax,
+                    y_values=[
+                        data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted
+                    ],
+                )
                 # Add reference lines for ME and FBI scores
                 if score == "ME":
                     ax.axhline(y=0, color="black", linestyle="--", linewidth=0.5)
