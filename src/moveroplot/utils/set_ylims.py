@@ -57,18 +57,26 @@ def set_ylim(
 
     # Get the data range
     y_values_min, y_values_max = min(y_values), max(y_values)
+    
+    # Get the current plotting limits
+    lower_bound_before, upper_bound_before = ax.get_ylim()
 
-    # If the data range exceeds the set limits, reset to auto
+    # If the limits have not been set, or the data range exceeds the set limits, 
+    # or the limits from the plot are set larger already, reset to auto
     if (lower_bound == 0 and upper_bound == 0) or (
-        y_values_min <= lower_bound and y_values_max >= upper_bound
-    ):
+        y_values_min <= lower_bound and y_values_max >= upper_bound) or (
+        lower_bound_before < lower_bound and upper_bound_before > upper_bound):
         ax.autoscale(axis="y")
 
-    elif y_values_min <= lower_bound:
+    # If current data limit is below lower_bound or
+    # if the lower_bound_before is below the lower_bound
+    elif (y_values_min <= lower_bound) or (lower_bound_before < lower_bound):
         ax.autoscale(axis="y")
         ax.set_ylim(None, upper_bound)
 
-    elif y_values_max >= upper_bound:
+    # If current data limit is above upper_bound or
+    # if the upper_bound_before is above the upper_bound
+    elif (y_values_max >= upper_bound) or (upper_bound_before > upper_bound):
         ax.autoscale(axis="y")
         ax.set_ylim(lower_bound, None)
 
