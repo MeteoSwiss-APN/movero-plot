@@ -5,23 +5,14 @@ def set_ylim(
     param, score, score_range, cat_score_range, ax, y_values
 ):  # pylint: disable=unused-argument
     # Find the actual parameter
-    actual_param_candidates = []
-    for col in score_range.columns:
-        # *Exclude the '*' columns
-        if col[0] != "*":
-            if param in col[0] or col[0].replace("*", "") in param:
-                actual_param_candidates.append(col[0])
-    if not actual_param_candidates:
-        for col in cat_score_range.columns:
-            if col[0] != "*":
-                if param in col[0] or col[0].replace("*", "") in param:
-                    actual_param_candidates.append(col[0])
-
-    if actual_param_candidates:
-        actual_param = max(
-            actual_param_candidates,
-            key=lambda x: (x == param, param in x, len(set(param) & set(x))),
-        )
+    actual_param_candidates = [col[0] for col in score_range.columns if col[0] != "*"]
+    
+    if param in ["TOT_PREC3", "TOT_PREC6"]:
+        actual_param = "TOT_PREC[36]"
+    elif any(param == c for c in actual_param_candidates):
+        actual_param = next(c for c in actual_param_candidates if param == c)
+    elif any(param in c or c.replace("*", "") in param for c in actual_param_candidates):
+        actual_param = next(c for c in actual_param_candidates if param in c or c.replace("*", "") in param)
     else:
         actual_param = None
 
