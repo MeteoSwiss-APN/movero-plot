@@ -603,26 +603,19 @@ def _determine_cmap_and_bounds(
     param_score_range,
 ):
     """Set cmap depending on param and score and and plotting bounds for some variables."""
+        
     # Colormaps that depend on parameter and score
-    if param is not None:
-        if param.startswith(("T_2M", "FF", "VMAX", "DD", "PS", "PMSL")):
-            if score.startswith(("ME", "FBI")):
-                cmap = "RdBu_r"
+    if param.startswith(("T_2M", "FF", "VMAX", "DD", "PS", "PMSL")) and score.startswith(("ME", "FBI")):
+        cmap = "RdBu_r"
 
-        elif param.startswith(("CLCT", "GLOB", "DURSUN", "ATHD_S")):
-            if score.startswith(("ME", "FBI")):
-                cmap = "PuOr"
+    elif param.startswith(("CLCT", "GLOB", "DURSUN", "ATHD_S")) and score.startswith(("ME", "FBI")):
+        cmap = "PuOr"
 
-        elif param.startswith(("TOT_PREC", "RELHUM", "TD")):
-            if score.startswith(("ME", "FBI")):
-                cmap = "BrBG"
-
-    # Go to default if parameter is not defined
-    else:
-        cmap = "viridis"
+    elif param.startswith(("TOT_PREC", "RELHUM", "TD")) and score.startswith(("ME", "FBI")):
+        cmap = "BrBG"
 
     # Colormaps that depend on score only
-    if score in ["MMOD"]:
+    elif score in ["MMOD"]:
         cmap = "jet"
 
     elif score in ["MOBS"]:
@@ -661,5 +654,9 @@ def _determine_cmap_and_bounds(
             )
         else:
             param_score_range = {"min": None, "max": None}
+            
+    # Go to default if param is None or no option specified here
+    else:
+        cmap = "viridis"
 
     return cmap, param_score_range
