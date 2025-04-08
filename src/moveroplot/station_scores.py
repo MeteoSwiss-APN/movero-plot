@@ -608,8 +608,11 @@ def _determine_cmap_and_bounds(
     if param.startswith(("T_2M", "FF", "VMAX", "DD", "PS", "PMSL")) and score.startswith(("ME", "FBI")):
         cmap = "RdBu_r"
 
-    elif param.startswith(("CLCT", "GLOB", "DURSUN", "ATHD_S")) and score.startswith(("ME", "FBI")):
+    elif param.startswith(("CLCT", "GLOB", "ATHD_S")) and score.startswith(("ME", "FBI")):
         cmap = "PuOr"
+        
+    elif param.startswith(("DURSUN")) and score.startswith(("ME", "FBI")):
+        cmap = "PuOr_r"
 
     elif param.startswith(("TOT_PREC", "RELHUM", "TD")) and score.startswith(("ME", "FBI")):
         cmap = "BrBG"
@@ -626,13 +629,13 @@ def _determine_cmap_and_bounds(
             param_score_range = station_score_range[param].loc["MMOD"]
 
     elif score in ["MAE", "STDE", "RMSE"]:
-        cmap = "Spectral"
+        cmap = "Spectral_r"
 
     elif score in ["COR"]:
         cmap = "Spectral"
 
     elif score in ["NOBS"]:
-        cmap = "viridis"
+        cmap = "Spectral"
         param_score_range["min"] = 0
         param_score_range["max"] = np.ceil(plot_data.max())
 
