@@ -616,13 +616,13 @@ def _determine_cmap_and_bounds(
 
     elif param.startswith(("TOT_PREC", "RELHUM", "TD")) and score.startswith(("ME", "FBI")):
         cmap = "BrBG"
+        
+    elif param.startswith(("TOT_PREC")) and score.startswith(("MMOD", "MOBS")):
+        cmap = "YlGnBu"
 
     # Colormaps that depend on score only
-    elif score in ["MMOD"]:
-        cmap = "jet"
-
-    elif score in ["MOBS"]:
-        cmap = "jet"
+    elif score in ["MMOD", "MOBS"]:
+        cmap = "gist_ncar_r"
 
         # Workaround as ATHD_S is not in utils/plot_synop_ch
         if param != "ATHD_S":
