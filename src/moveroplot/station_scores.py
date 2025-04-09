@@ -325,7 +325,7 @@ def _add_features(ax):
         icon_ch1_eps_topo["y_1"][:].data,
         icon_ch1_eps_topo["HSURF"][0, ...].data,
         cmap="gray_r",
-        levels=np.arange(0, 8100, 100),
+        levels=np.arange(0, 8400, 400),
         extend="both",
         alpha=0.4,
     )
