@@ -9,6 +9,8 @@ import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.colors as mcolors
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
 
 # relevant imports for plotting pipeline
 import matplotlib.pyplot as plt
@@ -644,7 +646,11 @@ def _determine_cmap_and_bounds(
         param_score_range = station_score_range[param].loc["MMOD"]
         
     elif param.startswith(("DD")) and score.startswith(("MMOD", "MOBS")):
-        cmap = "hsv"
+        
+        hsv_cmap = cm.get_cmap('hsv', 256)
+        colors_hsv = hsv_cmap(np.linspace(0, 1, 256))
+        shifted_colors = np.roll(colors_hsv, 128, axis=0)
+        cmap = ListedColormap(shifted_colors)
         param_score_range = station_score_range[param].loc["MMOD"]     
 
     elif score in ["MAE", "STDE", "RMSE"]:
