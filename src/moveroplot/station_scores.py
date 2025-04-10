@@ -619,14 +619,33 @@ def _determine_cmap_and_bounds(
         
     elif param.startswith(("TOT_PREC")) and score.startswith(("MMOD", "MOBS")):
         cmap = "YlGnBu"
-
-    # Colormaps that depend on score only
-    elif score in ["MMOD", "MOBS"]:
-        cmap = "gist_ncar_r"
-
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("CLCT", "ATHD_S")) and score.startswith(("MMOD", "MOBS")):
+        cmap = "cividis_r"
         # Workaround as ATHD_S is not in utils/plot_synop_ch
         if param != "ATHD_S":
             param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("GLOB", "DURSUN")) and score.startswith(("MMOD", "MOBS")):
+        cmap = "cividis"
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("T_2M")) and score.startswith(("MMOD", "MOBS")):
+        cmap = "coolwarm"
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("TD_2M", "RELHUM_2M")) and score.startswith(("MMOD", "MOBS")):
+        cmap = "coolwarm_r"
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("FF", "VMAX", "PS", "PMSL")) and score.startswith(("MMOD", "MOBS")):
+        cmap = "cool"
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("DD")) and score.startswith(("MMOD", "MOBS")):
+        cmap = "hsv"
+        param_score_range = station_score_range[param].loc["MMOD"]     
 
     elif score in ["MAE", "STDE", "RMSE"]:
         cmap = "Spectral_r"
