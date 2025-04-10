@@ -653,7 +653,7 @@ def _determine_cmap_and_bounds(
         cmap = ListedColormap(shifted_colors)
         param_score_range = station_score_range[param].loc["MMOD"]     
 
-    elif score in ["MAE", "STDE", "RMSE"]:
+    elif score in ["MAE", "STDE", "RMSE", "FAR"]:
         cmap = "Spectral_r"
 
     elif score in ["COR"]:
@@ -664,7 +664,7 @@ def _determine_cmap_and_bounds(
         param_score_range["min"] = 0
         param_score_range["max"] = np.ceil(plot_data.max())
 
-    elif score.startswith(("MF", "POD", "FAR", "THS", "ETS")):
+    elif score.startswith(("MF", "POD", "THS", "ETS")):
         cmap = "Spectral"
 
     elif score.startswith("OF"):
