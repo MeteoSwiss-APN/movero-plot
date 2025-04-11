@@ -11,6 +11,7 @@ import cartopy.feature as cfeature
 import matplotlib.colors as mcolors
 from matplotlib import cm
 from matplotlib.colors import ListedColormap
+from matplotlib.colors import LinearSegmentedColormap
 
 # relevant imports for plotting pipeline
 import matplotlib.pyplot as plt
@@ -607,8 +608,11 @@ def _determine_cmap_and_bounds(
     """Set cmap depending on param and score and and plotting bounds for some variables."""
         
     # Colormaps that depend on parameter and score
-    if param.startswith(("T_2M", "FF", "VMAX", "DD", "PS", "PMSL")) and score.startswith(("ME", "FBI")):
+    if param.startswith(("T_2M")) and score.startswith(("ME", "FBI")):
         cmap = "RdBu_r"
+        
+    elif param.startswith(("FF", "VMAX", "DD", "PS", "PMSL")) and score.startswith(("ME", "FBI")):
+        cmap = "RdBu"
 
     elif param.startswith(("CLCT", "ATHD_S")) and score.startswith(("ME", "FBI")):
         cmap = "PuOr"
@@ -624,13 +628,35 @@ def _determine_cmap_and_bounds(
         param_score_range = station_score_range[param].loc["MMOD"]
         
     elif param.startswith(("CLCT", "ATHD_S")) and score.startswith(("MMOD", "MOBS")):
-        cmap = "cividis_r"
+        colors = [
+            (0.949, 0.404, 0.235),
+            (0.969, 0.549, 0.310),
+            (0.980, 0.725, 0.396),
+            (0.984, 0.855, 0.514),
+            (0.996, 0.996, 0.714),
+            (0.906, 0.906, 0.886),
+            (0.737, 0.737, 0.757),
+            (0.561, 0.561, 0.596),
+            (0.329, 0.318, 0.376),
+        ]       
+        cmap = LinearSegmentedColormap.from_list("cmap_glob", colors, N=256)
         # Workaround as ATHD_S is not in utils/plot_synop_ch
         if param != "ATHD_S":
             param_score_range = station_score_range[param].loc["MMOD"]
         
     elif param.startswith(("GLOB", "DURSUN")) and score.startswith(("MMOD", "MOBS")):
-        cmap = "cividis"
+        colors = [
+            (0.329, 0.318, 0.376),
+            (0.561, 0.561, 0.596),
+            (0.737, 0.737, 0.757),
+            (0.906, 0.906, 0.886),
+            (0.996, 0.996, 0.714),
+            (0.984, 0.855, 0.514),
+            (0.980, 0.725, 0.396),
+            (0.969, 0.549, 0.310),
+            (0.949, 0.404, 0.235),
+        ]        
+        cmap = LinearSegmentedColormap.from_list("cmap_glob", colors, N=256)
         param_score_range = station_score_range[param].loc["MMOD"]
         
     elif param.startswith(("T_2M")) and score.startswith(("MMOD", "MOBS")):
@@ -641,7 +667,26 @@ def _determine_cmap_and_bounds(
         cmap = "coolwarm_r"
         param_score_range = station_score_range[param].loc["MMOD"]
         
-    elif param.startswith(("FF", "VMAX", "PS", "PMSL")) and score.startswith(("MMOD", "MOBS")):
+    elif param.startswith(("FF", "VMAX")) and score.startswith(("MMOD", "MOBS")):
+        colors = [
+            (0.027, 0.078, 0.976),
+            (0.078, 0.286, 0.941),
+            (0.098, 0.451, 0.878),
+            (0.247, 0.631, 0.710),
+            (0.529, 0.765, 0.510),
+            (0.804, 0.882, 0.463),
+            (0.984, 0.820, 0.373),
+            (0.980, 0.631, 0.263),
+            (0.961, 0.392, 0.369),
+            (0.906, 0.000, 0.820),
+            (0.961, 0.549, 0.871),
+            (0.976, 0.753, 0.922),
+            (0.996, 0.941, 0.945)
+        ]
+        cmap = LinearSegmentedColormap.from_list("wind_cmap", colors, N=256)
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("PS", "PMSL")) and score.startswith(("MMOD", "MOBS")):
         cmap = "cool"
         param_score_range = station_score_range[param].loc["MMOD"]
         
