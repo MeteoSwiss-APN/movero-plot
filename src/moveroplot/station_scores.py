@@ -610,10 +610,10 @@ def _determine_cmap_and_bounds(
     if param.startswith(("T_2M", "FF", "VMAX", "DD", "PS", "PMSL")) and score.startswith(("ME", "FBI")):
         cmap = "RdBu_r"
 
-    elif param.startswith(("CLCT", "GLOB", "ATHD_S")) and score.startswith(("ME", "FBI")):
+    elif param.startswith(("CLCT", "ATHD_S")) and score.startswith(("ME", "FBI")):
         cmap = "PuOr"
         
-    elif param.startswith(("DURSUN")) and score.startswith(("ME", "FBI")):
+    elif param.startswith(("DURSUN", "GLOB")) and score.startswith(("ME", "FBI")):
         cmap = "PuOr_r"
 
     elif param.startswith(("TOT_PREC", "RELHUM", "TD")) and score.startswith(("ME", "FBI")):
