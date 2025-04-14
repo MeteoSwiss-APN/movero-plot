@@ -15,7 +15,9 @@ from moveroplot.load_files import load_relevant_files
 from moveroplot.plotting import get_total_dates_from_headers
 
 # Local
-from .utils.parse_plot_synop_ch import total_score_range
+from .utils.parse_plot_synop_ch import cat_time_score_range
+from .utils.parse_plot_synop_ch import time_score_range
+from .utils.set_ylims import set_ylim
 
 
 def _time_score_transformation(df, header):
@@ -136,19 +138,6 @@ def _initialize_plots(labels: list):
     return fig, [ax0, ax1]
 
 
-# PLOTTING PIPELINE FOR TOTAL SCORES PLOTS
-def _set_ylim(param, score, ax, debug):  # pylint: disable=unused-argument
-    # define limits for yaxis if available
-    regular_param = (param, "min") in total_score_range.columns
-    regular_scores = score in total_score_range.index
-
-    if regular_param and regular_scores:
-        lower_bound = total_score_range[param]["min"].loc[score]
-        upper_bound = total_score_range[param]["max"].loc[score]
-        if lower_bound != upper_bound:
-            ax.set_ylim(lower_bound, upper_bound)
-
-
 def _customise_ax(parameter, scores, x_ticks, grid, ax):
     """Apply cosmetics to current ax.
 
@@ -250,9 +239,20 @@ def _plot_and_save_scores(
                         fillstyle="none",
                         label=f"{score.upper()}",
                     )
+                    set_ylim(
+                        param=parameter,
+                        score_range=time_score_range,
+                        cat_score_range=cat_time_score_range,
+                        score=score,
+                        ax=ax,
+                        y_values=score_values[score].values,
+                    )
+                    if score == "ME":
+                        ax.axhline(y=0, color="black", linestyle="--", linewidth=0.5)
+                    if score.startswith("FBI"):
+                        ax.axhline(y=1, color="black", linestyle="--", linewidth=0.5)
                     ax.tick_params(axis="both", which="major", labelsize=8)
                     ax.tick_params(axis="both", which="minor", labelsize=6)
-                    ax.autoscale(axis="y")
                 ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d\n%H:%M"))
             if len(score_setup) > 1:
                 sub_plot_legend = ax.legend(

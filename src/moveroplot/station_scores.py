@@ -8,6 +8,10 @@ from pathlib import Path
 import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import matplotlib.colors as mcolors
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
+from matplotlib.colors import LinearSegmentedColormap
 
 # relevant imports for plotting pipeline
 import matplotlib.pyplot as plt
@@ -16,6 +20,9 @@ import numpy as np
 # class to add relief to map
 # > taken from: https://stackoverflow.com/questions/37423997/cartopy-shaded-relief
 from cartopy.io.img_tiles import GoogleTiles
+from cartopy.mpl.gridliner import LATITUDE_FORMATTER
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER
+from netCDF4 import Dataset
 
 # First-party
 from moveroplot.load_files import load_relevant_files
@@ -57,12 +64,14 @@ def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 
     return (total_width, total_height)
 
 
-def _initialize_plots(labels: list, scores: list):
+def _initialize_plots(labels: list, scores: list, plot_setup: dict):
     num_cols = len(labels)
     num_rows = len(scores)
     figsize = _calculate_figsize(num_rows, num_cols, (7.3, 5), (0, 2))
     fig, axes = plt.subplots(
-        subplot_kw=dict(projection=ccrs.PlateCarree()),
+        subplot_kw=dict(
+            projection=ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)
+        ),
         nrows=num_rows,
         ncols=num_cols,
         tight_layout=True,
@@ -70,8 +79,11 @@ def _initialize_plots(labels: list, scores: list):
         dpi=100,
         squeeze=False,
     )
-    for ax in axes.ravel():
-        ax.set_extent([5.3, 11.2, 45.4, 48.2])
+    for ax in axes.ravel():        
+        if "ch" in plot_setup["model_versions"][0][0]:
+            ax.set_extent([5.3, 11.2, 45.4, 48.2], crs=ccrs.PlateCarree())
+        if "alps" in plot_setup["model_versions"][0][0]:
+            ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
         _add_features(ax)
     fig.tight_layout(w_pad=8, h_pad=2, rect=(0.05, 0.05, 0.90, 0.90))
     plt.subplots_adjust(bottom=0.15)
@@ -102,7 +114,7 @@ def _add_plot_text(ax, data, score, ltr):
     # pylint: disable=line-too-long
     plt.text(
         0.5,
-        -0.1,
+        -0.03,
         f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} -Min: {min_value} mm at station {min_station} +Max: {max_value} mm at station {max_station}""",  # noqa: E501
         horizontalalignment="center",
         verticalalignment="center",
@@ -119,6 +131,7 @@ def _plot_and_save_scores(
     plot_scores_setup,
     sup_title,
     ltr_models_data,
+    plot_setup,
     debug=False,
 ):
     for ltr, models_data in ltr_models_data.items():
@@ -128,7 +141,7 @@ def _plot_and_save_scores(
         )
         for scores in plot_scores_setup:
             filename = base_filename + ltr_info + model_info
-            fig, subplot_axes = _initialize_plots(models_data.keys(), scores)
+            fig, subplot_axes = _initialize_plots(models_data.keys(), scores, plot_setup=plot_setup)
             for idx, score in enumerate(scores):
                 filename += f"_{score}"
                 for model_idx, data in enumerate(models_data.values()):
@@ -165,6 +178,7 @@ def _generate_station_plots(
     models_data,
     parameter,
     output_dir,
+    plot_setup,
     debug,
 ):
     # initialise filename
@@ -178,6 +192,7 @@ def _generate_station_plots(
         plot_scores["regular_scores"],
         sup_title,
         models_data,
+        plot_setup,
         debug=False,
     )
     _plot_and_save_scores(
@@ -187,6 +202,7 @@ def _generate_station_plots(
         plot_scores["cat_scores"],
         sup_title,
         models_data,
+        plot_setup,
         debug=False,
     )
 
@@ -212,7 +228,7 @@ def _station_scores_pipeline(
         lt_ranges (list): lead time ranges, for which plots should be generated (i.e. 01-06, 07-12,...). part of the file name
         parameters (list): parameters, for which plots should be generated (i.e. CLCT, DD_10M, FF_10M, PMSL,...). part of file name
         file_prefix (str): prefix of files (i.e. station_scores)
-        file_postfix (str): postfix of files (i.e. '.dat')
+        file_postfix (str): postfix of files (i.e. ".dat")
         input_dir (str): directory to seasons (i.e. /scratch/osm/movero/wd)
         output_dir (str): output directory (i.e. plots/)
         model_version (str): model_version of interest (i.e. C-1E_ch)
@@ -246,6 +262,7 @@ def _station_scores_pipeline(
                 models_data=model_data,
                 parameter=parameter,
                 output_dir=output_dir,
+                plot_setup=plot_setup,
                 debug=debug,
             )
 
@@ -273,24 +290,23 @@ def _add_features(ax):
 
     # add grid & labels to map
     """  # noqa: E501
-    gl = ax.gridlines(
-        crs=ccrs.PlateCarree(),
-        draw_labels=True,
-        linewidth=0.5,
-        color="k",
-        alpha=0.3,
-        linestyle="-.",
-        rasterized=True,
-    )  # define grid line properties
-    gl.top_labels = False
+    gl = ax.gridlines(draw_labels=True, ls="--", lw=0.5, x_inline=False, y_inline=False, zorder=11)
+    gl.top_labels = True
+    gl.left_labels = True
+    gl.bottom_labels = False
     gl.right_labels = False
+    gl.xformatter = LONGITUDE_FORMATTER
+    gl.yformatter = LATITUDE_FORMATTER
+    gl.xlabel_style = {"rotation": 0}
+    gl.ylabel_style = {"rotation": 0}
 
-    ax.add_feature(cfeature.LAND, rasterized=True, color="white")  # color="#FFFAF0"
-    ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True)
-    ax.add_feature(cfeature.BORDERS, linestyle="--", alpha=1, rasterized=True)
-    ax.add_feature(cfeature.OCEAN, rasterized=True)
-    ax.add_feature(cfeature.LAKES, alpha=0.5, rasterized=True)
-    ax.add_feature(cfeature.RIVERS, alpha=0.5, rasterized=True)
+    ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True, zorder=10)
+    ax.add_feature(
+        cfeature.BORDERS, linestyle="--", alpha=1, rasterized=True, zorder=10
+    )
+    ax.add_feature(cfeature.OCEAN, rasterized=True, zorder=10)
+    ax.add_feature(cfeature.LAKES, alpha=0.5, rasterized=True, zorder=10)
+    ax.add_feature(cfeature.RIVERS, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(
         cartopy.feature.NaturalEarthFeature(
             category="physical",
@@ -301,13 +317,29 @@ def _add_features(ax):
         alpha=0.5,
         rasterized=True,
         color="#97b6e1",
+        zorder=10,
     )
     # ax.add_image(ShadedReliefESRI(), 8)
+
+    # add ICON-CH1-EPS topography on COSMO-1E grid
+    icon_ch1_eps_topo = Dataset("/users/oprusers/osm/opr/data/topo_i1e_on_c1e_grid.nc")
+    ax.contourf(
+        icon_ch1_eps_topo["x_1"][:].data,
+        icon_ch1_eps_topo["y_1"][:].data,
+        icon_ch1_eps_topo["HSURF"][0, ...].data,
+        cmap="gray_r",
+        levels=np.arange(0, 8400, 400),
+        extend="both",
+        alpha=0.4,
+    )
 
 
 def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     # dataframes have two different structures
-    param = check_params(param[0])
+
+    # Workaround since check_params does not work for ATHD_S
+    param = "ATHD_S" if param[0] == "ATHD_S" else check_params(param[0])
+
     if param in station_score_range.columns and score in station_score_range.index:
         param_score_range = station_score_range[param].loc[score]
     elif (
@@ -318,22 +350,47 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
             cat_station_score_range[param].set_index("scores").loc[score]
         )
     else:
-        param_score_range = {"min": None, "max": None}
-    lower_bound = param_score_range["min"]
-    upper_bound = param_score_range["max"]
+        # Set default range for the FBI score that is not defined in the lookup table
+        if score.startswith("FBI"):
+            param_score_range = (
+                {"min": 0.3, "max": 3}
+                if param.startswith("CLCT")
+                else {"min": 0.1, "max": 10}
+            )
+
+        # Set default range for all other scores that are not defined in the lookup table
+        else:
+            param_score_range = {"min": None, "max": None}
+
     if score not in data.index:
         return
+
     plot_data = data.loc[["lon", "lat", score]].astype(float)
     nan_data = plot_data.loc[:, plot_data.isna().any()]
     plot_data = plot_data.dropna(axis="columns")
+
+    cmap, param_score_range = _determine_cmap_and_bounds(
+        param, score, plot_data.loc[score], param_score_range
+    )
+
+    if score.startswith("FBI"):
+        norm = mcolors.TwoSlopeNorm(
+            vmin=param_score_range["min"], vmax=param_score_range["max"], vcenter=1
+        )
+
     sc = ax.scatter(
         x=list(plot_data.loc["lon"]),
         y=list(plot_data.loc["lat"]),
         marker="o",
         c=list(plot_data.loc[score]),
-        vmin=lower_bound,
-        vmax=upper_bound,
+        vmin=param_score_range["min"] if not score.startswith("FBI") else None,
+        vmax=param_score_range["max"] if not score.startswith("FBI") else None,
+        cmap=cmap,
+        norm=norm if score.startswith("FBI") else None,
+        edgecolors="black",
+        linewidth=0.4,
         rasterized=True,
+        zorder=80,
         transform=ccrs.PlateCarree(),
     )
     if len(plot_data.loc[score]) != 0:
@@ -345,6 +402,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
             marker="+",
             color="black",
             s=80,
+            zorder=100,
             transform=ccrs.PlateCarree(),
         )
         ax.scatter(
@@ -353,6 +411,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
             marker="_",
             color="black",
             s=80,
+            zorder=100,
             transform=ccrs.PlateCarree(),
         )
     cax = fig.add_axes(
@@ -364,6 +423,17 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         ]
     )
     cbar = plt.colorbar(sc, cax=cax)
+
+    # Only modify ticks for the FBI case
+    if score.startswith("FBI"):
+        custom_ticks = (
+            [0.3, 0.5, 0.7, 0.9, 1, 2, 3]
+            if param.startswith("CLCT")
+            else [0.1, 0.3, 0.5, 0.7, 0.9, 1, 2, 4, 6, 8, 10]
+        )
+        cbar.set_ticks(custom_ticks)
+        cbar.ax.set_yticklabels([str(tick) for tick in custom_ticks])
+
     cbar.set_label(unit, rotation=270, labelpad=10)
     ax.scatter(
         x=list(nan_data.loc["lon"]),
@@ -416,9 +486,9 @@ def _add_text(
     max_station,
 ):
     """Add footer and title to plot."""
-    footer = f"""Model: {header_dict['Model version']} |
-    Period: {header_dict['Start time'][0]} - {header_dict['End time'][0]} | Min: {min_value} {header_dict['Unit']}
-     @ {min_station} | Max: {max_value} {header_dict['Unit']} @ {max_station}
+    footer = f"""Model: {header_dict["Model version"]} |
+    Period: {header_dict["Start time"][0]} - {header_dict["End time"][0]} | Min: {min_value} {header_dict["Unit"]}
+     @ {min_station} | Max: {max_value} {header_dict["Unit"]} @ {max_station}
      | © MeteoSwiss"""  # noqa: E501
 
     plt.suptitle(
@@ -481,16 +551,18 @@ def _generate_map_plot(
         if relief:
             ax = plt.axes(projection=ShadedReliefESRI().crs)
         else:
-            ax = plt.axes(projection=ccrs.PlateCarree())
+            ax = plt.axes(
+                projection=ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)
+            )
 
         # make sure, aspect ratio of map & figure match
         ax.set_aspect("auto")
 
         # cut map to model_version (taken from pytrajplot)
         if "ch" in model_version:
-            ax.set_extent([5.3, 11.2, 45.4, 48.2])
+            ax.set_extent([5.3, 11.2, 45.4, 48.2], crs=ccrs.PlateCarree())
         if "alps" in model_version:
-            ax.set_extent([0.7, 16.5, 42.3, 50])
+            ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
 
         if relief:
             # add relief
@@ -525,3 +597,139 @@ def _generate_map_plot(
         plt.close(fig)
 
     return
+
+
+def _determine_cmap_and_bounds(
+    param,
+    score,
+    plot_data,
+    param_score_range,
+):
+    """Set cmap depending on param and score and and plotting bounds for some variables."""
+        
+    # Colormaps that depend on parameter and score
+    if param.startswith(("T_2M")) and score.startswith(("ME", "FBI")):
+        cmap = "RdBu_r"
+        
+    elif param.startswith(("FF", "VMAX", "DD", "PS", "PMSL")) and score.startswith(("ME", "FBI")):
+        cmap = "RdBu"
+
+    elif param.startswith(("CLCT", "ATHD_S")) and score.startswith(("ME", "FBI")):
+        cmap = "PuOr"
+        
+    elif param.startswith(("DURSUN", "GLOB")) and score.startswith(("ME", "FBI")):
+        cmap = "PuOr_r"
+
+    elif param.startswith(("TOT_PREC", "RELHUM", "TD")) and score.startswith(("ME", "FBI")):
+        cmap = "BrBG"
+        
+    elif param.startswith(("TOT_PREC")) and score.startswith(("MMOD", "MOBS")):
+        cmap = "YlGnBu"
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("CLCT", "ATHD_S")) and score.startswith(("MMOD", "MOBS")):
+        colors = [
+            (0.949, 0.404, 0.235),
+            (0.969, 0.549, 0.310),
+            (0.980, 0.725, 0.396),
+            (0.984, 0.855, 0.514),
+            (0.996, 0.996, 0.714),
+            (0.906, 0.906, 0.886),
+            (0.737, 0.737, 0.757),
+            (0.561, 0.561, 0.596),
+            (0.329, 0.318, 0.376),
+        ]       
+        cmap = LinearSegmentedColormap.from_list("cmap_glob", colors, N=256)
+        # Workaround as ATHD_S is not in utils/plot_synop_ch
+        if param != "ATHD_S":
+            param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("GLOB", "DURSUN")) and score.startswith(("MMOD", "MOBS")):
+        colors = [
+            (0.329, 0.318, 0.376),
+            (0.561, 0.561, 0.596),
+            (0.737, 0.737, 0.757),
+            (0.906, 0.906, 0.886),
+            (0.996, 0.996, 0.714),
+            (0.984, 0.855, 0.514),
+            (0.980, 0.725, 0.396),
+            (0.969, 0.549, 0.310),
+            (0.949, 0.404, 0.235),
+        ]        
+        cmap = LinearSegmentedColormap.from_list("cmap_glob", colors, N=256)
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("T_2M")) and score.startswith(("MMOD", "MOBS")):
+        cmap = "coolwarm"
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("TD_2M", "RELHUM_2M")) and score.startswith(("MMOD", "MOBS")):
+        cmap = "coolwarm_r"
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("FF", "VMAX")) and score.startswith(("MMOD", "MOBS")):
+        colors = [
+            (0.027, 0.078, 0.976),
+            (0.078, 0.286, 0.941),
+            (0.098, 0.451, 0.878),
+            (0.247, 0.631, 0.710),
+            (0.529, 0.765, 0.510),
+            (0.804, 0.882, 0.463),
+            (0.984, 0.820, 0.373),
+            (0.980, 0.631, 0.263),
+            (0.961, 0.392, 0.369),
+            (0.906, 0.000, 0.820),
+            (0.961, 0.549, 0.871),
+            (0.976, 0.753, 0.922),
+            (0.996, 0.941, 0.945)
+        ]
+        cmap = LinearSegmentedColormap.from_list("wind_cmap", colors, N=256)
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("PS", "PMSL")) and score.startswith(("MMOD", "MOBS")):
+        cmap = "cool"
+        param_score_range = station_score_range[param].loc["MMOD"]
+        
+    elif param.startswith(("DD")) and score.startswith(("MMOD", "MOBS")):
+        
+        hsv_cmap = cm.get_cmap('hsv', 256)
+        colors_hsv = hsv_cmap(np.linspace(0, 1, 256))
+        shifted_colors = np.roll(colors_hsv, 128, axis=0)
+        cmap = ListedColormap(shifted_colors)
+        param_score_range = station_score_range[param].loc["MMOD"]     
+
+    elif score in ["MAE", "STDE", "RMSE", "FAR"]:
+        cmap = "Spectral_r"
+
+    elif score in ["COR"]:
+        cmap = "Spectral"
+
+    elif score in ["NOBS"]:
+        cmap = "Spectral"
+        param_score_range["min"] = 0
+        param_score_range["max"] = np.ceil(plot_data.max())
+
+    elif score.startswith(("MF", "POD", "THS", "ETS")):
+        cmap = "Spectral"
+
+    elif score.startswith("OF"):
+        cmap = "Spectral"
+
+        # Only set range of OF to range of MF if it is defined in lookup table
+        if (
+            score.replace("OF", "MF")
+            in cat_station_score_range[param].set_index("scores").index
+        ):
+            param_score_range = (
+                cat_station_score_range[param]
+                .set_index("scores")
+                .loc[score.replace("OF", "MF")]
+            )
+        else:
+            param_score_range = {"min": None, "max": None}
+            
+    # Go to default if param is None or no option specified here
+    else:
+        cmap = "viridis"
+
+    return cmap, param_score_range

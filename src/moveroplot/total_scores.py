@@ -15,7 +15,9 @@ from .load_files import load_relevant_files
 from .plotting import get_total_dates_from_headers
 
 # pylint: disable=no-name-in-module
+from .utils.parse_plot_synop_ch import cat_total_score_range
 from .utils.parse_plot_synop_ch import total_score_range
+from .utils.set_ylims import set_ylim
 
 # pylint: enable=no-name-in-module
 
@@ -95,18 +97,6 @@ def _total_scores_pipeline(
 
 
 # PLOTTING PIPELINE FOR TOTAL SCORES PLOTS
-def _set_ylim(param, score, ax, debug):  # pylint: disable=unused-argument
-    # define limits for yaxis if available
-    regular_param = (param, "min") in total_score_range.columns
-    regular_scores = score in total_score_range.index
-
-    if regular_param and regular_scores:
-        lower_bound = total_score_range[param]["min"].loc[score]
-        upper_bound = total_score_range[param]["max"].loc[score]
-        if lower_bound != upper_bound:
-            ax.set_ylim(lower_bound, upper_bound)
-
-
 def _customise_ax(parameter, scores, x_ticks, grid, ax):
     """Apply cosmetics to current ax.
 
@@ -131,7 +121,6 @@ def _customise_ax(parameter, scores, x_ticks, grid, ax):
     steps = len(x_ticks) // 5
     skip_indices = slice(None, None, steps) if steps > 0 else slice(None)
     ax.set_xticks(range(len(x_ticks))[skip_indices], x_ticks[skip_indices])
-    ax.autoscale(axis="y")
 
 
 def _clear_empty_axes_if_necessary(subplot_axes, idx):
@@ -182,6 +171,8 @@ def _plot_and_save_scores(
     models_color_lines,
     debug=False,
 ):
+    if debug:
+        print("Entering plot_and_save_scores.")
     filename = base_filename
     fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
 
@@ -231,7 +222,6 @@ def _plot_and_save_scores(
             for score_idx, score in enumerate(score_setup):
                 if model_idx == 0:
                     filename += f"{score}_"
-                _set_ylim(param=parameter, score=score_setup[0], ax=ax, debug=debug)
                 y_values = [data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted]
                 ax.plot(
                     x_int,
@@ -242,6 +232,21 @@ def _plot_and_save_scores(
                     fillstyle="none",
                     label=f"{score_setup[0].upper()}",
                 )
+                set_ylim(
+                    param=parameter,
+                    score_range=total_score_range,
+                    cat_score_range=cat_total_score_range,
+                    score=score_setup[0],
+                    ax=ax,
+                    y_values=[
+                        data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted
+                    ],
+                )
+                # Add reference lines for ME and FBI scores
+                if score == "ME":
+                    ax.axhline(y=0, color="black", linestyle="--", linewidth=0.5)
+                if score.startswith("FBI"):
+                    ax.axhline(y=1, color="black", linestyle="--", linewidth=0.5)
 
             # Generate a legend if two scores in one subplot
             if len(score_setup) > 1:
