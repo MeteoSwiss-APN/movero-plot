@@ -200,8 +200,8 @@ def _plot_and_save_scores(
             )
             filename = base_filename
             current_plot_idx += current_plot_idx % 4
-        for model_idx, data in enumerate(models_data.values()):
-            model_plot_color = plot_settings.modelcolors[model_idx]
+        for model_idx, (key, data) in enumerate(models_data.items()):
+            model_plot_color = plot_settings.modelcolors[key]
             # sorted lead time ranges
             ltr_sorted = sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))
             x_int = list(range(len(ltr_sorted)))
@@ -292,11 +292,10 @@ def _generate_total_scores_plots(
     debug,
 ):
     """Generate Total Score Plots."""
-    model_plot_colors = plot_settings.modelcolors
     model_versions = list(models_data.keys())
     custom_lines = [
-        Line2D([0], [0], color=model_plot_colors[i], lw=2)
-        for i in range(len(model_versions))
+        Line2D([0], [0], color=plot_settings.modelcolors[model_version], lw=2)
+        for model_version in model_versions
     ]
 
     # initialise filename

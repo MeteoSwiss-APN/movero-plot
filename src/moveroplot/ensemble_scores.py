@@ -162,8 +162,8 @@ def _plot_and_save_scores(
                 [ax] = subplot_axes.ravel()
                 ax.set_xlabel("RANK")
                 ax.set_title(f"{parameter}, LT: {ltr}")
-                for model_idx, data in enumerate(model_data.values()):
-                    model_plot_color = plot_settings.modelcolors[model_idx]
+                for model_idx, (key, data) in enumerate(models_data.items()):
+                    model_plot_color = plot_settings.modelcolors[key]
                     model_ranks = sorted(
                         [
                             index
@@ -204,8 +204,8 @@ def _plot_and_save_scores(
                 ax.set_title(f"{parameter} {threshold[1:-1]} {unit}, LT: {ltr}")
                 sample_subplot = _add_sample_subplot(fig, ax)
 
-                for model_idx, data in enumerate(model_data.values()):
-                    model_plot_color = plot_settings.modelcolors[model_idx]
+                for model_idx, (key, data) in enumerate(models_data.items()):
+                    model_plot_color = plot_settings.modelcolors[key]
                     fbin_values = _get_bin_values(data, "FBIN", threshold)
                     obin_values = _get_bin_values(data, "OBIN", threshold)
                     nbin_values = _get_bin_values(data, "NBIN", threshold)
@@ -272,7 +272,7 @@ def _plot_and_save_scores(
                 for model_idx, model_name in enumerate(
                     models_data[next(iter(ltr_sorted))].keys()
                 ):
-                    model_plot_color = plot_settings.modelcolors[model_idx]
+                    model_plot_color = plot_settings.modelcolors[model_name]
                     y_values = [
                         models_data[ltr][model_name]["df"]["Total"].loc[score]
                         if model_name in models_data[ltr].keys()
@@ -319,11 +319,10 @@ def _generate_ensemble_scores_plots(
     debug,
 ):
     """Generate Ensemble Score Plots."""
-    model_plot_colors = plot_settings.modelcolors
     model_versions = list(models_data[next(iter(models_data))].keys())
     custom_lines = [
-        Line2D([0], [0], color=model_plot_colors[i], lw=2)
-        for i in range(len(model_versions))
+        Line2D([0], [0], color=plot_settings.modelcolors[model_version], lw=2)
+        for model_version in model_versions
     ]
 
     # initialise filename
