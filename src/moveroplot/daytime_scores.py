@@ -89,8 +89,8 @@ def _initialize_plots(labels: list):
         nrows=2, ncols=1, tight_layout=True, figsize=(10, 10), dpi=200
     )
     custom_lines = [
-        Line2D([0], [0], color=plot_settings.modelcolors[i], lw=2)
-        for i in range(len(labels))
+        Line2D([0], [0], color=plot_settings.modelcolors[label], lw=2)
+        for label in labels
     ]
     fig.legend(
         custom_lines,
@@ -155,8 +155,8 @@ def _plot_and_save_scores(
 
             title = title_base + ",".join(score_setup) + model_info
             ax = subplot_axes[current_plot_idx % 2]
-            for model_idx, data in enumerate(models_data.values()):
-                model_plot_color = plot_settings.modelcolors[model_idx]
+            for key, data in models_data.items():
+                model_plot_color = plot_settings.modelcolors[key]
                 header = data["header"]
                 unit = header["Unit"][0]
                 y_label = ",".join(score_setup)
