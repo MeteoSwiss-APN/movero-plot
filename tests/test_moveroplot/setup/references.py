@@ -4,7 +4,7 @@ from typing import Any
 from typing import Dict
 
 DEFAULT_PLOT_SETUP: Dict[str, Any] = {
-    "model_versions": [["C-1E_ch", "C-1E-CTR_ch"], ["C-2E_alps"]],
+    "model_versions": [["C-1E_ch"], ["C-1E-CTR_ch"], ["C-2E_alps"]],
     "parameter": {
         "VMAX_10M6": {
             "regular_scores": [],
