@@ -1,4 +1,4 @@
-name: Run pre-commit in moveroplot
+name: Run pytest in moveroplot
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
     - main
 
 jobs:
-  moveroplot-pre-commit:
+  moveroplot-pytest:
     runs-on: ubuntu-latest
     defaults:
       run:
