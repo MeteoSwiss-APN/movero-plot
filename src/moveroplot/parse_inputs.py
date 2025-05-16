@@ -85,7 +85,13 @@ def _parse_inputs(
             number of models to plot ({len(color_list)} < {len(all_model_versions)})
             """
             )
-        plot_settings.modelcolors = color_list
+
+        color_dict = {}
+        for i, model in enumerate(all_model_versions):
+            color_dict[model] = color_list[i]
+
+        plot_settings.modelcolors = color_dict
+
     else:
         if len(all_model_versions) > len(plot_settings.modelcolors):
             raise ValueError(
@@ -95,6 +101,13 @@ def _parse_inputs(
             ({len(all_model_versions)} > {len(plot_settings.modelcolors)})
             """
             )
+
+        color_list_default = plot_settings.modelcolors
+
+        color_dict = {}
+        for i, model in enumerate(all_model_versions):
+            color_dict[model] = color_list_default[i]
+        plot_settings.modelcolors = color_dict
 
     plot_models_setup = [
         model_combinations.split("/")
