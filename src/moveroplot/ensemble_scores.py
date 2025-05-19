@@ -162,8 +162,9 @@ def _plot_and_save_scores(
                 [ax] = subplot_axes.ravel()
                 ax.set_xlabel("RANK")
                 ax.set_title(f"{parameter}, LT: {ltr}")
-                for model_idx, (key, data) in enumerate(models_data.items()):
-                    model_plot_color = plot_settings.modelcolors[key]
+                for model_idx, data in enumerate(model_data.values()):
+                    model_key = list(models_data[ltr].keys())[model_idx]
+                    model_plot_color = plot_settings.modelcolors[model_key]
                     model_ranks = sorted(
                         [
                             index
@@ -204,8 +205,9 @@ def _plot_and_save_scores(
                 ax.set_title(f"{parameter} {threshold[1:-1]} {unit}, LT: {ltr}")
                 sample_subplot = _add_sample_subplot(fig, ax)
 
-                for model_idx, (key, data) in enumerate(models_data.items()):
-                    model_plot_color = plot_settings.modelcolors[key]
+                for model_idx, data in enumerate(model_data.values()):
+                    model_key = list(models_data[ltr].keys())[model_idx]
+                    model_plot_color = plot_settings.modelcolors[model_key]
                     fbin_values = _get_bin_values(data, "FBIN", threshold)
                     obin_values = _get_bin_values(data, "OBIN", threshold)
                     nbin_values = _get_bin_values(data, "NBIN", threshold)
