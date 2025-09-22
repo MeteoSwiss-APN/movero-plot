@@ -45,5 +45,10 @@ class TestInput:
         # Test with valid inputs
         result = _parse_inputs(**test_input_dict)
         assert result == DEFAULT_PLOT_SETUP, "plot_setup differs."
-        print('DBG modelcolors=', plot_settings.modelcolors)
-        assert plot_settings.modelcolors == dict(zip(test_input_dict["model_versions"].split(","),test_input_dict["plotcolors"].split(","))), "color input differs."
+        print("DBG modelcolors=", plot_settings.modelcolors)
+        assert plot_settings.modelcolors == dict(
+            zip(
+                test_input_dict["model_versions"].split(","),
+                test_input_dict["plotcolors"].split(","),
+            )
+        ), "color input differs."
