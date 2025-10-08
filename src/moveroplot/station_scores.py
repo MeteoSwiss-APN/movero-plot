@@ -91,6 +91,7 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict):
 
 
 def _add_plot_text(ax, data, score, ltr):
+    unit=data["header"]["Unit"][0]
     [subplot_title] = data["header"]["Model version"]
     ax.set_title(f"{subplot_title}: {score}, LT: {ltr}")
     if score not in data["df"].index:
@@ -115,7 +116,7 @@ def _add_plot_text(ax, data, score, ltr):
     plt.text(
         0.5,
         -0.03,
-        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} -Min: {min_value} mm at station {min_station} +Max: {max_value} mm at station {max_station}""",  # noqa: E501
+        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} -Min: {min_value} {unit} at station {min_station} +Max: {max_value} {unit} at station {max_station}""",  # noqa: E501
         horizontalalignment="center",
         verticalalignment="center",
         transform=ax.transAxes,
