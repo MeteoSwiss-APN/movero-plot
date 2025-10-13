@@ -9,6 +9,9 @@ import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.colors as mcolors
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
+from matplotlib.colors import LinearSegmentedColormap
 
 # relevant imports for plotting pipeline
 import matplotlib.pyplot as plt
@@ -19,9 +22,6 @@ import numpy as np
 from cartopy.io.img_tiles import GoogleTiles
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER
-from matplotlib import cm
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.colors import ListedColormap
 from netCDF4 import Dataset
 
 # First-party
@@ -81,7 +81,7 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict):
     )
     for ax in axes.ravel():
         if "ch" in plot_setup["model_versions"][0][0]:
-            ax.set_extent([5.3, 11.2, 45.4, 48.2], crs=ccrs.PlateCarree())
+            ax.set_extent([5.8, 10.6, 45.75, 47.8], crs=ccrs.PlateCarree())
         if "alps" in plot_setup["model_versions"][0][0]:
             ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
         _add_features(ax)
@@ -565,7 +565,7 @@ def _generate_map_plot(
 
         # cut map to model_version (taken from pytrajplot)
         if "ch" in model_version:
-            ax.set_extent([5.3, 11.2, 45.4, 48.2], crs=ccrs.PlateCarree())
+            ax.set_extent([5.8, 10.6, 45.75, 47.8], crs=ccrs.PlateCarree())
         if "alps" in model_version:
             ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
 
