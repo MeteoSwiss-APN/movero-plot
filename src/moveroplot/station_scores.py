@@ -9,9 +9,6 @@ import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.colors as mcolors
-from matplotlib import cm
-from matplotlib.colors import ListedColormap
-from matplotlib.colors import LinearSegmentedColormap
 
 # relevant imports for plotting pipeline
 import matplotlib.pyplot as plt
@@ -22,6 +19,9 @@ import numpy as np
 from cartopy.io.img_tiles import GoogleTiles
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
+from matplotlib.colors import LinearSegmentedColormap
 from netCDF4 import Dataset
 
 # First-party
