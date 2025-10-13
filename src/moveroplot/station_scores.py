@@ -20,8 +20,8 @@ from cartopy.io.img_tiles import GoogleTiles
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER
 from matplotlib import cm
-from matplotlib.colors import ListedColormap
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import ListedColormap
 from netCDF4 import Dataset
 
 # First-party
