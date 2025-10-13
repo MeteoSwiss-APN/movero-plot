@@ -9,9 +9,6 @@ import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.colors as mcolors
-from matplotlib import cm
-from matplotlib.colors import ListedColormap
-from matplotlib.colors import LinearSegmentedColormap
 
 # relevant imports for plotting pipeline
 import matplotlib.pyplot as plt
@@ -22,6 +19,9 @@ import numpy as np
 from cartopy.io.img_tiles import GoogleTiles
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER
+from matplotlib import cm
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import ListedColormap
 from netCDF4 import Dataset
 
 # First-party
@@ -79,7 +79,7 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict):
         dpi=100,
         squeeze=False,
     )
-    for ax in axes.ravel():        
+    for ax in axes.ravel():
         if "ch" in plot_setup["model_versions"][0][0]:
             ax.set_extent([5.3, 11.2, 45.4, 48.2], crs=ccrs.PlateCarree())
         if "alps" in plot_setup["model_versions"][0][0]:
@@ -91,6 +91,7 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict):
 
 
 def _add_plot_text(ax, data, score, ltr):
+    unit=data["header"]["Unit"][0]
     [subplot_title] = data["header"]["Model version"]
     ax.set_title(f"{subplot_title}: {score}, LT: {ltr}")
     if score not in data["df"].index:
@@ -115,7 +116,7 @@ def _add_plot_text(ax, data, score, ltr):
     plt.text(
         0.5,
         -0.03,
-        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} -Min: {min_value} mm at station {min_station} +Max: {max_value} mm at station {max_station}""",  # noqa: E501
+        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} -Min: {min_value} {unit} at station {min_station} +Max: {max_value} {unit} at station {max_station}""",  # noqa: E501
         horizontalalignment="center",
         verticalalignment="center",
         transform=ax.transAxes,
@@ -141,7 +142,9 @@ def _plot_and_save_scores(
         )
         for scores in plot_scores_setup:
             filename = base_filename + ltr_info + model_info
-            fig, subplot_axes = _initialize_plots(models_data.keys(), scores, plot_setup=plot_setup)
+            fig, subplot_axes = _initialize_plots(
+                models_data.keys(), scores, plot_setup=plot_setup
+            )
             for idx, score in enumerate(scores):
                 filename += f"_{score}"
                 for model_idx, data in enumerate(models_data.values()):
@@ -290,7 +293,9 @@ def _add_features(ax):
 
     # add grid & labels to map
     """  # noqa: E501
-    gl = ax.gridlines(draw_labels=True, ls="--", lw=0.5, x_inline=False, y_inline=False, zorder=11)
+    gl = ax.gridlines(
+        draw_labels=True, ls="--", lw=0.5, x_inline=False, y_inline=False, zorder=11
+    )
     gl.top_labels = True
     gl.left_labels = True
     gl.bottom_labels = False
@@ -606,27 +611,31 @@ def _determine_cmap_and_bounds(
     param_score_range,
 ):
     """Set cmap depending on param and score and and plotting bounds for some variables."""
-        
+
     # Colormaps that depend on parameter and score
     if param.startswith(("T_2M")) and score.startswith(("ME", "FBI")):
         cmap = "RdBu_r"
-        
-    elif param.startswith(("FF", "VMAX", "DD", "PS", "PMSL")) and score.startswith(("ME", "FBI")):
+
+    elif param.startswith(("FF", "VMAX", "DD", "PS", "PMSL")) and score.startswith(
+        ("ME", "FBI")
+    ):
         cmap = "RdBu"
 
     elif param.startswith(("CLCT", "ATHD_S")) and score.startswith(("ME", "FBI")):
         cmap = "PuOr"
-        
+
     elif param.startswith(("DURSUN", "GLOB")) and score.startswith(("ME", "FBI")):
         cmap = "PuOr_r"
 
-    elif param.startswith(("TOT_PREC", "RELHUM", "TD")) and score.startswith(("ME", "FBI")):
+    elif param.startswith(("TOT_PREC", "RELHUM", "TD")) and score.startswith(
+        ("ME", "FBI")
+    ):
         cmap = "BrBG"
-        
+
     elif param.startswith(("TOT_PREC")) and score.startswith(("MMOD", "MOBS")):
         cmap = "YlGnBu"
         param_score_range = station_score_range[param].loc["MMOD"]
-        
+
     elif param.startswith(("CLCT", "ATHD_S")) and score.startswith(("MMOD", "MOBS")):
         colors = [
             (0.949, 0.404, 0.235),
@@ -638,12 +647,12 @@ def _determine_cmap_and_bounds(
             (0.737, 0.737, 0.757),
             (0.561, 0.561, 0.596),
             (0.329, 0.318, 0.376),
-        ]       
+        ]
         cmap = LinearSegmentedColormap.from_list("cmap_glob", colors, N=256)
         # Workaround as ATHD_S is not in utils/plot_synop_ch
         if param != "ATHD_S":
             param_score_range = station_score_range[param].loc["MMOD"]
-        
+
     elif param.startswith(("GLOB", "DURSUN")) and score.startswith(("MMOD", "MOBS")):
         colors = [
             (0.329, 0.318, 0.376),
@@ -655,18 +664,20 @@ def _determine_cmap_and_bounds(
             (0.980, 0.725, 0.396),
             (0.969, 0.549, 0.310),
             (0.949, 0.404, 0.235),
-        ]        
+        ]
         cmap = LinearSegmentedColormap.from_list("cmap_glob", colors, N=256)
         param_score_range = station_score_range[param].loc["MMOD"]
-        
+
     elif param.startswith(("T_2M")) and score.startswith(("MMOD", "MOBS")):
         cmap = "coolwarm"
         param_score_range = station_score_range[param].loc["MMOD"]
-        
-    elif param.startswith(("TD_2M", "RELHUM_2M")) and score.startswith(("MMOD", "MOBS")):
+
+    elif param.startswith(("TD_2M", "RELHUM_2M")) and score.startswith(
+        ("MMOD", "MOBS")
+    ):
         cmap = "coolwarm_r"
         param_score_range = station_score_range[param].loc["MMOD"]
-        
+
     elif param.startswith(("FF", "VMAX")) and score.startswith(("MMOD", "MOBS")):
         colors = [
             (0.027, 0.078, 0.976),
@@ -681,22 +692,21 @@ def _determine_cmap_and_bounds(
             (0.906, 0.000, 0.820),
             (0.961, 0.549, 0.871),
             (0.976, 0.753, 0.922),
-            (0.996, 0.941, 0.945)
+            (0.996, 0.941, 0.945),
         ]
         cmap = LinearSegmentedColormap.from_list("wind_cmap", colors, N=256)
         param_score_range = station_score_range[param].loc["MMOD"]
-        
+
     elif param.startswith(("PS", "PMSL")) and score.startswith(("MMOD", "MOBS")):
         cmap = "cool"
         param_score_range = station_score_range[param].loc["MMOD"]
-        
+
     elif param.startswith(("DD")) and score.startswith(("MMOD", "MOBS")):
-        
-        hsv_cmap = cm.get_cmap('hsv', 256)
+        hsv_cmap = cm.get_cmap("hsv", 256)
         colors_hsv = hsv_cmap(np.linspace(0, 1, 256))
         shifted_colors = np.roll(colors_hsv, 128, axis=0)
         cmap = ListedColormap(shifted_colors)
-        param_score_range = station_score_range[param].loc["MMOD"]     
+        param_score_range = station_score_range[param].loc["MMOD"]
 
     elif score in ["MAE", "STDE", "RMSE", "FAR"]:
         cmap = "Spectral_r"
@@ -727,7 +737,7 @@ def _determine_cmap_and_bounds(
             )
         else:
             param_score_range = {"min": None, "max": None}
-            
+
     # Go to default if param is None or no option specified here
     else:
         cmap = "viridis"

@@ -6,13 +6,19 @@ def set_ylim(
 ):  # pylint: disable=unused-argument
     # Find the actual parameter
     actual_param_candidates = [col[0] for col in score_range.columns if col[0] != "*"]
-    
+
     if param in ["TOT_PREC3", "TOT_PREC6"]:
         actual_param = "TOT_PREC[36]"
     elif any(param == c for c in actual_param_candidates):
         actual_param = next(c for c in actual_param_candidates if param == c)
-    elif any(param in c or c.replace("*", "") in param for c in actual_param_candidates):
-        actual_param = next(c for c in actual_param_candidates if param in c or c.replace("*", "") in param)
+    elif any(
+        param in c or c.replace("*", "") in param for c in actual_param_candidates
+    ):
+        actual_param = next(
+            c
+            for c in actual_param_candidates
+            if param in c or c.replace("*", "") in param
+        )
     else:
         actual_param = None
 
@@ -48,15 +54,17 @@ def set_ylim(
 
     # Get the data range
     y_values_min, y_values_max = min(y_values), max(y_values)
-    
+
     # Get the current plotting limits
     lower_bound_before, upper_bound_before = ax.get_ylim()
 
-    # If the limits have not been set, or the data range exceeds the set limits, 
+    # If the limits have not been set, or the data range exceeds the set limits,
     # or the limits from the plot are set larger already, reset to auto
-    if (lower_bound == 0 and upper_bound == 0) or (
-        y_values_min <= lower_bound and y_values_max >= upper_bound) or (
-        lower_bound_before < lower_bound and upper_bound_before > upper_bound):
+    if (
+        (lower_bound == 0 and upper_bound == 0)
+        or (y_values_min <= lower_bound and y_values_max >= upper_bound)
+        or (lower_bound_before < lower_bound and upper_bound_before > upper_bound)
+    ):
         ax.autoscale(axis="y")
 
     # If current data limit is below lower_bound or
