@@ -81,7 +81,7 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict):
     )
     for ax in axes.ravel():
         if "ch" in plot_setup["model_versions"][0][0]:
-            ax.set_extent([5.3, 11.2, 45.4, 48.2], crs=ccrs.PlateCarree())
+            ax.set_extent([5.8, 10.6, 45.75, 47.8], crs=ccrs.PlateCarree())
         if "alps" in plot_setup["model_versions"][0][0]:
             ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
         _add_features(ax)
@@ -565,7 +565,7 @@ def _generate_map_plot(
 
         # cut map to model_version (taken from pytrajplot)
         if "ch" in model_version:
-            ax.set_extent([5.3, 11.2, 45.4, 48.2], crs=ccrs.PlateCarree())
+            ax.set_extent([5.8, 10.6, 45.75, 47.8], crs=ccrs.PlateCarree())
         if "alps" in model_version:
             ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
 
