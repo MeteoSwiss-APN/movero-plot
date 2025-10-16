@@ -76,8 +76,15 @@ def _parse_inputs(
             do not exist in the directory {input_dir}."""
         )
 
+    color_list = plotcolors.split(",")
+    for i, elem in enumerate(color_list):
+        if elem=='':
+            for col in plot_settings.modelcolors:
+                if col not in color_list:
+                    color_list[i]=col
+                    break
+
     if plotcolors:
-        color_list = plotcolors.split(",")
         if len(color_list) < len(all_model_versions):
             raise ValueError(
                 f"""
