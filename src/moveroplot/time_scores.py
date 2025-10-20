@@ -248,8 +248,9 @@ def _plot_and_save_scores(
                         ax=ax,
                         y_values=score_values[score].values,
                     )
-                    if score == "ME":
-                        ax.axhline(y=0, color="black", linestyle="--", linewidth=0.5)
+                    ymin, ymax = ax.get_ylim()
+                    if ymin <= 0 <= ymax:
+                        ax.axhline(y=0, color="black",         linestyle="--", linewidth=0.5)
                     if score.startswith("FBI"):
                         ax.axhline(y=1, color="black", linestyle="--", linewidth=0.5)
                     ax.tick_params(axis="both", which="major", labelsize=8)
