@@ -200,6 +200,8 @@ def _plot_and_save_scores(
             )
             filename = base_filename
             current_plot_idx += current_plot_idx % 4
+        unitless_scores=['FBI', 'MF', 'COR', 'OF', 'POD', 'FAR', 'THS', 'ETS']
+        unit_number_scores=['N', 'NMOD', 'NOBS']
         for model_idx, (key, data) in enumerate(models_data.items()):
             model_plot_color = plot_settings.modelcolors[key]
             # sorted lead time ranges
@@ -212,7 +214,15 @@ def _plot_and_save_scores(
             # get ax, to add plot to
             ax = subplot_axes[current_plot_idx % 4]
             y_label = ",".join(score_setup)
-            ax.set_ylabel(f"{y_label.upper()} ({unit})")
+            #ax.setylabel
+            if any(val1.startswith(val2) for val1 in score_setup for
+                   val2 in unitless_scores):
+                ax.set_ylabel(f"{y_label.upper()}")
+            elif any(val1.startswith(val2) for val1 in score_setup for
+                     val2 in unit_number_scores):
+                ax.set_ylabel(f"{y_label.upper()} (Number)")
+            else:
+                ax.set_ylabel(f"{y_label.upper()} ({unit})")
 
             if len(score_setup) > 2:
                 raise ValueError(

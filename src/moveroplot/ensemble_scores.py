@@ -293,7 +293,20 @@ def _plot_and_save_scores(
                         fillstyle="none",
                     )
 
-                ax.set_ylabel(f"{score}")
+                #ax.setylabel
+                unitless_scores=['FBI', 'MF', 'COR', 'OF', 'POD', 'FAR', 'THS', 'ETS']
+                unit_number_scores=['N', 'NMOD', 'NOBS']
+                sample_ltr = next(iter(models_data))
+                sample_model = next(iter(models_data[sample_ltr]))
+                unit = models_data[sample_ltr][sample_model]["header"]["Unit"][0]
+
+                if any(s.startswith(u) for s in score_setup for u in unitless_scores):
+                    ax.set_ylabel(score)
+                elif any(s.startswith(u) for s in score_setup for u in
+                         unit_number_scores):
+                    ax.set_ylabel(f"{score}, (Number)")
+                else:
+                    ax.set_ylabel(f"{score}, ({unit})")
                 ax.set_xticks(x_int, ltr_sorted)
                 ax.set_title(f"{parameter}: {score}")
                 ax.grid(which="major", color="#DDDDDD", linewidth=0.8)

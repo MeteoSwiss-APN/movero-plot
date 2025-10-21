@@ -155,12 +155,20 @@ def _plot_and_save_scores(
 
             title = title_base + ",".join(score_setup) + model_info
             ax = subplot_axes[current_plot_idx % 2]
+            unitless_scores=['FBI', 'MF', 'COR', 'OF', 'POD', 'FAR', 'THS', 'ETS']
+            unit_number_scores=['N', 'NMOD', 'NOBS']
             for key, data in models_data.items():
                 model_plot_color = plot_settings.modelcolors[key]
                 header = data["header"]
                 unit = header["Unit"][0]
                 y_label = ",".join(score_setup)
-                ax.set_ylabel(f"{y_label.upper()} ({unit})")
+                #ax.setylabel 
+                if any(val1.startswith(val2) for val1 in score_setup for val2 in unitless_scores):
+                    ax.set_ylabel(f"{y_label.upper()}")
+                elif any(val1.startswith(val2) for val1 in score_setup for val2 in unit_number_scores):
+                    ax.set_ylabel(f"{y_label.upper()}, (Number)")
+                else:
+                    ax.set_ylabel(f"{y_label.upper()}, ({unit})")
                 ax.set_xlabel(x_label_base)
                 ax.set_title(title + f", LT: {ltr}")
 

@@ -438,8 +438,15 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         )
         cbar.set_ticks(custom_ticks)
         cbar.ax.set_yticklabels([str(tick) for tick in custom_ticks])
-
-    cbar.set_label(unit, rotation=270, labelpad=10)
+    #Plot bar label
+    unitless_scores=['FBI', 'MF', 'COR', 'OF', 'POD', 'FAR', 'THS', 'ETS']
+    unit_number_scores=['N', 'NMOD', 'NOBS']
+    if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
+        cbar.set_label(f"{score}")
+    elif any(val1.startswith(val2) for val1 in score for val2 in unit_number_scores):
+        cbar.set_label(f"{score}, (Number)")
+    else:
+        cbar.set_label(f"{score}, ({unit})")
     ax.scatter(
         x=list(nan_data.loc["lon"]),
         y=list(nan_data.loc["lat"]),
@@ -476,7 +483,15 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
     )
 
     cbar = plt.colorbar(sc, ax=ax, orientation="vertical", fraction=0.046, pad=0.04)
-    cbar.set_label(unit, rotation=270, labelpad=15)
+    #Plot bar label
+    unitless_scores=['FBI', 'MF', 'COR', 'OF', 'POD', 'FAR', 'THS', 'ETS']
+    unit_number_scores=['N', 'NMOD', 'NOBS']
+    if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
+        cbar.set_label(f"{score}")
+    elif any(val1.startswith(val2) for val1 in score for val2 in unit_number_scores):
+        cbar.set_label(f"{score}, (Number)")
+    else:
+        cbar.set_label(f"{score}, ({unit})")
 
 
 def _add_text(
