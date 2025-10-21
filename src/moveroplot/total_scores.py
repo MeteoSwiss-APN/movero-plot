@@ -245,7 +245,7 @@ def _plot_and_save_scores(
                 # Add reference lines
                 ymin, ymax = ax.get_ylim()
                 if ymin <= 0 <= ymax:
-                    ax.axhline(y=0, color="black",         linestyle="--", linewidth=0.5)
+                    ax.axhline(y=0, color="black", linestyle="--", linewidth=0.5)
                 if score.startswith("FBI"):
                     ax.axhline(y=1, color="black", linestyle="--", linewidth=0.5)
 
