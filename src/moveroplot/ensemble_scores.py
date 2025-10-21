@@ -300,6 +300,10 @@ def _plot_and_save_scores(
                 ax.grid(which="minor", color="#EEEEEE", linestyle=":", linewidth=0.5)
                 ax.set_xlabel("Lead-Time Range (h)")
 
+                ymin, ymax = ax.get_ylim()
+                if ymin <= 0 <= ymax:
+                    ax.axhline(y=0, color="black",         linestyle="--", linewidth=0.5)
+
             if len(score_setup) > 2 and len(score_setup) % 2 == 1:
                 subplot_axes[-1].axis("off")
 
