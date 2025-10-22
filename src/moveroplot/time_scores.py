@@ -18,6 +18,7 @@ from moveroplot.plotting import get_total_dates_from_headers
 from .utils.parse_plot_synop_ch import cat_time_score_range
 from .utils.parse_plot_synop_ch import time_score_range
 from .utils.set_ylims import set_ylim
+from.utils.unitless_scores_lists import unit_number_scores, unitless_scores
 
 
 def _time_score_transformation(df, header):
@@ -221,8 +222,6 @@ def _plot_and_save_scores(
 
             title = title_base + ",".join(score_setup) + model_info + f" LT: {ltr}"
             ax = subplot_axes[current_plot_idx % 2]
-            unitless_scores=['FBI', 'MF', 'COR', 'OF', 'POD', 'FAR', 'THS', 'ETS']
-            unit_number_scores=['N', 'NMOD', 'NOBS']
             for key, data in models_data.items():
                 model_plot_color = plot_settings.modelcolors[key]
                 header = data["header"]

@@ -18,6 +18,7 @@ from .plotting import get_total_dates_from_headers
 from .utils.parse_plot_synop_ch import cat_total_score_range
 from .utils.parse_plot_synop_ch import total_score_range
 from .utils.set_ylims import set_ylim
+from.utils.unitless_scores_lists import unit_number_scores, unitless_scores
 
 # pylint: enable=no-name-in-module
 
@@ -200,8 +201,6 @@ def _plot_and_save_scores(
             )
             filename = base_filename
             current_plot_idx += current_plot_idx % 4
-        unitless_scores=['FBI', 'MF', 'COR', 'OF', 'POD', 'FAR', 'THS', 'ETS']
-        unit_number_scores=['N', 'NMOD', 'NOBS']
         for model_idx, (key, data) in enumerate(models_data.items()):
             model_plot_color = plot_settings.modelcolors[key]
             # sorted lead time ranges

@@ -32,6 +32,7 @@ from moveroplot.load_files import load_relevant_files
 from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import cat_station_score_range
 from .utils.parse_plot_synop_ch import station_score_range
+from.utils.unitless_scores_lists import unit_number_scores, unitless_scores
 
 
 class ShadedReliefESRI(GoogleTiles):
@@ -439,8 +440,6 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         cbar.set_ticks(custom_ticks)
         cbar.ax.set_yticklabels([str(tick) for tick in custom_ticks])
     #Plot bar label
-    unitless_scores=['FBI', 'MF', 'COR', 'OF', 'POD', 'FAR', 'THS', 'ETS']
-    unit_number_scores=['N', 'NMOD', 'NOBS']
     if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
         cbar.set_label(f"{score}")
     elif any(val1.startswith(val2) for val1 in score for val2 in unit_number_scores):
@@ -484,8 +483,6 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
 
     cbar = plt.colorbar(sc, ax=ax, orientation="vertical", fraction=0.046, pad=0.04)
     #Plot bar label
-    unitless_scores=['FBI', 'MF', 'COR', 'OF', 'POD', 'FAR', 'THS', 'ETS']
-    unit_number_scores=['N', 'NMOD', 'NOBS']
     if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
         cbar.set_label(f"{score}")
     elif any(val1.startswith(val2) for val1 in score for val2 in unit_number_scores):

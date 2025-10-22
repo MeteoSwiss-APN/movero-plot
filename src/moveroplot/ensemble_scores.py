@@ -15,6 +15,7 @@ from moveroplot.plotting import get_total_dates_from_headers
 
 # Local
 from .station_scores import _calculate_figsize
+from.utils.unitless_scores_lists import unit_number_scores, unitless_scores
 
 # pylint: disable=no-name-in-module
 
@@ -294,8 +295,6 @@ def _plot_and_save_scores(
                     )
 
                 #ax.setylabel
-                unitless_scores=['FBI', 'MF', 'COR', 'OF', 'POD', 'FAR', 'THS', 'ETS']
-                unit_number_scores=['N', 'NMOD', 'NOBS']
                 sample_ltr = next(iter(models_data))
                 sample_model = next(iter(models_data[sample_ltr]))
                 unit = models_data[sample_ltr][sample_model]["header"]["Unit"][0]
