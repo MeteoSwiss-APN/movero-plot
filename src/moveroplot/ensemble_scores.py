@@ -15,6 +15,7 @@ from moveroplot.plotting import get_total_dates_from_headers
 
 # Local
 from .station_scores import _calculate_figsize
+from.utils.unitless_scores_lists import unit_number_scores, unitless_scores
 
 # pylint: disable=no-name-in-module
 
@@ -293,7 +294,18 @@ def _plot_and_save_scores(
                         fillstyle="none",
                     )
 
-                ax.set_ylabel(f"{score}")
+                #ax.setylabel
+                sample_ltr = next(iter(models_data))
+                sample_model = next(iter(models_data[sample_ltr]))
+                unit = models_data[sample_ltr][sample_model]["header"]["Unit"][0]
+
+                if any(s.startswith(u) for s in score_setup for u in unitless_scores):
+                    ax.set_ylabel(score)
+                elif any(s.startswith(u) for s in score_setup for u in
+                         unit_number_scores):
+                    ax.set_ylabel(f"{score}, (Number)")
+                else:
+                    ax.set_ylabel(f"{score}, ({unit})")
                 ax.set_xticks(x_int, ltr_sorted)
                 ax.set_title(f"{parameter}: {score}")
                 ax.grid(which="major", color="#DDDDDD", linewidth=0.8)
