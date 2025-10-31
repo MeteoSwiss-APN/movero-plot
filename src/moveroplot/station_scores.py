@@ -32,8 +32,8 @@ from moveroplot.load_files import load_relevant_files
 from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import cat_station_score_range
 from .utils.parse_plot_synop_ch import station_score_range
-from.utils.unitless_scores_lists import unit_number_scores, unitless_scores
-
+from .utils.unitless_scores_lists import unit_number_scores, unitless_scores
+from .utils.FBI_scores_settings import param_score_range_FBI, _forward, _inverse, _forward_spec,     _inverse_spec, FBI_custom_ticks
 
 class ShadedReliefESRI(GoogleTiles):
     # TODO: download image, place in resource directory and link to it
@@ -358,11 +358,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     else:
         # Set default range for the FBI score that is not defined in the lookup table
         if score.startswith("FBI"):
-            param_score_range = (
-                {"min": 0.3, "max": 3}
-                if param.startswith("CLCT")
-                else {"min": 0.1, "max": 10}
-            )
+            param_score_range = param_score_range_FBI(param)
 
         # Set default range for all other scores that are not defined in the lookup table
         else:
@@ -380,86 +376,14 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     )
 
     if score.startswith("FBI"):
-        vmin = param_score_range["min"]
-        vmax = param_score_range["max"]
-
-        # fractions of the color bar (in [0,1])
-        t0, t1, t2, t3, t4 = 0.0, 0.25, 0.5, 0.75, 1.0
-
-        # log span
-        log_high_min = np.log10(2.0)
-        log_high_max = np.log10(vmax)
-        range_high_log = log_high_max - log_high_min
-
-        def _forward(x):
-            """
-            Maps [vmin, 0.5] and [2, vmax] logarithmically bended to [0, 0.25] and [0.75, 1.0] and maps [0.5, 1.0] and [1.0, 2.0] linearly bended to [0.25, 0.5] and [0.5, 0.75]
-            """
-            x = np.asarray(x, dtype=float)
-            y = np.empty_like(x, dtype=float)
-
-            # masks for the 4 intervals
-            m1 = x <= 0.5
-            m2 = (x > 0.5) & (x <= 1.0)
-            m3 = (x > 1.0) & (x <= 2.0)
-            m4 = x > 2.0
-
-            # 1) lower log
-            y[m1] = (
-                ((((np.log10(((x[m1]-vmin)*2+(0.5-x[m1])*vmax)/(0.5-vmin))-log_high_min) / range_high_log) * (t1))*(-1))+t1
+        if param.startswith(("CLCT", "T_2M", "TD_2M")):
+            norm = mcolors.FuncNorm((_forward_spec, _inverse_spec),
+                vmin=param_score_range["min"], vmax=param_score_range["max"]
             )
-
-            # 2) left linear
-            y[m2] = (
-                ((x[m2] - 0.5)*t2+(1-x[m2])*t1) / (1.0 - 0.5)
+        else:
+            norm = mcolors.FuncNorm((_forward, _inverse),
+                vmin=param_score_range["min"], vmax=param_score_range["max"]
             )
-
-            # 3) right linear
-            y[m3] = (
-                ((x[m3] - 1.0)*t3+(2.0-x[m3])*t2) / (2.0 - 1.0)
-            )
-
-            # 4) higher log
-            y[m4] = (
-                ((np.log10(x[m4]) - log_high_min) / range_high_log) * (t4 -   t3) + t3
-            )
-            return y
-
-        def _inverse(y):
-            """Reverts the map [0,1] → x in (vmin–vmax)."""
-            y = np.asarray(y, dtype=float)
-            x = np.empty_like(y, dtype=float)
-
-            # same 4 intervals but in the normalized space
-            n1 = y <= t1
-            n2 = (y > t1) & (y <= t2)
-            n3 = (y > t2) & (y <= t3)
-            n4 = y > t3
-
-            # 1) inverse lower log
-            x[n1] = (((10 ** (
-                ((((y[n1] - t1)/ ((-1)*(t1)))* range_high_log) )  + log_high_min))*(0.5-vmin)-0.5*vmax+2.0*vmin)/(2.0-vmax)
-            )
-
-            # 2) inverse left linear
-            x[n2] = (
-                (y[n2]*(1.0-0.5)+(0.5*t2-t1))/(t2-t1)
-            )
-
-            # 3) inverse right linear
-            x[n3] = (
-                (y[n3]*(2.0-1.0)+(t3-2.0*t2))/(t3-t2)
-            )
-
-            # 4) inverse higher log
-            x[n4] = 10 ** (
-                ((y[n4] - t3) / (t4 - t3)) * range_high_log + log_high_min
-            )
-            return x
-
-        norm = mcolors.FuncNorm((_forward, _inverse),
-            vmin=param_score_range["min"], vmax=param_score_range["max"]
-        )
 
     sc = ax.scatter(
         x=list(plot_data.loc["lon"]),
@@ -509,11 +433,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
 
     # Only modify ticks for the FBI case
     if score.startswith("FBI"):
-        custom_ticks = (
-            [0.3, 0.5, 0.75, 1, 1.5, 2, 3]
-            if param.startswith("CLCT")
-            else [0.1, 0.3, 0.5, 0.75, 1, 1.5, 2, 4, 6, 8, 10]
-        )
+        custom_ticks = FBI_custom_ticks(param)
         cbar.set_ticks(custom_ticks)
         cbar.ax.set_yticklabels([str(tick) for tick in custom_ticks])
     #Plot bar label
