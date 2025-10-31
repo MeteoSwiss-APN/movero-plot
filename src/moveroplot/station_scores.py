@@ -114,15 +114,36 @@ def _add_plot_text(ax, data, score, ltr):
         print("Found invalid date format.")
 
     # pylint: disable=line-too-long
-    plt.text(
-        0.5,
-        -0.03,
-        f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} -Min: {min_value} {unit} at station {min_station} +Max: {max_value} {unit} at station {max_station}""",  # noqa: E501
-        horizontalalignment="center",
-        verticalalignment="center",
-        transform=ax.transAxes,
-        fontsize=8,
-    )
+    if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
+        plt.text(
+            0.5,
+            -0.03,
+            f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} -Min: {min_value} at station {min_station} +Max: {max_value} at station  {max_station}""",  # noqa: E501
+            horizontalalignment="center",
+            verticalalignment="center",
+            transform=ax.transAxes,
+            fontsize=8,
+        )
+    elif any(val1.startswith(val2) for val1 in score for val2 in unit_number_scores):
+        plt.text(
+            0.5,
+            -0.03,
+            f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} -Min: {min_value} (Number) at station {min_station} +Max: {max_value} (Number) at station  {max_station}""",  # noqa: E501
+            horizontalalignment="center",
+            verticalalignment="center",
+            transform=ax.transAxes,
+            fontsize=8,
+        )
+    else:
+        plt.text(
+            0.5,
+            -0.03,
+            f"""{start_date.strftime("%Y-%m-%d %H:%M")} to {end_date.strftime("%Y-%m-%d %H:%M")} -Min: {min_value} {unit} at station {min_station} +Max: {max_value} {unit} at station  {max_station}""",  # noqa: E501
+            horizontalalignment="center",
+            verticalalignment="center",
+            transform=ax.transAxes,
+            fontsize=8,
+        )
     # pylint: enable=line-too-long
 
 
@@ -439,7 +460,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     #Plot bar label
     if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
         cbar.set_label(f"{score}")
-    elif any(val1.startswith(val2) for val1 in score for val2 in unit_number_scores):
+    elif any(val1.startswith(val2) for val1 in {score} for val2 in unit_number_scores):
         cbar.set_label(f"{score}, (Number)")
     else:
         cbar.set_label(f"{score}, ({unit})")
