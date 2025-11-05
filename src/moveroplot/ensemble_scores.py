@@ -117,7 +117,7 @@ def _get_bin_values(data: dict, prefix: str, threshold: str):
     return data["df"]["Total"][indices]
 
 
-def _customize_figure(fig, sup_title, models_color_lines, labels):
+def _set_suptitle(fig, sup_title):
     fig.suptitle(
         sup_title,
         horizontalalignment="center",
@@ -128,15 +128,6 @@ def _customize_figure(fig, sup_title, models_color_lines, labels):
         },
         bbox={"facecolor": "none", "edgecolor": "grey"},
     )
-
-    fig.legend(
-        models_color_lines,
-        labels,
-        loc="upper right",
-        ncol=1,
-        frameon=False,
-    )
-
 
 # pylint: disable=too-many-branches,too-many-statements
 def _plot_and_save_scores(
@@ -181,11 +172,16 @@ def _plot_and_save_scores(
                         width=0.25,
                         color=model_plot_color,
                     )
-                _customize_figure(
+                _set_suptitle(
                     fig,
                     custom_sup_title,
-                    models_color_lines,
-                    list(models_data[next(iter(models_data.keys()))].keys()),
+                )
+                fig.legend(
+                    all_handles,
+                    all_labels,
+                    loc="upper right",
+                    ncol=1,
+                    frameon=True,
                 )
 
                 fig.savefig(f"{output_dir}/{filename}.png")
@@ -238,11 +234,16 @@ def _plot_and_save_scores(
                     ],
                 )
                 sample_subplot.set_yticks(np.round([max(nbin_values)], -3))
-                _customize_figure(
+                _set_suptitle(
                     fig,
                     custom_sup_title,
-                    models_color_lines,
-                    list(models_data[next(iter(models_data.keys()))].keys()),
+                )
+                fig.legend(
+                    all_handles,
+                    all_labels,
+                    loc="center right",
+                    ncol=1,
+                    frameon=True,
                 )
                 fig.savefig(f"{output_dir}/{filename}.png")
                 plt.close()
@@ -252,13 +253,11 @@ def _plot_and_save_scores(
                 (len(score_setup) + 1) // 2,
             )
             subplot_axes = subplot_axes.ravel()
-            fig.legend(
-                models_color_lines,
-                list(models_data[next(iter(models_data.keys()))].keys()),
-                loc="upper right",
-                ncol=1,
-                frameon=False,
-            )
+
+            model_names = list(models_data[next(iter(models_data.keys()))].keys())
+            all_handles = list(models_color_lines)
+            all_labels  = list(model_names)
+
             ltr_sorted = sorted(
                 list(models_data.keys()), key=lambda x: int(x.split("-")[0])
             )
@@ -292,6 +291,7 @@ def _plot_and_save_scores(
                         color=model_plot_color,
                         marker="D",
                         fillstyle="none",
+                        label=model_name,
                     )
 
                 #ax.setylabel
@@ -315,15 +315,36 @@ def _plot_and_save_scores(
                 ymin, ymax = ax.get_ylim()
                 if ymin <= 0 <= ymax:
                     ax.axhline(y=0, color="black",         linestyle="--", linewidth=0.5)
+                if "OUTLIERS" in score:
+                    #This part of the loop adds dotted lines that indicate the optimal value for each model
+                    headers = [data["header"] for data in models_data[next(iter(models_data))].values()]
+                    for h in headers:
+                        rows_dict = {h["Model name"][0]: int(h["EPS info"][0])}
+                        model_name = list(rows_dict.keys())[0] + "_ch"
+                        model_plot_color =plot_settings.modelcolors[model_name]
+                        n=list(rows_dict.values())[0]
+                        ax.axhline(y=2/(n+1), color=model_plot_color, label=model_name, linestyle="--", linewidth=0.8)
+                    #this part of the loop adds a black dotted line to the legend of the OUTLIER plots to represent the optimal value lines
+                    outlier_handles = [Line2D([], [], linestyle="--", linewidth=0.8, color="black")]
+                    outlier_labels  = ["Optimal value"]
+                    all_handles += outlier_handles
+                    all_labels  += outlier_labels
+
 
             if len(score_setup) > 2 and len(score_setup) % 2 == 1:
                 subplot_axes[-1].axis("off")
 
-            _customize_figure(
+            fig.legend(
+                all_handles,
+                all_labels,
+                loc="upper right",
+                ncol=1,
+                frameon=True,
+            )
+
+            _set_suptitle(
                 fig,
                 custom_sup_title,
-                models_color_lines,
-                list(models_data[next(iter(models_data.keys()))].keys()),
             )
             fig.savefig(f"{output_dir}/{filename}.png")
             plt.close()
