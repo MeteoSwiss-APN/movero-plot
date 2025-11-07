@@ -270,6 +270,7 @@ def _plot_and_save_scores(
                     [models_data[ltr].keys() for ltr in ltr_sorted],
                 )
                 ax = subplot_axes[score_idx]
+                ax.get_yaxis().get_major_formatter().set_useOffset(False)
                 filename += f"_{score}"
                 for model_idx, model_name in enumerate(
                     models_data[next(iter(ltr_sorted))].keys()

@@ -171,6 +171,7 @@ def _plot_and_save_scores(
                 filename += f"_{score}"
                 for model_idx, data in enumerate(models_data.values()):
                     ax = subplot_axes[idx][model_idx]
+                    ax.get_yaxis().get_major_formatter().set_useOffset(False)
                     _add_datapoints2(
                         fig=fig,
                         data=data["df"],

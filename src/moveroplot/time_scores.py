@@ -222,6 +222,7 @@ def _plot_and_save_scores(
 
             title = title_base + ",".join(score_setup) + model_info + f" LT: {ltr}"
             ax = subplot_axes[current_plot_idx % 2]
+            ax.get_yaxis().get_major_formatter().set_useOffset(False)
             for key, data in models_data.items():
                 model_plot_color = plot_settings.modelcolors[key]
                 header = data["header"]

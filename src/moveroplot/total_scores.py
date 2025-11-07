@@ -212,6 +212,7 @@ def _plot_and_save_scores(
             unit = header["Unit"][0]
             # get ax, to add plot to
             ax = subplot_axes[current_plot_idx % 4]
+            ax.get_yaxis().get_major_formatter().set_useOffset(False)
             y_label = ",".join(score_setup)
             #ax.setylabel
             if any(val1.startswith(val2) for val1 in score_setup for
