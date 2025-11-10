@@ -679,9 +679,7 @@ def _determine_cmap_and_bounds(
             (0.329, 0.318, 0.376),
         ]
         cmap = LinearSegmentedColormap.from_list("cmap_glob", colors, N=256)
-        # Workaround as ATHD_S is not in utils/plot_synop_ch
-        if param != "ATHD_S":
-            param_score_range = station_score_range[param].loc["MMOD"]
+        param_score_range = station_score_range[param].loc["MMOD"]
 
     elif param.startswith(("GLOB", "DURSUN")) and score.startswith(("MMOD", "MOBS")):
         colors = [
