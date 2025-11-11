@@ -236,6 +236,16 @@ def _plot_and_save_scores(
                 fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
             current_plot_idx += 1
 
+            fig.suptitle(
+                sup_title,
+                horizontalalignment="center",
+                verticalalignment="top",
+                fontdict={
+                    "size": 6,
+                    "color": "k",
+                },
+                bbox={"facecolor": "none", "edgecolor": "grey"},
+            )
 
 def _generate_daytime_plots(
     plot_scores,
@@ -253,7 +263,14 @@ def _generate_daytime_plots(
         if len(model_versions) == 1
         else f"daytime_scores_{parameter}"
     )
-    sup_title = ""
+    headers = [
+        data["header"] for data in models_data[next(iter(models_data.keys()))].values()
+    ]
+    total_start_date, total_end_date = get_total_dates_from_headers(headers)
+    # pylint: disable=line-too-long
+    period_info = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")} | © MeteoSwiss"""  # noqa: E501
+    # pylint: enable=line-too-long
+    sup_title = f"{parameter}: " + period_info
     # plot regular scores
     _plot_and_save_scores(
         output_dir,

@@ -329,9 +329,9 @@ def _generate_total_scores_plots(
         else f"Model: {headers[0]['Model version'][0]} | \n"
     )
     # pylint: disable=line-too-long
-    period_info = f"""Period: {total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""  # noqa: E501
+    period_info = f"""{total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""  # noqa: E501
     # pylint: enable=line-too-long
-    sup_title = model_info + period_info
+    sup_title = f"{parameter}: " + period_info
     if debug:
         print("Try to generate total score plots.")
     # plot regular scores
