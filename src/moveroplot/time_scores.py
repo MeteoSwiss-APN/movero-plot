@@ -316,7 +316,7 @@ def _generate_timeseries_plots(
     ]
     total_start_date, total_end_date = get_total_dates_from_headers(headers)
     # pylint: disable=line-too-long
-    period_info = f"""Period: {total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")} | © MeteoSwiss"""  # noqa: E501
+    period_info = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")} | © MeteoSwiss"""  # noqa: E501
     # pylint: enable=line-too-long
     sup_title = f"{parameter}: " + period_info
     # plot regular scores

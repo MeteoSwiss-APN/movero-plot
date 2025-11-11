@@ -26,6 +26,7 @@ from netCDF4 import Dataset
 
 # First-party
 from moveroplot.load_files import load_relevant_files
+from moveroplot.plotting import get_total_dates_from_headers
 
 # Local
 # local
@@ -207,9 +208,22 @@ def _generate_station_plots(
     plot_setup,
     debug,
 ):
+    # flat list of unique keys of dicts within models_data dict
+    model_versions = list({k for d in models_data.values() for k in d.keys()})
     # initialise filename
-    base_filename = f"station_scores_{parameter}"
-    sup_title = f"PARAMETER: {parameter}"
+    base_filename = (
+        f"station_scores_{model_versions[0]}_{parameter}"
+        if len(model_versions) == 1
+        else f"station_scores_{parameter}"
+    )
+    headers = [
+        data["header"] for data in models_data[next(iter(models_data.keys()))].values()
+    ]
+    total_start_date, total_end_date = get_total_dates_from_headers(headers)
+    # pylint: disable=line-too-long
+    period_info = f"""{total_start_date.strftime("%Y-%m-%d %H:%M")} - {total_end_date.strftime("%Y-%m-%d %H:%M")} | © MeteoSwiss"""  # noqa: E501
+    # pylint: enable=line-too-long
+    sup_title = f"{parameter}: " + period_info
 
     _plot_and_save_scores(
         output_dir,
