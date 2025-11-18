@@ -15,7 +15,7 @@ from moveroplot.plotting import get_total_dates_from_headers
 
 # Local
 from .station_scores import _calculate_figsize
-from.utils.unitless_scores_lists import unit_number_scores, unitless_scores
+from.utils.scores_lists_settings import unit_number_scores, unitless_scores
 
 # pylint: disable=no-name-in-module
 

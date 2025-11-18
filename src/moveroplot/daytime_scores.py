@@ -19,7 +19,7 @@ from moveroplot.plotting import get_total_dates_from_headers
 from .utils.parse_plot_synop_ch import cat_daytime_score_range
 from .utils.parse_plot_synop_ch import daytime_score_range
 from .utils.set_ylims import set_ylim
-from.utils.unitless_scores_lists import unit_number_scores, unitless_scores
+from.utils.scores_lists_settings import unit_number_scores, unitless_scores
 
 
 # enter directory / read station_scores files / call plotting pipeline
