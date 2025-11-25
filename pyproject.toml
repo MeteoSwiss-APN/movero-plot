@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "moveroplot"
-version = "1.2.2"
+version = "1.2.3"
 description = "Movero-plot"
 readme = "README.md"
 keywords = [
