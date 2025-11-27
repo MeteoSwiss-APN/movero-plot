@@ -150,7 +150,6 @@ def _add_plot_text(ax, data, score, ltr):
 
 def _plot_and_save_scores(
     output_dir,
-    base_filename,
     parameter,
     plot_scores_setup,
     sup_title,
@@ -164,7 +163,8 @@ def _plot_and_save_scores(
             "" if len(models_data.keys()) > 1 else f"_{next(iter(models_data.keys()))}"
         )
         for scores in plot_scores_setup:
-            filename = base_filename + ltr_info + model_info
+            filename = (
+                f"station_scores_{parameter}{ltr_info}{model_info}")
             fig, subplot_axes = _initialize_plots(
                 models_data.keys(), scores, plot_setup=plot_setup
             )
@@ -209,13 +209,6 @@ def _generate_station_plots(
     debug,
 ):
     # flat list of unique keys of dicts within models_data dict
-    model_versions = list({k for d in models_data.values() for k in d.keys()})
-    # initialise filename
-    base_filename = (
-        f"station_scores_{model_versions[0]}_{parameter}"
-        if len(model_versions) == 1
-        else f"station_scores_{parameter}"
-    )
     headers = [
         data["header"] for data in models_data[next(iter(models_data.keys()))].values()
     ]
@@ -227,7 +220,6 @@ def _generate_station_plots(
 
     _plot_and_save_scores(
         output_dir,
-        base_filename,
         parameter,
         plot_scores["regular_scores"],
         sup_title,
@@ -237,7 +229,6 @@ def _generate_station_plots(
     )
     _plot_and_save_scores(
         output_dir,
-        base_filename,
         parameter,
         plot_scores["cat_scores"],
         sup_title,
