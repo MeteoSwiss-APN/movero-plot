@@ -503,6 +503,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     ax.scatter(
         x=list(nan_data.loc["lon"]),
         y=list(nan_data.loc["lat"]),
+        marker=".",
         rasterized=True,
         transform=ccrs.PlateCarree(),
         facecolors="none",
