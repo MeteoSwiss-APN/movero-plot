@@ -78,7 +78,7 @@ FBI(0.1)  MF(0.1)  POD(0.1)  FAR(0.1)   THS(0.1)  ETS(0.1)  FBI(1)    MF(1)    P
 FBI(0)    MF(0)    POD(0)    FAR(0)     THS(0)    ETS(0)    FBI(15)   MF(15)   POD(15)   FAR(15)   THS(15)   ETS(15)   FBI(25)   MF(25)   POD(25)   FAR(25)    THS(25)   ETS(25)
 FBI(-5)   MF(-5)   POD(-5)   FAR(-5)    THS(-5)   ETS(-5)   FBI(5)    MF(5)    POD(5)    FAR(5)    THS(5)    ETS(5)    FBI(15)   MF(15)   POD(15)   FAR(15)    THS(15)   ETS(15)
 FBI(2.5)  MF(2.5)  POD(2.5)  FAR(2.5)   THS(2.5)  ETS(2.5)  FBI(5)    MF(5)    POD(5)    FAR(5)    THS(5)    ETS(5)    FBI(10)   MF(10)   POD(10)   FAR(10)    THS(10)   ETS(10)
-FBI(5)    MF(5)    POD(5)    FAR(5)     THS(5)    ETS(5)    FBI(12.5) MF(12.5) POD(12.5) FAR(12.5) THS(12.5) ETS(12.5) FBI(20)   MF(20)   POD(20)   FAR(20)    THS(20)   ETS(20)
+FBI(12.5) MF(12.5) POD(12.5) FAR(12.5)  THS(12.5) ETS(12.5) FBI(20)   MF(20)   POD(20)   FAR(20)   THS(20)   ETS(20)   FBI(25)   MF(25)   POD(25)   FAR(25)    THS(25)   ETS(25)
 FBI(5)    MF(5)    POD(5)    FAR(5)     THS(5)    ETS(5)    FBI(10)   MF(10)   POD(10)   FAR(10)   THS(10)   ETS(10)   FBI(40)   MF(40)   POD(40)   FAR(40)    THS(40)   ETS(40)
 FBI(5)    MF(5)    POD(5)    FAR(5)     THS(5)    ETS(5)    FBI(10)   MF(10)   POD(10)   FAR(10)   THS(10)   ETS(10)   FBI(40)   MF(40)   POD(40)   FAR(40)    THS(40)   ETS(40)
 FBI(10)   MF(10)   POD(10)   FAR(10)    THS(10)   ETS(10)   FBI(70)   MF(70)   POD(70)   FAR(70)   THS(70)   ETS(70)   FBI(300)  MF(300)  POD(300)  FAR(300)   THS(300)  ETS(300)
