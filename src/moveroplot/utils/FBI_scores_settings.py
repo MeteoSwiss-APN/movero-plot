@@ -166,7 +166,7 @@ def _inverse_spec(y):
     return x
 
 # Set ticks for specific parameters under the FBI score
-def FBI_custom_ticks(param):
+def fbi_custom_ticks(param):
     return(
         [0.3, 0.5, 0.7, 0.9, 1, 1.2, 1.5, 2, 3]
         if param.startswith(("CLCT", "T_2M", "TD_2M"))

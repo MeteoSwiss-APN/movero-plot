@@ -34,7 +34,7 @@ from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import cat_station_score_range
 from .utils.parse_plot_synop_ch import station_score_range
 from .utils.scores_lists_settings import unit_number_scores, unitless_scores, _determine_cmap_and_bounds
-from .utils.FBI_scores_settings import param_score_range_FBI, _forward, _inverse, _forward_spec,     _inverse_spec, FBI_custom_ticks
+from .utils.FBI_scores_settings import param_score_range_FBI, _forward, _inverse, _forward_spec,     _inverse_spec, fbi_custom_ticks
 
 class ShadedReliefESRI(GoogleTiles):
     # TODO: download image, place in resource directory and link to it
@@ -481,7 +481,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
 
     # Only modify ticks for the FBI case
     if score.startswith("FBI"):
-        custom_ticks = FBI_custom_ticks(param)
+        custom_ticks = fbi_custom_ticks(param)
         cbar.set_ticks(custom_ticks)
         cbar.ax.set_yticklabels([str(tick) for tick in custom_ticks])
     #Plot bar label
