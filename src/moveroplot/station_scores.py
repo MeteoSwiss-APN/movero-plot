@@ -424,7 +424,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     )
 
     if score.startswith("FBI"):
-        if param.startswith(("CLCT", "T_2M", "TD_2M")):
+        if param.startswith(("CLCT", "TD_2M")):
             norm = mcolors.FuncNorm((_forward_spec, _inverse_spec),
                 vmin=param_score_range["min"], vmax=param_score_range["max"]
             )
