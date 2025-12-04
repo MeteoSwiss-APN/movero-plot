@@ -34,7 +34,7 @@ from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import cat_station_score_range
 from .utils.parse_plot_synop_ch import station_score_range
 from .utils.scores_lists_settings import unit_number_scores, unitless_scores, _determine_cmap_and_bounds
-from .utils.FBI_scores_settings import param_score_range_FBI, _forward, _inverse, _forward_spec,     _inverse_spec, fbi_custom_ticks
+from .utils.FBI_scores_settings import param_score_range_fbi, _forward, _inverse, _forward_spec,     _inverse_spec, fbi_custom_ticks
 
 class ShadedReliefESRI(GoogleTiles):
     # TODO: download image, place in resource directory and link to it
@@ -406,7 +406,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     else:
         # Set default range for the FBI score that is not defined in the lookup table
         if score.startswith("FBI"):
-            param_score_range = param_score_range_FBI(param)
+            param_score_range = param_score_range_fbi(param)
 
         # Set default range for all other scores that are not defined in the lookup table
         else:

@@ -1,7 +1,7 @@
 import numpy as np
 
 # Set ranges for specific parameters under the FBI score
-def param_score_range_FBI(param):
+def param_score_range_fbi(param):
     return(
         {"min": 0.3, "max": 3}
         if param.startswith(("CLCT", "T_2M", "TD_2M"))
