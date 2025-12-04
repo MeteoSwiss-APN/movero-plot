@@ -532,9 +532,9 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
     if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
         cbar.set_label(f"{score}")
     elif any(val1.startswith(val2) for val1 in score for val2 in unit_number_scores):
-        cbar.set_label(f"{score}, (Number)")
+        cbar.set_label(f"{score} (Number)")
     else:
-        cbar.set_label(f"{score}, ({unit})")
+        cbar.set_label(f"{score} ({unit})")
 
 
 def _add_text(
