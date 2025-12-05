@@ -4,7 +4,7 @@ import numpy as np
 def param_score_range_fbi(param):
     return(
         {"min": 0.3, "max": 3}
-        if param.startswith(("CLCT", "TD_2M"))
+        if param.startswith(("CLCT"))
         else {"min": 0.1, "max": 10}
     )
 
@@ -169,6 +169,6 @@ def _inverse_spec(y):
 def fbi_custom_ticks(param):
     return(
         [0.3, 0.5, 0.75, 0.9, 1, 1.2, 1.5, 2, 3]
-        if param.startswith(("CLCT", "TD_2M"))
+        if param.startswith(("CLCT"))
         else [0.1, 0.3, 0.5, 0.75, 1, 1.5, 2, 4, 6, 8, 10]
     )
