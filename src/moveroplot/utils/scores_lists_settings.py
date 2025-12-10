@@ -87,9 +87,16 @@ def _determine_cmap_and_bounds(
             cmap = station_score_colortable[param].loc["MMOD"]
         else:
             cmap = "viridis"
-    elif any(p.startswith(param)  or param.startswith(p) for p in verif_param) and score in verif_scores:
+    elif score.startswith("OF"):
+        table = cat_station_score_colortable[param].set_index("scores")
+        mf_score = score.replace("OF", "MF")
+        if mf_score in table.index:
+            cmap = table.loc[mf_score, "cmap"]
+        else:
+            cmap = "viridis"
+    elif any(p.startswith(param) or param.startswith(p) for p in verif_param) and score in verif_scores:
         cmap = station_score_colortable[param].loc[score]
-    elif any(p.startswith(param)  or param.startswith(p) for p in cat_param) and any(s.startswith(score)  or score.startswith(s) for s in cat_station_score_colortable[param].scores):
+    elif any(p.startswith(param) or param.startswith(p) for p in cat_param) and any(s.startswith(score) or score.startswith(s) for s in cat_station_score_colortable[param].scores):
         table = cat_station_score_colortable[param]
         cmap = table.loc[table["scores"] == score, "cmap"].iloc[0]
     # Go to default if param is None or no option specified here

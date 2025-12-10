@@ -34,7 +34,7 @@ from .utils.check_params import check_params
 from .utils.parse_plot_synop_ch import cat_station_score_range
 from .utils.parse_plot_synop_ch import station_score_range
 from .utils.scores_lists_settings import unit_number_scores, unitless_scores, _determine_cmap_and_bounds
-from .utils.FBI_scores_settings import param_score_range_FBI, _forward, _inverse, _forward_spec,     _inverse_spec, FBI_custom_ticks
+from .utils.FBI_scores_settings import param_score_range_fbi, _forward, _inverse, _forward_spec,     _inverse_spec, fbi_custom_ticks
 
 class ShadedReliefESRI(GoogleTiles):
     # TODO: download image, place in resource directory and link to it
@@ -406,7 +406,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     else:
         # Set default range for the FBI score that is not defined in the lookup table
         if score.startswith("FBI"):
-            param_score_range = param_score_range_FBI(param)
+            param_score_range = param_score_range_fbi(param)
 
         # Set default range for all other scores that are not defined in the lookup table
         else:
@@ -424,7 +424,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     )
 
     if score.startswith("FBI"):
-        if param.startswith(("CLCT", "T_2M", "TD_2M")):
+        if param.startswith(("CLCT")):
             norm = mcolors.FuncNorm((_forward_spec, _inverse_spec),
                 vmin=param_score_range["min"], vmax=param_score_range["max"]
             )
@@ -481,7 +481,7 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
 
     # Only modify ticks for the FBI case
     if score.startswith("FBI"):
-        custom_ticks = FBI_custom_ticks(param)
+        custom_ticks = fbi_custom_ticks(param)
         cbar.set_ticks(custom_ticks)
         cbar.ax.set_yticklabels([str(tick) for tick in custom_ticks])
     #Plot bar label
@@ -532,9 +532,9 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
     if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
         cbar.set_label(f"{score}")
     elif any(val1.startswith(val2) for val1 in score for val2 in unit_number_scores):
-        cbar.set_label(f"{score}, (Number)")
+        cbar.set_label(f"{score} (Number)")
     else:
-        cbar.set_label(f"{score}, ({unit})")
+        cbar.set_label(f"{score} ({unit})")
 
 
 def _add_text(

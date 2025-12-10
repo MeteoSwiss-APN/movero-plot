@@ -155,6 +155,7 @@ if True:
     color_map_dict = {
         "34": "jet",
         "48": "cubehelix",
+        "51": "gist_earth_r",
         "52": "bwr",
         "53": "bwr_r",
         "54": "PuOr",
@@ -400,6 +401,7 @@ if True:
     color_map_dict = {
         "34": "jet",
         "48": "cubehelix",
+        "51": "gist_earth_r",
         "52": "bwr",
         "53": "bwr_r",
         "54": "PuOr",
