@@ -1,5 +1,6 @@
 #In this file are established divisions within lists in smaller lists with the same requirements, which are then used in the scores files
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, ListedColormap
+from matplotlib import cm
 from .parse_plot_synop_ch import station_score_colortable, cat_station_score_colortable, verif_param, verif_scores, station_score_range, cat_station_score_range, cat_param
 
 import numpy as np
@@ -83,7 +84,12 @@ def _determine_cmap_and_bounds(
                 (0.949, 0.404, 0.235),
             ]
             cmap = LinearSegmentedColormap.from_list("cmap_glob", colors, N=256)
-        elif param.startswith(("PMSL", "PS", "TD_2M", "T_2M", "DD", "TOT_PREC", "RELHUM_2M")):
+        elif param.startswith(("DD")):
+            hsv_cmap = cm.get_cmap("hsv", 256)
+            colors_hsv = hsv_cmap(np.linspace(0, 1, 256))
+            shifted_colors = np.roll(colors_hsv, 128, axis=0)
+            cmap = ListedColormap(shifted_colors)
+        elif param.startswith(("PMSL", "PS", "TD_2M", "T_2M", "TOT_PREC", "RELHUM_2M")):
             cmap = station_score_colortable[param].loc["MMOD"]
         else:
             cmap = "viridis"
