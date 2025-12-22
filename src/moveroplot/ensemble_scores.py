@@ -320,11 +320,11 @@ def _plot_and_save_scores(
                     #This part of the loop adds dotted lines that indicate the optimal value for each model
                     headers = [data["header"] for data in models_data[next(iter(models_data))].values()]
                     for h in headers:
-                        rows_dict = {h["Model name"][0]: int(h["EPS info"][0])}
-                        model_name = list(rows_dict.keys())[0] + "_ch"
-                        model_plot_color =plot_settings.modelcolors[model_name]
+                        rows_dict = {h["Model version"][0]: int(h["EPS info"][0])}
+                        model_version = list(rows_dict.keys())[0]
+                        model_plot_color =plot_settings.modelcolors[model_version]
                         n=list(rows_dict.values())[0]
-                        ax.axhline(y=2/(n+1), color=model_plot_color, label=model_name, linestyle="--", linewidth=0.8)
+                        ax.axhline(y=2/(n+1), color=model_plot_color, label=model_version, linestyle="--", linewidth=0.8)
                     #this part of the loop adds a black dotted line to the legend of the OUTLIER plots to represent the optimal value lines
                     outlier_handles = [Line2D([], [], linestyle="--", linewidth=0.8, color="black")]
                     outlier_labels  = ["Optimal value"]

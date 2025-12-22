@@ -1,10 +1,10 @@
 import numpy as np
 
 # Set ranges for specific parameters under the FBI score
-def param_score_range_FBI(param):
+def param_score_range_fbi(param):
     return(
         {"min": 0.3, "max": 3}
-        if param.startswith(("CLCT", "T_2M", "TD_2M"))
+        if param.startswith(("CLCT"))
         else {"min": 0.1, "max": 10}
     )
 
@@ -166,9 +166,9 @@ def _inverse_spec(y):
     return x
 
 # Set ticks for specific parameters under the FBI score
-def FBI_custom_ticks(param):
+def fbi_custom_ticks(param):
     return(
-        [0.3, 0.5, 0.7, 0.9, 1, 1.2, 1.5, 2, 3]
-        if param.startswith(("CLCT", "T_2M", "TD_2M"))
-        else [0.1, 0.3, 0.5, 0.7, 1, 1.5, 2, 4, 6, 8, 10]
+        [0.3, 0.5, 0.75, 0.9, 1, 1.2, 1.5, 2, 3]
+        if param.startswith(("CLCT"))
+        else [0.1, 0.3, 0.5, 0.75, 1, 1.5, 2, 4, 6, 8, 10]
     )
