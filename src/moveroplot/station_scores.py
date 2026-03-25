@@ -14,9 +14,6 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 
-# class to add relief to map
-# > taken from: https://stackoverflow.com/questions/37423997/cartopy-shaded-relief
-from cartopy.io.img_tiles import GoogleTiles
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER
 from matplotlib import cm
@@ -35,17 +32,6 @@ from .utils.parse_plot_synop_ch import cat_station_score_range
 from .utils.parse_plot_synop_ch import station_score_range
 from .utils.scores_lists_settings import unit_number_scores, unitless_scores, _determine_cmap_and_bounds
 from .utils.FBI_scores_settings import param_score_range_fbi, _forward, _inverse, _forward_spec,     _inverse_spec, fbi_custom_ticks
-
-class ShadedReliefESRI(GoogleTiles):
-    # TODO: download image, place in resource directory and link to it
-    # shaded relief
-    def _image_url(self, tile):
-        x, y, z = tile
-        url = (
-            "https://server.arcgisonline.com/ArcGIS/rest/services/"
-            "World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}.jpg"
-        ).format(z=z, y=y, x=x)
-        return url
 
 
 def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 2)):
@@ -66,7 +52,7 @@ def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 
     return (total_width, total_height)
 
 
-def _initialize_plots(labels: list, scores: list, plot_setup: dict):
+def _initialize_plots(labels: list, scores: list, plot_setup: dict, topography=None):
     num_cols = len(labels)
     num_rows = len(scores)
     figsize = _calculate_figsize(num_rows, num_cols, (7.3, 5), (0, 2))
@@ -86,7 +72,7 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict):
             ax.set_extent([5.8, 10.6, 45.75, 47.8], crs=ccrs.PlateCarree())
         if "alps" in plot_setup["model_versions"][0][0]:
             ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
-        _add_features(ax)
+        _add_features(ax, topography)
     fig.tight_layout(w_pad=8, h_pad=2, rect=(0.05, 0.05, 0.90, 0.90))
     plt.subplots_adjust(bottom=0.15)
     return fig, axes
@@ -176,6 +162,7 @@ def _plot_and_save_scores(
     sup_title,
     ltr_models_data,
     plot_setup,
+    topography=None,
     debug=False,
 ):
     for ltr, models_data in ltr_models_data.items():
@@ -187,7 +174,7 @@ def _plot_and_save_scores(
             filename = (
                 f"station_scores_{parameter}{ltr_info}{model_info}")
             fig, subplot_axes = _initialize_plots(
-                models_data.keys(), scores, plot_setup=plot_setup
+                models_data.keys(), scores, plot_setup=plot_setup, topography=topography
             )
             for idx, score in enumerate(scores):
                 filename += f"_{score}"
@@ -228,6 +215,7 @@ def _generate_station_plots(
     output_dir,
     plot_setup,
     debug,
+    topography=None,
 ):
     # flat list of unique keys of dicts within models_data dict
     headers = [
@@ -246,6 +234,7 @@ def _generate_station_plots(
         sup_title,
         models_data,
         plot_setup,
+        topography=topography,
         debug=False,
     )
     _plot_and_save_scores(
@@ -255,6 +244,7 @@ def _generate_station_plots(
         sup_title,
         models_data,
         plot_setup,
+        topography=topography,
         debug=False,
     )
 
@@ -269,6 +259,7 @@ def _station_scores_pipeline(
     input_dir,
     output_dir,
     debug,
+    topography=None,
 ) -> None:
     """Read all ```ATAB``` files that are present in: data_dir/season/model_version/<file_prefix><...><file_postfix>.
 
@@ -316,6 +307,7 @@ def _station_scores_pipeline(
                 output_dir=output_dir,
                 plot_setup=plot_setup,
                 debug=debug,
+                topography=topography,
             )
 
 
@@ -328,7 +320,7 @@ def _station_score_transformation(df, header):
 
 
 # PLOTTING PIPELINE FOR STATION SCORES PLOTS
-def _add_features(ax):
+def _add_features(ax, topography=None):
     """Add features to map.
 
     # # point cartopy to the folder containing the shapefiles for the features on the map
@@ -376,16 +368,36 @@ def _add_features(ax):
     # ax.add_image(ShadedReliefESRI(), 8)
 
     # add ICON-CH1-EPS topography on COSMO-1E grid
-    icon_ch1_eps_topo = Dataset("/users/oprusers/osm/opr/data/topo_i1e_on_c1e_grid.nc")
-    ax.contourf(
-        icon_ch1_eps_topo["x_1"][:].data,
-        icon_ch1_eps_topo["y_1"][:].data,
-        icon_ch1_eps_topo["HSURF"][0, ...].data,
-        cmap="gray_r",
-        levels=np.arange(0, 8400, 400),
-        extend="both",
-        alpha=0.4,
-    )
+    if topography:
+        topo_file = Path(topography)
+
+        if not topo_file.is_file():
+            print(
+                f"Warning: --topography file '{topography}' not found, skipping topography plotting."
+            )
+            topo_file = None
+
+        if topo_file is not None and topo_file.exists():
+            try:
+                icon_ch1_eps_topo = Dataset(str(topo_file))
+                ax.contourf(
+                    icon_ch1_eps_topo["x_1"][:].data,
+                    icon_ch1_eps_topo["y_1"][:].data,
+                    icon_ch1_eps_topo["HSURF"][0, ...].data,
+                    cmap="gray_r",
+                    levels=np.arange(0, 8400, 400),
+                    extend="both",
+                    alpha=0.4,
+                )
+            except Exception as exc:  # pylint: disable=broad-except
+                print(
+                    f"Warning: Failed to read topography file '{topo_file}': {exc}. Skipping topography plotting."
+                )
+        else:
+            if topo_file is not None:
+                print(
+                    f"Warning: Topo file '{topo_file}' not found, skipping topography plotting."
+                )
 
 
 def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
@@ -570,93 +582,3 @@ def _add_text(
     ax.set_title(title, fontsize=15, fontweight="bold")
 
     return ax
-
-
-def _generate_map_plot(
-    data,
-    lt_range,
-    variable,
-    file,
-    file_postfix,
-    header_dict,
-    model_version,
-    output_dir,
-    relief,
-    debug,
-):
-    """Generate Map Plot."""
-    # output_dir = f"{output_dir}/stations_scores"
-    if not Path(output_dir).exists():
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
-
-    # extract scores, which are available in the dataframe (data)
-    # for each score, create one map
-    scores = data.index.tolist()
-    scores.remove("lon")
-    scores.remove("lat")
-
-    for score in scores:
-        min_value = data.loc[score].min()
-        max_value = data.loc[score].max()
-
-        # TODO: get column name from min/max and remove for loop below
-        # incomplete_df.T.idxmin()
-
-        # determine the station, where the min/max occurs
-        for station, value in data.loc[score].items():
-            if value == min_value:
-                min_station = station
-            if value == max_value:
-                max_station = station
-
-        # plotting pipeline
-        fig = plt.figure(figsize=(14.7, 10), dpi=100)
-        if relief:
-            ax = plt.axes(projection=ShadedReliefESRI().crs)
-        else:
-            ax = plt.axes(
-                projection=ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)
-            )
-
-        # make sure, aspect ratio of map & figure match
-        ax.set_aspect("auto")
-
-        # cut map to model_version (taken from pytrajplot)
-        if "ch" in model_version:
-            ax.set_extent([5.8, 10.6, 45.75, 47.8], crs=ccrs.PlateCarree())
-        if "alps" in model_version:
-            ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
-
-        if relief:
-            # add relief
-            ax.add_image(ShadedReliefESRI(), 8)
-
-        # add features/datapoints & text
-        _add_features(ax=ax)
-        _add_datapoints(
-            data=data,
-            score=score,
-            ax=ax,
-            min=min_value,
-            max=max_value,
-            unit=header_dict["Unit"],
-            param=header_dict["Parameter"],
-        )
-        _add_text(
-            ax=ax,
-            variable=variable,
-            score=score,
-            header_dict=header_dict,
-            lt_range=lt_range,
-            min_value=min_value,
-            max_value=max_value,
-            min_station=min_station,
-            max_station=max_station,
-        )
-
-        # save and clear figure
-        print(f"saving:\t\t{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
-        plt.savefig(f"{output_dir}/{file.split(file_postfix)[0]}_{score}.png")
-        plt.close(fig)
-
-    return
