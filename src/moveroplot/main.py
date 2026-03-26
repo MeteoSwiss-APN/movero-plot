@@ -86,10 +86,10 @@ def main(
     # new inputs
     input_dir: Path,
     output_dir: Path,
-    relief: bool,
     grid: bool,
     colors: Optional[str],
     plot_type: str,
+    topography: Optional[str],
 ):
     """Entry Point for the MOVERO Plotting Pipeline.
 
@@ -156,6 +156,7 @@ def main(
             input_dir=input_dir,
             output_dir=output_dir,
             debug=debug,
+            topography=topography,
         )
     # 2. INITIALISE TIME SERIES PLOTTING PIPELINE
     if "time" in plot_type:

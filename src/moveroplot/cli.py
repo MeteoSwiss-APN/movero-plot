@@ -97,8 +97,8 @@ from .main import main
     help="""Specify the plot color for each model version
     using matploblib's color coding""",
 )
-@click.option("--relief", type=bool, is_flag=True, help="Add relief to maps.")
 @click.option("--grid", type=bool, is_flag=True, help="Add grid to plots.")
+@click.option("--topography", type=str, help="Specify the topography file path to add relief to maps.")
 @click.pass_context
 def cli(ctx: Context, **kwargs) -> None:
     """Console script for test_cli_project."""
