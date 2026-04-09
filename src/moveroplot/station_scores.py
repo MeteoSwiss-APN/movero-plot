@@ -32,7 +32,6 @@ from .utils.scores_lists_settings import unit_number_scores, unitless_scores, _d
 from .utils.FBI_scores_settings import param_score_range_fbi, _forward, _inverse, _forward_spec,     _inverse_spec, fbi_custom_ticks
 
 
-@lru_cache(maxsize=1)
 def _get_topo_rgba(topo_path: str):
     """Load topography in rotated pole coordinates from a NetCDF file
       and pre-compute the RGBA array."""
@@ -63,7 +62,6 @@ def _get_topo_rgba(topo_path: str):
     return rgba, extent
 
 
-@lru_cache(maxsize=None)
 def _get_cached_geometries(
     category: str, name: str, scale: str
 ) -> list:
@@ -107,6 +105,55 @@ _MAP_FEATURES: list[tuple[cfeature.NaturalEarthFeature, dict]] = [
 ]
 
 
+@lru_cache(maxsize=2)
+def _get_map_background_rgba(extent_key: str):
+    """Pre-render all map features into a single cached RGBA image."""
+    _EXTENTS_PC = {
+        "ch": [5.8, 10.6, 45.75, 47.8],
+        "alps": [0.7, 16.5, 42.3, 50],
+    }
+    if extent_key not in _EXTENTS_PC:
+        return None
+
+    proj = ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)
+    render_dpi = 150
+
+    fig_bg = plt.figure(figsize=(7.3, 5), dpi=render_dpi)
+    fig_bg.patch.set_alpha(0)
+    ax_bg = fig_bg.add_axes([0, 0, 1, 1], projection=proj)
+    ax_bg.set_extent(_EXTENTS_PC[extent_key], crs=ccrs.PlateCarree())
+    ax_bg.patch.set_alpha(0)
+    try:
+        ax_bg.spines["geo"].set_visible(False)
+    except (KeyError, AttributeError):
+        try:
+            ax_bg.outline_patch.set_visible(False)
+        except AttributeError:
+            pass
+
+    for feature, style in _MAP_FEATURES:
+        ax_bg.add_geometries(
+            _get_cached_geometries(feature.category, feature.name, feature.scale),
+            feature.crs,
+            **style,
+        )
+
+    native_extent = ax_bg.get_extent()  # (x0, x1, y0, y1) in rotated-pole CRS
+
+    fig_bg.canvas.draw()
+    w, h = fig_bg.canvas.get_width_height()
+    rgba = (
+        np.frombuffer(fig_bg.canvas.buffer_rgba(), dtype=np.uint8)
+        .reshape(h, w, 4)
+        .copy()
+        .astype(np.float32)
+        / 255.0
+    )
+    plt.close(fig_bg)
+
+    return rgba, native_extent
+
+
 def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 2)):
     """Calculate the figure size given the number of rows and columns of subplots.
 
@@ -139,12 +186,16 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict, topography=N
         dpi=100,
         squeeze=False,
     )
+    model_id = plot_setup["model_versions"][0][0]
+    extent_key = None
     for ax in axes.ravel():
-        if "ch" in plot_setup["model_versions"][0][0]:
+        if "ch" in model_id:
             ax.set_extent([5.8, 10.6, 45.75, 47.8], crs=ccrs.PlateCarree())
-        if "alps" in plot_setup["model_versions"][0][0]:
+            extent_key = "ch"
+        if "alps" in model_id:
             ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
-        _add_features(ax, topography)
+            extent_key = "alps"
+        _add_features(ax, topography, extent_key=extent_key)
     fig.tight_layout(w_pad=8, h_pad=2, rect=(0.05, 0.05, 0.90, 0.90))
     plt.subplots_adjust(bottom=0.15)
     return fig, axes
@@ -392,7 +443,7 @@ def _station_score_transformation(df, header):
 
 
 # PLOTTING PIPELINE FOR STATION SCORES PLOTS
-def _add_features(ax, topography=None):
+def _add_features(ax, topography=None, extent_key=None):
     """Add features to map.
 
     # # point cartopy to the folder containing the shapefiles for the features on the map
@@ -418,15 +469,33 @@ def _add_features(ax, topography=None):
     gl.xlabel_style = {"rotation": 0}
     gl.ylabel_style = {"rotation": 0}
 
-    # Add pre-defined map features with cached geometries.
-    for feature, style in _MAP_FEATURES:
-        ax.add_geometries(
-            _get_cached_geometries(feature.category, feature.name, feature.scale),
-            feature.crs,
-            rasterized=True,
-            zorder=10,
-            **style,
-        )
+    # Use pre-rendered map background if available, avoiding costly
+    # FeatureArtist redraws and shapely.intersects on every draw().
+    _bg_used = False
+    if extent_key is not None:
+        bg = _get_map_background_rgba(extent_key)
+        if bg is not None:
+            bg_rgba, (x0, x1, y0, y1) = bg
+            _mpl_axes.Axes.imshow(
+                ax,
+                bg_rgba,
+                extent=(x0, x1, y0, y1),
+                origin="upper",
+                interpolation="bilinear",
+                aspect="auto",
+                zorder=10,
+            )
+            _bg_used = True
+    if not _bg_used:
+        # Fallback: add features individually (slower, triggers FeatureArtist)
+        for feature, style in _MAP_FEATURES:
+            ax.add_geometries(
+                _get_cached_geometries(feature.category, feature.name, feature.scale),
+                feature.crs,
+                rasterized=True,
+                zorder=10,
+                **style,
+            )
     # ax.add_image(ShadedReliefESRI(), 8)
 
     # add ICON-CH1-EPS topography on COSMO-1E grid (cached RGBA image)
