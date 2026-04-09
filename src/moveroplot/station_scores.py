@@ -33,6 +33,10 @@ from .utils.parse_plot_synop_ch import station_score_range
 from .utils.scores_lists_settings import unit_number_scores, unitless_scores, _determine_cmap_and_bounds
 from .utils.FBI_scores_settings import param_score_range_fbi, _forward, _inverse, _forward_spec,     _inverse_spec, fbi_custom_ticks
 
+# Module-level cache for pre-rendered map background images.
+# Key: (extent_tuple, topography_path_or_None), Value: (rgba_array, xlim, ylim)
+_background_cache = {}
+
 
 def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 2)):
     """Calculate the figure size given the number of rows and columns of subplots.
@@ -56,10 +60,25 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict, topography=N
     num_cols = len(labels)
     num_rows = len(scores)
     figsize = _calculate_figsize(num_rows, num_cols, (7.3, 5), (0, 2))
+
+    projection = ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)
+
+    # Determine map extent from model version (same logic as before; last match wins)
+    extent = None
+    if "ch" in plot_setup["model_versions"][0][0]:
+        extent = [5.8, 10.6, 45.75, 47.8]
+    if "alps" in plot_setup["model_versions"][0][0]:
+        extent = [0.7, 16.5, 42.3, 50]
+
+    # Pre-render (or retrieve from cache) the map background image
+    bg_rgba = bg_xlim = bg_ylim = None
+    if extent is not None:
+        bg_rgba, bg_xlim, bg_ylim = _get_cached_background(
+            extent, topography, projection
+        )
+
     fig, axes = plt.subplots(
-        subplot_kw=dict(
-            projection=ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)
-        ),
+        subplot_kw=dict(projection=projection),
         nrows=num_rows,
         ncols=num_cols,
         tight_layout=True,
@@ -68,11 +87,19 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict, topography=N
         squeeze=False,
     )
     for ax in axes.ravel():
-        if "ch" in plot_setup["model_versions"][0][0]:
-            ax.set_extent([5.8, 10.6, 45.75, 47.8], crs=ccrs.PlateCarree())
-        if "alps" in plot_setup["model_versions"][0][0]:
-            ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
-        _add_features(ax, topography)
+        if extent is not None:
+            ax.set_extent(extent, crs=ccrs.PlateCarree())
+            # Stamp the cached background image onto every subplot
+            assert bg_rgba is not None and bg_xlim is not None and bg_ylim is not None
+            ax.imshow(
+                bg_rgba,
+                extent=[bg_xlim[0], bg_xlim[1], bg_ylim[0], bg_ylim[1]],
+                origin='upper',
+                interpolation='bilinear',
+                zorder=9,
+                transform=projection,
+            )
+        _add_gridlines(ax)
     fig.tight_layout(w_pad=8, h_pad=2, rect=(0.05, 0.05, 0.90, 0.90))
     plt.subplots_adjust(bottom=0.15)
     return fig, axes
@@ -320,20 +347,8 @@ def _station_score_transformation(df, header):
 
 
 # PLOTTING PIPELINE FOR STATION SCORES PLOTS
-def _add_features(ax, topography=None):
-    """Add features to map.
-
-    # # point cartopy to the folder containing the shapefiles for the features on the map
-    # earth_data_path = Path("src/pytrajplot/resources/")
-    # assert (
-    #     earth_data_path.exists()
-    # ), f"The natural earth data could not be found at {earth_data_path}"
-    # # earth_data_path = str(earth_data_path)
-    # cartopy.config["pre_existing_data_dir"] = earth_data_path
-    # cartopy.config["data_dir"] = earth_data_path
-
-    # add grid & labels to map
-    """  # noqa: E501
+def _add_gridlines(ax):
+    """Add gridlines with formatted coordinate labels to a map axis."""
     gl = ax.gridlines(
         draw_labels=True, ls="--", lw=0.5, x_inline=False, y_inline=False, zorder=11
     )
@@ -346,6 +361,9 @@ def _add_features(ax, topography=None):
     gl.xlabel_style = {"rotation": 0}
     gl.ylabel_style = {"rotation": 0}
 
+
+def _add_geographic_features(ax, topography=None):
+    """Add geographic features (coastlines, borders, water bodies, topography) to a map axis."""
     ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(
         cfeature.BORDERS, linestyle="--", alpha=1, rasterized=True, zorder=10
@@ -385,9 +403,7 @@ def _add_features(ax, topography=None):
                     icon_ch1_eps_topo["y_1"][:].data,
                     icon_ch1_eps_topo["HSURF"][0, ...].data,
                     cmap="gray_r",
-                    levels=np.arange(0, 8400, 400),
-                    extend="both",
-                    alpha=0.4,
+                    levels=np.arange(0, 6000, 300),
                 )
             except Exception as exc:  # pylint: disable=broad-except
                 print(
@@ -399,6 +415,38 @@ def _add_features(ax, topography=None):
                     f"Warning: Topo file '{topo_file}' not found, skipping topography plotting."
                 )
 
+
+def _get_cached_background(extent, topography, projection):
+    """Get or render a cached RGBA background image with all geographic features.
+
+    Returns:
+        Tuple of (rgba_array, xlim, ylim) where xlim/ylim are in the native
+        projection coordinates.
+
+    """
+    cache_key = (tuple(extent), topography)
+    if cache_key in _background_cache:
+        return _background_cache[cache_key]
+
+    print("  Pre-rendering map background (cached for subsequent plots)...")
+    # Render at generous resolution; will be resampled into each subplot
+    render_dpi = 150
+    render_figsize = (14, 10)
+
+    fig_temp = plt.figure(figsize=render_figsize, dpi=render_dpi)
+    ax_temp = fig_temp.add_axes((0, 0, 1, 1), projection=projection)
+    ax_temp.set_extent(extent, crs=ccrs.PlateCarree())
+
+    _add_geographic_features(ax_temp, topography)
+
+    fig_temp.canvas.draw()
+    rgba = np.array(fig_temp.canvas.buffer_rgba()).copy()
+    xlim = ax_temp.get_xlim()
+    ylim = ax_temp.get_ylim()
+    plt.close(fig_temp)
+
+    _background_cache[cache_key] = (rgba, xlim, ylim)
+    return rgba, xlim, ylim
 
 def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
     # dataframes have two different structures
