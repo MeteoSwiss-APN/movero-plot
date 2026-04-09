@@ -175,7 +175,6 @@ def _plot_and_save_scores(
     ltr_models_data,
     plot_setup,
     topography=None,
-    debug=False,
 ):
     for ltr, models_data in ltr_models_data.items():
         ltr_info = f"_{ltr}"
@@ -245,7 +244,6 @@ def _generate_station_plots(
         models_data,
         plot_setup,
         topography=topography,
-        debug=False,
     )
     _plot_and_save_scores(
         output_dir,
@@ -255,7 +253,6 @@ def _generate_station_plots(
         models_data,
         plot_setup,
         topography=topography,
-        debug=False,
     )
 
 
@@ -552,71 +549,3 @@ def _add_datapoints2(fig, data, score, ax, unit, param):
         linewidth=0.5,
     )
 
-
-def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
-    print(f"plotting:\t{param}/{score}")
-    # check param, before trying to assign cmap to it
-
-    print("Station Score Colortable")
-    # pprint(station_score_colortable)
-    print("Note: Index = Scores")
-
-    # print("Cat Station Score Colortable")
-    # print(data.loc[["lon", "lat", score]])
-    lower_bound = station_score_range[param[0], "min"][score]
-    upper_bound = station_score_range[param[0], "max"][score]
-
-    sc = ax.scatter(
-        x=list(data.loc["lon"].astype(float)),
-        y=list(data.loc["lat"].astype(float)),
-        marker="o",
-        c=list(data.loc[score].astype(float)),
-        vmin=lower_bound,
-        vmax=upper_bound,
-        rasterized=True,
-        transform=ccrs.PlateCarree(),
-    )
-
-    cbar = plt.colorbar(sc, ax=ax, orientation="vertical", fraction=0.046, pad=0.04)
-    # Plot bar label
-    if any(score.startswith(p) for p in unitless_scores):
-        cbar.set_label(f"{score}")
-    elif any(score.startswith(p) for p in unit_number_scores):
-        cbar.set_label(f"{score} (Number)")
-    else:
-        cbar.set_label(f"{score} ({unit})")
-
-
-def _add_text(
-    ax,
-    variable,
-    score,
-    header_dict,
-    lt_range,
-    min_value,
-    max_value,
-    min_station,
-    max_station,
-):
-    """Add footer and title to plot."""
-    footer = f"""Model: {header_dict["Model version"]} |
-    Period: {header_dict["Start time"][0]} - {header_dict["End time"][0]} | Min: {min_value} {header_dict["Unit"]}
-     @ {min_station} | Max: {max_value} {header_dict["Unit"]} @ {max_station}
-     | © MeteoSwiss"""  # noqa: E501
-
-    plt.suptitle(
-        footer,
-        x=0.125,
-        y=0.06,
-        horizontalalignment="left",
-        verticalalignment="top",
-        fontdict={
-            "size": 6,
-            "color": "k",
-        },
-    )
-
-    title = f"{variable}: {score}, LT: {lt_range}"
-    ax.set_title(title, fontsize=15, fontweight="bold")
-
-    return ax
