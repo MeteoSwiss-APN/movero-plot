@@ -5,7 +5,6 @@ from datetime import datetime
 from pathlib import Path
 
 # Third-party
-import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.colors as mcolors
@@ -381,7 +380,7 @@ def _add_features(ax, topography=None):
     ax.add_feature(cfeature.LAKES, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(cfeature.RIVERS, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(
-        cartopy.feature.NaturalEarthFeature(
+        cfeature.NaturalEarthFeature(
             category="physical",
             name="lakes_europe",
             scale="10m",
