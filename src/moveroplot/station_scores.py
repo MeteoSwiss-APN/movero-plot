@@ -146,7 +146,7 @@ def _add_plot_text(ax, data, score, ltr):
     max_value = valid.max()
     max_station = valid.idxmax()
     
-    if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
+    if any(score.startswith(p) for p in unitless_scores):
         plt.text(
             0.5,
             -0.03,
@@ -156,7 +156,7 @@ def _add_plot_text(ax, data, score, ltr):
             transform=ax.transAxes,
             fontsize=8,
         )
-    elif any(val1.startswith(val2) for val1 in {score} for val2 in unit_number_scores):
+    elif any(score.startswith(p) for p in unit_number_scores):
         plt.text(
             0.5,
             -0.03,
@@ -210,8 +210,6 @@ def _plot_and_save_scores(
                         data=data["df"],
                         score=score,
                         ax=ax,
-                        min=-10,
-                        max=10,
                         unit=data["header"]["Unit"][0],
                         param=data["header"]["Parameter"],
                     )
@@ -445,9 +443,7 @@ def _get_cached_background(extent, topography, projection):
     _background_cache[cache_key] = (rgba, xlim, ylim)
     return rgba, xlim, ylim
 
-def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
-    # dataframes have two different structures
-
+def _add_datapoints2(fig, data, score, ax, unit, param):
     # Workaround since check_params does not work for ATHD_S
     param = "ATHD_S" if param[0] == "ATHD_S" else check_params(param[0])
     if param is None:
@@ -498,10 +494,10 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         y=list(plot_data.loc["lat"]),
         marker="o",
         c=list(plot_data.loc[score]),
-        vmin=param_score_range["min"] if not score.startswith("FBI") else None,
-        vmax=param_score_range["max"] if not score.startswith("FBI") else None,
+        vmin=param_score_range["min"] if norm is None else None,
+        vmax=param_score_range["max"] if norm is None else None,
         cmap=cmap,
-        norm=norm if score.startswith("FBI") else None,
+        norm=norm,
         edgecolors="black",
         linewidth=0.4,
         rasterized=True,
@@ -544,10 +540,10 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         custom_ticks = fbi_custom_ticks(param)
         cbar.set_ticks(custom_ticks)
         cbar.ax.set_yticklabels([str(tick) for tick in custom_ticks])
-    #Plot bar label
-    if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
+    # Plot bar label
+    if any(score.startswith(p) for p in unitless_scores):
         cbar.set_label(f"{score}")
-    elif any(val1.startswith(val2) for val1 in {score} for val2 in unit_number_scores):
+    elif any(score.startswith(p) for p in unit_number_scores):
         cbar.set_label(f"{score}, (Number)")
     else:
         cbar.set_label(f"{score}, ({unit})")
@@ -588,10 +584,10 @@ def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
     )
 
     cbar = plt.colorbar(sc, ax=ax, orientation="vertical", fraction=0.046, pad=0.04)
-    #Plot bar label
-    if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
+    # Plot bar label
+    if any(score.startswith(p) for p in unitless_scores):
         cbar.set_label(f"{score}")
-    elif any(val1.startswith(val2) for val1 in score for val2 in unit_number_scores):
+    elif any(score.startswith(p) for p in unit_number_scores):
         cbar.set_label(f"{score} (Number)")
     else:
         cbar.set_label(f"{score} ({unit})")
