@@ -1,6 +1,7 @@
 # pylint: skip-file
 # relevant imports for parsing pipeline
 # Standard library
+from functools import lru_cache
 from datetime import datetime
 from pathlib import Path
 
@@ -30,34 +31,67 @@ from .utils.scores_lists_settings import unit_number_scores, unitless_scores, _d
 from .utils.FBI_scores_settings import param_score_range_fbi, _forward, _inverse, _forward_spec,     _inverse_spec, fbi_custom_ticks
 
 
-# Module-level cache for topography data (keyed by file path, loaded once per path)
-_topo_cache: dict = {}
-
-
+@lru_cache(maxsize=None)
 def _get_topo_data(topo_path: str):
-    """Load and cache topography arrays from a NetCDF file.
+    """Load and cache topography arrays from a NetCDF file."""
+    try:
+        ds = Dataset(topo_path)
+        data = (
+            ds["x_1"][:].data.copy(),
+            ds["y_1"][:].data.copy(),
+            ds["HSURF"][0, ...].data.copy(),
+        )
+        ds.close()
+        return data
+    except Exception as exc:  # pylint: disable=broad-except
+        print(
+            f"Warning: Failed to read topography file '{topo_path}': {exc}. "
+            "Skipping topography plotting."
+        )
+        return None
 
-    The file is read from disk only on the first call for a given path;
-    subsequent calls return the cached numpy arrays.
+@lru_cache(maxsize=None)
+def _get_cached_geometries(
+    category: str, name: str, scale: str
+) -> list:
+    """Return (and cache) the shapely geometries for a NaturalEarth feature."""
+    feature = cfeature.NaturalEarthFeature(category=category, name=name, scale=scale)
+    return list(feature.geometries())
 
-    Returns None if the file cannot be read.
-    """
-    if topo_path not in _topo_cache:
-        try:
-            ds = Dataset(topo_path)
-            _topo_cache[topo_path] = (
-                ds["x_1"][:].data.copy(),
-                ds["y_1"][:].data.copy(),
-                ds["HSURF"][0, ...].data.copy(),
-            )
-            ds.close()
-        except Exception as exc:  # pylint: disable=broad-except
-            print(
-                f"Warning: Failed to read topography file '{topo_path}': {exc}. "
-                "Skipping topography plotting."
-            )
-            _topo_cache[topo_path] = None
-    return _topo_cache[topo_path]
+
+# Map features to draw on every station-score plot, with their styling.
+# Mirrors the original add_feature() calls but with cached 10m geometries.
+_MAP_FEATURES: list[tuple[cfeature.NaturalEarthFeature, dict]] = [
+    (cfeature.NaturalEarthFeature("physical", "coastline", "10m"), {
+        "edgecolor": "black",
+        "facecolor": "none",
+        "alpha": 0.5,
+    }),
+    (cfeature.NaturalEarthFeature("cultural", "admin_0_boundary_lines_land", "10m"), {
+        "edgecolor": "black",
+        "facecolor": "none",
+        "linestyle": "--",
+        "alpha": 1,
+    }),
+    (cfeature.NaturalEarthFeature("physical", "ocean", "10m"), {
+        "facecolor": cfeature.COLORS["water"],
+        "edgecolor": "face",
+    }),
+    (cfeature.NaturalEarthFeature("physical", "lakes", "10m"), {
+        "facecolor": cfeature.COLORS["water"],
+        "edgecolor": "face",
+        "alpha": 0.5,
+    }),
+    (cfeature.NaturalEarthFeature("physical", "rivers_lake_centerlines", "10m"), {
+        "edgecolor": cfeature.COLORS["water"],
+        "facecolor": "none",
+        "alpha": 0.5,
+    }),
+    (cfeature.NaturalEarthFeature("physical", "lakes_europe", "10m"), {
+        "color": "#97b6e1",
+        "alpha": 0.5,
+    }),
+]
 
 
 def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 2)):
@@ -371,25 +405,15 @@ def _add_features(ax, topography=None):
     gl.xlabel_style = {"rotation": 0}
     gl.ylabel_style = {"rotation": 0}
 
-    ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True, zorder=10)
-    ax.add_feature(
-        cfeature.BORDERS, linestyle="--", alpha=1, rasterized=True, zorder=10
-    )
-    ax.add_feature(cfeature.OCEAN, rasterized=True, zorder=10)
-    ax.add_feature(cfeature.LAKES, alpha=0.5, rasterized=True, zorder=10)
-    ax.add_feature(cfeature.RIVERS, alpha=0.5, rasterized=True, zorder=10)
-    ax.add_feature(
-        cfeature.NaturalEarthFeature(
-            category="physical",
-            name="lakes_europe",
-            scale="10m",
+    # Add pre-defined map features with cached geometries.
+    for feature, style in _MAP_FEATURES:
+        ax.add_geometries(
+            _get_cached_geometries(feature.category, feature.name, feature.scale),
+            feature.crs,
             rasterized=True,
-        ),
-        alpha=0.5,
-        rasterized=True,
-        color="#97b6e1",
-        zorder=10,
-    )
+            zorder=10,
+            **style,
+        )
     # ax.add_image(ShadedReliefESRI(), 8)
 
     # add ICON-CH1-EPS topography on COSMO-1E grid (cached after first load)
