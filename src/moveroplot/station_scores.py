@@ -34,6 +34,36 @@ from .utils.scores_lists_settings import unit_number_scores, unitless_scores, _d
 from .utils.FBI_scores_settings import param_score_range_fbi, _forward, _inverse, _forward_spec,     _inverse_spec, fbi_custom_ticks
 
 
+# Module-level cache for topography data (keyed by file path, loaded once per path)
+_topo_cache: dict = {}
+
+
+def _get_topo_data(topo_path: str):
+    """Load and cache topography arrays from a NetCDF file.
+
+    The file is read from disk only on the first call for a given path;
+    subsequent calls return the cached numpy arrays.
+
+    Returns None if the file cannot be read.
+    """
+    if topo_path not in _topo_cache:
+        try:
+            ds = Dataset(topo_path)
+            _topo_cache[topo_path] = (
+                ds["x_1"][:].data.copy(),
+                ds["y_1"][:].data.copy(),
+                ds["HSURF"][0, ...].data.copy(),
+            )
+            ds.close()
+        except Exception as exc:  # pylint: disable=broad-except
+            print(
+                f"Warning: Failed to read topography file '{topo_path}': {exc}. "
+                "Skipping topography plotting."
+            )
+            _topo_cache[topo_path] = None
+    return _topo_cache[topo_path]
+
+
 def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 2)):
     """Calculate the figure size given the number of rows and columns of subplots.
 
@@ -367,36 +397,26 @@ def _add_features(ax, topography=None):
     )
     # ax.add_image(ShadedReliefESRI(), 8)
 
-    # add ICON-CH1-EPS topography on COSMO-1E grid
+    # add ICON-CH1-EPS topography on COSMO-1E grid (cached after first load)
     if topography:
         topo_file = Path(topography)
-
         if not topo_file.is_file():
             print(
-                f"Warning: --topography file '{topography}' not found, skipping topography plotting."
+                f"Warning: --topography file '{topography}' not found, "
+                "skipping topography plotting."
             )
-            topo_file = None
-
-        if topo_file is not None and topo_file.exists():
-            try:
-                icon_ch1_eps_topo = Dataset(str(topo_file))
+        else:
+            topo_data = _get_topo_data(str(topo_file))
+            if topo_data is not None:
+                topo_x, topo_y, topo_hsurf = topo_data
                 ax.contourf(
-                    icon_ch1_eps_topo["x_1"][:].data,
-                    icon_ch1_eps_topo["y_1"][:].data,
-                    icon_ch1_eps_topo["HSURF"][0, ...].data,
+                    topo_x,
+                    topo_y,
+                    topo_hsurf,
                     cmap="gray_r",
                     levels=np.arange(0, 8400, 400),
                     extend="both",
                     alpha=0.4,
-                )
-            except Exception as exc:  # pylint: disable=broad-except
-                print(
-                    f"Warning: Failed to read topography file '{topo_file}': {exc}. Skipping topography plotting."
-                )
-        else:
-            if topo_file is not None:
-                print(
-                    f"Warning: Topo file '{topo_file}' not found, skipping topography plotting."
                 )
 
 
