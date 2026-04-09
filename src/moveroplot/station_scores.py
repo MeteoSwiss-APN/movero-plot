@@ -5,7 +5,6 @@ from datetime import datetime
 from pathlib import Path
 
 # Third-party
-import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.colors as mcolors
@@ -145,37 +144,26 @@ def _add_plot_text(ax, data, score, ltr):
     min_station = valid.idxmin()
     max_value = valid.max()
     max_station = valid.idxmax()
-    
+
+    # Determine the unit suffix for the footer text
     if any(score.startswith(p) for p in unitless_scores):
-        plt.text(
-            0.5,
-            -0.03,
-            f"""{start_str} to {end_str} -Min: {min_value} at station {min_station} +Max: {max_value} at station  {max_station}""",  # noqa: E501
-            horizontalalignment="center",
-            verticalalignment="center",
-            transform=ax.transAxes,
-            fontsize=8,
-        )
+        unit_suffix = ""
     elif any(score.startswith(p) for p in unit_number_scores):
-        plt.text(
-            0.5,
-            -0.03,
-            f"""{start_str} to {end_str} -Min: {min_value} (Number) at station {min_station} +Max: {max_value} (Number) at station  {max_station}""",  # noqa: E501
-            horizontalalignment="center",
-            verticalalignment="center",
-            transform=ax.transAxes,
-            fontsize=8,
-        )
+        unit_suffix = " (Number)"
     else:
-        plt.text(
-            0.5,
-            -0.03,
-            f"""{start_str} to {end_str} -Min: {min_value} {unit} at station {min_station} +Max: {max_value} {unit} at station  {max_station}""",  # noqa: E501
-            horizontalalignment="center",
-            verticalalignment="center",
-            transform=ax.transAxes,
-            fontsize=8,
-        )
+        unit_suffix = f" {unit}"
+
+    plt.text(
+        0.5,
+        -0.03,
+        f"{start_str} to {end_str} "
+        f"-Min: {min_value}{unit_suffix} at station {min_station} "
+        f"+Max: {max_value}{unit_suffix} at station  {max_station}",
+        horizontalalignment="center",
+        verticalalignment="center",
+        transform=ax.transAxes,
+        fontsize=8,
+    )
     # pylint: enable=line-too-long
 
 
@@ -367,7 +355,7 @@ def _add_geographic_features(ax, topography=None):
     ax.add_feature(cfeature.LAKES, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(cfeature.RIVERS, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(
-        cartopy.feature.NaturalEarthFeature(  # type: ignore[attr-defined]
+        cfeature.NaturalEarthFeature(
             category="physical",
             name="lakes_europe",
             scale="10m",
@@ -383,32 +371,26 @@ def _add_geographic_features(ax, topography=None):
     # add ICON-CH1-EPS topography on COSMO-1E grid
     if topography:
         topo_file = Path(topography)
-
         if not topo_file.is_file():
             print(
-                f"Warning: --topography file '{topography}' not found, skipping topography plotting."
+                f"Warning: --topography file '{topography}' not found, "
+                "skipping topography plotting."
             )
-            topo_file = None
-
-        if topo_file is not None and topo_file.exists():
-            try:
-                icon_ch1_eps_topo = Dataset(str(topo_file))
-                ax.contourf(
-                    icon_ch1_eps_topo["x_1"][:].data,
-                    icon_ch1_eps_topo["y_1"][:].data,
-                    icon_ch1_eps_topo["HSURF"][0, ...].data,
-                    cmap="gray_r",
-                    levels=np.arange(0, 6000, 300),
-                )
-            except Exception as exc:  # pylint: disable=broad-except
-                print(
-                    f"Warning: Failed to read topography file '{topo_file}': {exc}. Skipping topography plotting."
-                )
-        else:
-            if topo_file is not None:
-                print(
-                    f"Warning: Topo file '{topo_file}' not found, skipping topography plotting."
-                )
+            return
+        try:
+            icon_ch1_eps_topo = Dataset(str(topo_file))
+            ax.contourf(
+                icon_ch1_eps_topo["x_1"][:].data,
+                icon_ch1_eps_topo["y_1"][:].data,
+                icon_ch1_eps_topo["HSURF"][0, ...].data,
+                cmap="gray_r",
+                levels=np.arange(0, 6000, 300),
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            print(
+                f"Warning: Failed to read topography file '{topo_file}': "
+                f"{exc}. Skipping topography plotting."
+            )
 
 
 def _get_cached_background(extent, topography, projection):
@@ -453,6 +435,7 @@ def _get_cached_background(extent, topography, projection):
 
     _background_cache[cache_key] = (rgba, xlim, ylim)
     return rgba, xlim, ylim
+
 
 def _add_datapoints2(fig, data, score, ax, unit, param):
     # Workaround since check_params does not work for ATHD_S
