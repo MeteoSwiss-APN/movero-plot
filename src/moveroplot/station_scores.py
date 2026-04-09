@@ -8,6 +8,7 @@ from pathlib import Path
 # Third-party
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import matplotlib.axes as _mpl_axes
 import matplotlib.colors as mcolors
 
 # relevant imports for plotting pipeline
@@ -31,24 +32,36 @@ from .utils.scores_lists_settings import unit_number_scores, unitless_scores, _d
 from .utils.FBI_scores_settings import param_score_range_fbi, _forward, _inverse, _forward_spec,     _inverse_spec, fbi_custom_ticks
 
 
-@lru_cache(maxsize=None)
-def _get_topo_data(topo_path: str):
-    """Load and cache topography arrays from a NetCDF file."""
+@lru_cache(maxsize=1)
+def _get_topo_rgba(topo_path: str):
+    """Load topography in rotated pole coordinates from a NetCDF file
+      and pre-compute the RGBA array."""
     try:
         ds = Dataset(topo_path)
-        data = (
-            ds["x_1"][:].data.copy(),
-            ds["y_1"][:].data.copy(),
-            ds["HSURF"][0, ...].data.copy(),
-        )
+        topo_x = ds["x_1"][:].data.copy()
+        topo_y = ds["y_1"][:].data.copy()
+        topo_hsurf = ds["HSURF"][0, ...].data.copy()
         ds.close()
-        return data
     except Exception as exc:  # pylint: disable=broad-except
         print(
             f"Warning: Failed to read topography file '{topo_path}': {exc}. "
             "Skipping topography plotting."
         )
         return None
+
+    levels = np.arange(0, 6000, 300)
+    cmap = plt.get_cmap("gray_r")
+    norm = mcolors.BoundaryNorm(levels, cmap.N)
+
+    # Map height values to RGBA
+    rgba = cmap(norm(topo_hsurf))
+
+    extent = (
+        float(topo_x.min()), float(topo_x.max()),
+        float(topo_y.min()), float(topo_y.max()),
+    )
+    return rgba, extent
+
 
 @lru_cache(maxsize=None)
 def _get_cached_geometries(
@@ -416,7 +429,7 @@ def _add_features(ax, topography=None):
         )
     # ax.add_image(ShadedReliefESRI(), 8)
 
-    # add ICON-CH1-EPS topography on COSMO-1E grid (cached after first load)
+    # add ICON-CH1-EPS topography on COSMO-1E grid (cached RGBA image)
     if topography:
         topo_file = Path(topography)
         if not topo_file.is_file():
@@ -425,17 +438,19 @@ def _add_features(ax, topography=None):
                 "skipping topography plotting."
             )
         else:
-            topo_data = _get_topo_data(str(topo_file))
-            if topo_data is not None:
-                topo_x, topo_y, topo_hsurf = topo_data
-                ax.contourf(
-                    topo_x,
-                    topo_y,
-                    topo_hsurf,
-                    cmap="gray_r",
-                    levels=np.arange(0, 8400, 400),
-                    extend="both",
-                    alpha=0.4,
+            result = _get_topo_rgba(str(topo_file))
+            if result is not None:
+                rgba, extent = result
+                # Use base-class imshow to bypass cartopy reprojection;
+                # the topo data is already in the native RotatedPole CRS.
+                _mpl_axes.Axes.imshow(
+                    ax,
+                    rgba,
+                    extent=extent,
+                    origin="lower",
+                    interpolation="bilinear",
+                    aspect="auto",
+                    zorder=5,
                 )
 
 
