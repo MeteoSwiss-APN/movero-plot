@@ -10,6 +10,27 @@ from pathlib import Path
 from .utils.atab import Atab
 
 
+# Module-level cache for raw ATAB parse results, keyed by resolved file path.
+# This avoids re-reading the same file from disk when multiple pipelines
+# (e.g. total_scores and ensemble_scores) need the same underlying data.
+_atab_cache: dict = {}
+
+
+def _load_atab_cached(file_path: Path, sep: str = " "):
+    """Return (header, data) for an ATAB file, using cache when possible.
+
+    The raw header dict and a *copy* of the DataFrame are returned so
+    that callers can apply their own transforms without mutating the cache.
+    """
+    key = str(file_path.resolve())
+    if key not in _atab_cache:
+        loaded_atab = Atab(file=file_path, sep=sep)
+        _atab_cache[key] = (loaded_atab.header, loaded_atab.data)
+    header, df = _atab_cache[key]
+    # Return a copy of the DataFrame so transforms don't mutate the cache
+    return header, df.copy()
+
+
 # pylint: disable=too-many-arguments,too-many-locals
 def is_valid_data(header):
     try:
@@ -51,10 +72,8 @@ def load_relevant_files(
                     in_lt_ranges = lt_range in lt_ranges
 
                 if in_lt_ranges:
-                    # extract header & dataframe
-                    loaded_atab = Atab(file=file_path, sep=" ")
-                    header = loaded_atab.header
-                    df = loaded_atab.data
+                    # extract header & dataframe (cached to avoid re-parsing)
+                    header, df = _load_atab_cached(file_path, sep=" ")
                     if transform_func:
                         df = transform_func(df, header)
                     if is_valid_data(header):
