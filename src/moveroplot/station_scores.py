@@ -192,7 +192,7 @@ def _plot_and_save_scores(
                 for model_idx, data in enumerate(models_data.values()):
                     ax = subplot_axes[idx][model_idx]
                     ax.get_yaxis().get_major_formatter().set_useOffset(False)
-                    _add_datapoints2(
+                    _add_datapoints(
                         fig=fig,
                         data=data["df"],
                         score=score,
@@ -429,7 +429,7 @@ def _get_cached_background(extent, topography, projection):
     return rgba, xlim, ylim
 
 
-def _add_datapoints2(fig, data, score, ax, unit, param):
+def _add_datapoints(fig, data, score, ax, unit, param):
     # Workaround since check_params does not work for ATHD_S
     param = "ATHD_S" if param[0] == "ATHD_S" else check_params(param[0])
     if param is None:
