@@ -1,5 +1,6 @@
 """Atab file support."""
 # Standard library
+import io
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -37,6 +38,7 @@ class Atab:
         self.n_header_lines = 0
         self.header: Dict[str, list[str]] = {}
         self.data: pd.DataFrame = pd.DataFrame()
+        self._data_lines: str = ""
 
         self._parse()
 
@@ -50,13 +52,13 @@ class Atab:
         self._parse_header()
 
         # Parse the data section
-        args: Dict[str, Any] = {"skiprows": self.n_header_lines, "parse_dates": False}
+        args: Dict[str, Any] = {"parse_dates": False}
         if self.sep == " ":
             args["delim_whitespace"] = True
         else:
             args["sep"] = self.sep
 
-        self.data = pd.read_csv(self.file, **args)
+        self.data = pd.read_csv(io.StringIO(self._data_lines), **args)
         if self.data.empty:
             raise OSError("ERROR: Atab file is empty")
 
@@ -112,6 +114,8 @@ class Atab:
             # Stop extraction of header information if line contains no ":"
             if len(elements) == 1:
                 self.n_header_lines = idx
+                # Keep remaining lines (including current) for data parsing
+                self._data_lines = line + "".join(lines)
                 break
 
             # Store header information
