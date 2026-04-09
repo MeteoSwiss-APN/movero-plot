@@ -16,9 +16,6 @@ import numpy as np
 
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER
-from matplotlib import cm
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.colors import ListedColormap
 from netCDF4 import Dataset
 
 # First-party
@@ -372,7 +369,7 @@ def _add_geographic_features(ax, topography=None):
     ax.add_feature(cfeature.LAKES, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(cfeature.RIVERS, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(
-        cartopy.feature.NaturalEarthFeature(
+        cartopy.feature.NaturalEarthFeature(  # type: ignore[attr-defined]
             category="physical",
             name="lakes_europe",
             scale="10m",
@@ -435,12 +432,12 @@ def _get_cached_background(extent, topography, projection):
 
     fig_temp = plt.figure(figsize=render_figsize, dpi=render_dpi)
     ax_temp = fig_temp.add_axes((0, 0, 1, 1), projection=projection)
-    ax_temp.set_extent(extent, crs=ccrs.PlateCarree())
+    ax_temp.set_extent(extent, crs=ccrs.PlateCarree())  # type: ignore[union-attr]
 
     _add_geographic_features(ax_temp, topography)
 
     fig_temp.canvas.draw()
-    rgba = np.array(fig_temp.canvas.buffer_rgba()).copy()
+    rgba = np.array(fig_temp.canvas.buffer_rgba()).copy()  # type: ignore[attr-defined]
     xlim = ax_temp.get_xlim()
     ylim = ax_temp.get_ylim()
     plt.close(fig_temp)
@@ -453,6 +450,8 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
 
     # Workaround since check_params does not work for ATHD_S
     param = "ATHD_S" if param[0] == "ATHD_S" else check_params(param[0])
+    if param is None:
+        param = "*"
 
     if param in station_score_range.columns and score in station_score_range.index:
         param_score_range = station_score_range[param].loc[score]
@@ -483,8 +482,9 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         param, score, plot_data.loc[score], param_score_range
     )
 
+    norm = None
     if score.startswith("FBI"):
-        if param.startswith(("CLCT")):
+        if param.startswith("CLCT"):
             norm = mcolors.FuncNorm((_forward_spec, _inverse_spec),
                 vmin=param_score_range["min"], vmax=param_score_range["max"]
             )
