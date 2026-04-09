@@ -391,7 +391,7 @@ def _add_geographic_features(ax, topography=None):
 
 
 def _get_cached_background(extent, topography, projection):
-    """Get or render a cached RGBA background image with all geographic features.
+    """Get or render a cached RGBA background image with geographic features.
 
     Returns:
         Tuple of (rgba_array, xlim, ylim) where xlim/ylim are in the native
@@ -402,12 +402,7 @@ def _get_cached_background(extent, topography, projection):
     if cache_key in _background_cache:
         return _background_cache[cache_key]
 
-    print("  Pre-rendering map background (cached for subsequent plots)...")
-    # Render at generous resolution; will be resampled into each subplot
-    render_dpi = 150
-    render_figsize = (14, 10)
-
-    fig_temp = plt.figure(figsize=render_figsize, dpi=render_dpi)
+    fig_temp = plt.figure(figsize=(7.3, 5), dpi=100)
     ax_temp = fig_temp.add_axes((0, 0, 1, 1), projection=projection)
     ax_temp.set_extent(extent, crs=ccrs.PlateCarree())  # type: ignore[union-attr]
 
