@@ -80,7 +80,8 @@ def _daytime_scores_pipeline(
 
 
 def _daytime_score_transformation(df, header):
-    df["hh"] = df["hh"].astype(int)
+    # Use assign to avoid mutating the (potentially cached) input DataFrame
+    df = df.assign(hh=df["hh"].astype(int))
     df = df.replace(float(header["Missing value code"][0]), np.NaN)
     return df
 

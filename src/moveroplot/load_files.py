@@ -19,16 +19,17 @@ _atab_cache: dict = {}
 def _load_atab_cached(file_path: Path, sep: str = " "):
     """Return (header, data) for an ATAB file, using cache when possible.
 
-    The raw header dict and a *copy* of the DataFrame are returned so
-    that callers can apply their own transforms without mutating the cache.
+    The raw header dict and the cached DataFrame are returned directly.
+    Callers that apply a transform_func are expected to create a new
+    DataFrame (e.g. via ``df.replace``) rather than mutating in place.
+    When no transform is applied, ``load_relevant_files`` copies the
+    DataFrame to protect the cache.
     """
     key = str(file_path.resolve())
     if key not in _atab_cache:
         loaded_atab = Atab(file=file_path, sep=sep)
         _atab_cache[key] = (loaded_atab.header, loaded_atab.data)
-    header, df = _atab_cache[key]
-    # Return a copy of the DataFrame so transforms don't mutate the cache
-    return header, df.copy()
+    return _atab_cache[key]
 
 
 # pylint: disable=too-many-arguments,too-many-locals
@@ -76,6 +77,9 @@ def load_relevant_files(
                     header, df = _load_atab_cached(file_path, sep=" ")
                     if transform_func:
                         df = transform_func(df, header)
+                    else:
+                        # Copy to protect the cache when no transform is applied
+                        df = df.copy()
                     if is_valid_data(header):
                         # add information to dict
                         first_key, second_key = (
