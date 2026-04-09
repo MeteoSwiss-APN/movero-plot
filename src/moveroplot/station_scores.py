@@ -88,7 +88,6 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict, topography=N
         ),
         nrows=num_rows,
         ncols=num_cols,
-        tight_layout=True,
         figsize=figsize,
         dpi=100,
         squeeze=False,
