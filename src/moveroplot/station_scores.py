@@ -379,7 +379,7 @@ def _add_geographic_features(ax, topography=None):
                 icon_ch1_eps_topo["y_1"][:].data,
                 icon_ch1_eps_topo["HSURF"][0, ...].data,
                 cmap="gray_r",
-                levels=np.arange(0, 12000, 500), # do not use entire colormap range
+                levels=np.arange(0, 6000, 300),
             )
         except Exception as exc:  # pylint: disable=broad-except
             print(
@@ -413,10 +413,14 @@ def _get_map_background(extent, topography, projection):
     # so the image maps 1-to-1 onto (xlim, ylim) without squeezing.
     bbox = ax_temp.get_window_extent(renderer)
     full_rgba = np.array(fig_temp.canvas.buffer_rgba())  # type: ignore[attr-defined]
-    h = full_rgba.shape[0]
-    # buffer_rgba has origin at top-left; bbox at bottom-left -> flip y
-    x0, x1 = int(bbox.x0), int(bbox.x1)
-    y0, y1 = h - int(bbox.y1), h - int(bbox.y0)
+    h, w = full_rgba.shape[:2]
+    # buffer_rgba has origin at top-left; bbox origin is bottom-left → flip y.
+    # Expand by 1 px on every side so that int() truncation doesn't clip the
+    # map frame border (spines are drawn on the bbox boundary).
+    x0 = max(int(bbox.x0) - 1, 0)
+    x1 = min(int(bbox.x1) + 1, w)
+    y0 = max(h - int(bbox.y1) - 1, 0)
+    y1 = min(h - int(bbox.y0), h)
     rgba = full_rgba[y0:y1, x0:x1].copy()
 
     xlim = ax_temp.get_xlim()
