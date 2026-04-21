@@ -379,7 +379,7 @@ def _add_geographic_features(ax, topography=None):
                 icon_ch1_eps_topo["y_1"][:].data,
                 icon_ch1_eps_topo["HSURF"][0, ...].data,
                 cmap="gray_r",
-                levels=np.arange(0, 6000, 300),
+                levels=np.arange(0, 12000, 500), # do not use entire colormap range
             )
         except Exception as exc:  # pylint: disable=broad-except
             print(
