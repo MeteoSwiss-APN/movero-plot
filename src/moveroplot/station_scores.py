@@ -407,26 +407,21 @@ def _get_map_background(extent, topography, projection):
     _add_geographic_features(ax_temp, topography)
 
     fig_temp.canvas.draw()
-    renderer = fig_temp.canvas.get_renderer()  # type: ignore[attr-defined]
 
     # The GeoAxes enforces its own aspect ratio. Crop the RGBA buffer to the actual axes pixel region
     # so the image maps 1-to-1 onto (xlim, ylim) without squeezing.
-    bbox = ax_temp.get_window_extent(renderer)
+    bbox = ax_temp.get_window_extent(fig_temp.canvas.get_renderer())  # type: ignore[attr-defined]
     full_rgba = np.array(fig_temp.canvas.buffer_rgba())  # type: ignore[attr-defined]
-    h, w = full_rgba.shape[:2]
+    h = full_rgba.shape[0]
     # buffer_rgba has origin at top-left; bbox origin is bottom-left -> flip y.
-    x0 = max(round(bbox.x0), 0)
-    x1 = min(round(bbox.x1), w)
-    y0 = max(h - round(bbox.y1), 0)
-    y1 = min(h - round(bbox.y0), h)
+    x0, x1 = round(bbox.x0), round(bbox.x1)
+    y0, y1 = h - round(bbox.y1), h - round(bbox.y0)
     rgba = full_rgba[y0:y1, x0:x1].copy()
 
-    xlim = ax_temp.get_xlim()
-    ylim = ax_temp.get_ylim()
+    result = (rgba, ax_temp.get_xlim(), ax_temp.get_ylim())
     plt.close(fig_temp)
-
-    _background_cache[cache_key] = (rgba, xlim, ylim)
-    return rgba, xlim, ylim
+    _background_cache[cache_key] = result
+    return result
 
 
 def _add_datapoints(fig, data, score, ax, unit, param):
