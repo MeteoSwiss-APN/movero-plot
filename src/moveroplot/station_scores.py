@@ -414,13 +414,11 @@ def _get_map_background(extent, topography, projection):
     bbox = ax_temp.get_window_extent(renderer)
     full_rgba = np.array(fig_temp.canvas.buffer_rgba())  # type: ignore[attr-defined]
     h, w = full_rgba.shape[:2]
-    # buffer_rgba has origin at top-left; bbox origin is bottom-left → flip y.
-    # Expand by 1 px on every side so that int() truncation doesn't clip the
-    # map frame border (spines are drawn on the bbox boundary).
-    x0 = max(int(bbox.x0) - 1, 0)
-    x1 = min(int(bbox.x1) + 1, w)
-    y0 = max(h - int(bbox.y1) - 1, 0)
-    y1 = min(h - int(bbox.y0), h)
+    # buffer_rgba has origin at top-left; bbox origin is bottom-left -> flip y.
+    x0 = max(round(bbox.x0), 0)
+    x1 = min(round(bbox.x1), w)
+    y0 = max(h - round(bbox.y1), 0)
+    y1 = min(h - round(bbox.y0), h)
     rgba = full_rgba[y0:y1, x0:x1].copy()
 
     xlim = ax_temp.get_xlim()
