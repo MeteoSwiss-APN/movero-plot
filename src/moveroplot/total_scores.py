@@ -319,11 +319,6 @@ def _generate_total_scores_plots(
     ]
     total_start_date, total_end_date = get_total_dates_from_headers(headers)
 
-    model_info = (
-        ""
-        if len(model_versions) > 1
-        else f"Model: {headers[0]['Model version'][0]} | \n"
-    )
     # pylint: disable=line-too-long
     period_info = f"""{total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""  # noqa: E501
     # pylint: enable=line-too-long
