@@ -281,16 +281,13 @@ def _plot_and_save_scores(
         )
 
         # save filled figure & re-set necessary for next iteration
-        full_figure = current_plot_idx > 0 and (current_plot_idx + 1) % 4 == 0
         last_plot = idx == len(plot_scores_setup) - 1
-        if full_figure or last_plot:
-            _save_figure(
-                output_dir, filename, sup_title, fig, subplot_axes, current_plot_idx
-            )
-            fig, subplot_axes = _initialize_plots(
-                models_color_lines, models_data.keys()
-            )
-            filename = base_filename
+        figure_full = (current_plot_idx + 1) % 4 == 0
+        if figure_full or last_plot:
+            _save_figure(output_dir, filename, sup_title, fig, subplot_axes, current_plot_idx)
+            if figure_full and not last_plot:
+                fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
+                filename = base_filename
 
         current_plot_idx += 1
 
