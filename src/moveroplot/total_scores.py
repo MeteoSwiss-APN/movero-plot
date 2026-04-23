@@ -174,6 +174,8 @@ def _plot_and_save_scores(
 ):
     if debug:
         print("Entering plot_and_save_scores.")
+    if not plot_scores_setup:
+        return
     filename = base_filename
     fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
 
