@@ -174,6 +174,8 @@ def _plot_and_save_scores(
 ):
     if debug:
         print("Entering plot_and_save_scores.")
+    if not plot_scores_setup:
+        return
     filename = base_filename
     fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
 
@@ -204,8 +206,9 @@ def _plot_and_save_scores(
         for model_idx, (key, data) in enumerate(models_data.items()):
             model_plot_color = plot_settings.modelcolors[key]
             # sorted lead time ranges
-            ltr_sorted = sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))
+            ltr_sorted = sorted(data.keys(), key=lambda x: int(x.split("-")[0]))
             x_int = list(range(len(ltr_sorted)))
+            total_series_by_ltr = {ltr: data[ltr]["df"]["Total"] for ltr in ltr_sorted}
 
             # extract header from data & create title
             header = data[ltr_sorted[-1]]["header"]
@@ -232,7 +235,7 @@ def _plot_and_save_scores(
             for score_idx, score in enumerate(score_setup):
                 if model_idx == 0:
                     filename += f"{score}_"
-                y_values = [data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted]
+                y_values = [total_series_by_ltr[ltr].loc[score] for ltr in ltr_sorted]
                 ax.plot(
                     x_int,
                     y_values,
@@ -248,9 +251,7 @@ def _plot_and_save_scores(
                     cat_score_range=cat_total_score_range,
                     score=score_setup[0],
                     ax=ax,
-                    y_values=[
-                        data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted
-                    ],
+                    y_values=y_values,
                 )
                 # Add reference lines
                 ymin, ymax = ax.get_ylim()
@@ -281,16 +282,13 @@ def _plot_and_save_scores(
         )
 
         # save filled figure & re-set necessary for next iteration
-        full_figure = current_plot_idx > 0 and (current_plot_idx + 1) % 4 == 0
         last_plot = idx == len(plot_scores_setup) - 1
-        if full_figure or last_plot:
-            _save_figure(
-                output_dir, filename, sup_title, fig, subplot_axes, current_plot_idx
-            )
-            fig, subplot_axes = _initialize_plots(
-                models_color_lines, models_data.keys()
-            )
-            filename = base_filename
+        figure_full = (current_plot_idx + 1) % 4 == 0
+        if figure_full or last_plot:
+            _save_figure(output_dir, filename, sup_title, fig, subplot_axes, current_plot_idx)
+            if not last_plot:
+                fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
+                filename = base_filename
 
         current_plot_idx += 1
 
@@ -323,11 +321,6 @@ def _generate_total_scores_plots(
     ]
     total_start_date, total_end_date = get_total_dates_from_headers(headers)
 
-    model_info = (
-        ""
-        if len(model_versions) > 1
-        else f"Model: {headers[0]['Model version'][0]} | \n"
-    )
     # pylint: disable=line-too-long
     period_info = f"""{total_start_date.strftime("%Y-%m-%d")} - {total_end_date.strftime("%Y-%m-%d")} | © MeteoSwiss"""  # noqa: E501
     # pylint: enable=line-too-long

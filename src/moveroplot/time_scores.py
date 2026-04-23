@@ -176,6 +176,8 @@ def _plot_and_save_scores(
     ltr_models_data,
     debug=False,
 ):
+    if not plot_scores_setup:
+        return
     for ltr, models_data in ltr_models_data.items():
         fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
         headers = [data["header"] for data in models_data.values()]
@@ -275,7 +277,9 @@ def _plot_and_save_scores(
                     line.set_color("black")
             filename += "_" + "_".join(score_setup)
 
-            if current_plot_idx % 2 == 1 or idx == len(plot_scores_setup) - 1:
+            last_plot = idx == len(plot_scores_setup) - 1
+            figure_full = current_plot_idx % 2 == 1
+            if figure_full or last_plot:
                 _clear_empty_axes_if_necessary(subplot_axes, current_plot_idx)
                 fig.suptitle(
                     sup_title,
@@ -289,8 +293,9 @@ def _plot_and_save_scores(
                 )
                 fig.savefig(f"{output_dir}/{filename}.png")
                 plt.close()
-                filename = base_filename + f"_{ltr}"
-                fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
+                if not last_plot:
+                    filename = base_filename + f"_{ltr}"
+                    fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
             current_plot_idx += 1
 
 
