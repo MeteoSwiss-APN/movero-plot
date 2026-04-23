@@ -293,7 +293,7 @@ def _plot_and_save_scores(
                 )
                 fig.savefig(f"{output_dir}/{filename}.png")
                 plt.close()
-                if figure_full and not last_plot:
+                if not last_plot:
                     filename = base_filename + f"_{ltr}"
                     fig, subplot_axes = _initialize_plots(ltr_models_data[ltr].keys())
             current_plot_idx += 1

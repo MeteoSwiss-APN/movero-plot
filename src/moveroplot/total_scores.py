@@ -286,7 +286,7 @@ def _plot_and_save_scores(
         figure_full = (current_plot_idx + 1) % 4 == 0
         if figure_full or last_plot:
             _save_figure(output_dir, filename, sup_title, fig, subplot_axes, current_plot_idx)
-            if figure_full and not last_plot:
+            if not last_plot:
                 fig, subplot_axes = _initialize_plots(models_color_lines, models_data.keys())
                 filename = base_filename
 
