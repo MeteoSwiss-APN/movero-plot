@@ -204,8 +204,9 @@ def _plot_and_save_scores(
         for model_idx, (key, data) in enumerate(models_data.items()):
             model_plot_color = plot_settings.modelcolors[key]
             # sorted lead time ranges
-            ltr_sorted = sorted(list(data.keys()), key=lambda x: int(x.split("-")[0]))
+            ltr_sorted = sorted(data.keys(), key=lambda x: int(x.split("-")[0]))
             x_int = list(range(len(ltr_sorted)))
+            total_series_by_ltr = {ltr: data[ltr]["df"]["Total"] for ltr in ltr_sorted}
 
             # extract header from data & create title
             header = data[ltr_sorted[-1]]["header"]
@@ -232,7 +233,7 @@ def _plot_and_save_scores(
             for score_idx, score in enumerate(score_setup):
                 if model_idx == 0:
                     filename += f"{score}_"
-                y_values = [data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted]
+                y_values = [total_series_by_ltr[ltr].loc[score] for ltr in ltr_sorted]
                 ax.plot(
                     x_int,
                     y_values,
@@ -248,9 +249,7 @@ def _plot_and_save_scores(
                     cat_score_range=cat_total_score_range,
                     score=score_setup[0],
                     ax=ax,
-                    y_values=[
-                        data[ltr]["df"]["Total"].loc[score] for ltr in ltr_sorted
-                    ],
+                    y_values=y_values,
                 )
                 # Add reference lines
                 ymin, ymax = ax.get_ylim()
