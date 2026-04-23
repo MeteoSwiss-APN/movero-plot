@@ -5,7 +5,6 @@ from datetime import datetime
 from pathlib import Path
 
 # Third-party
-import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.colors as mcolors
@@ -16,9 +15,6 @@ import numpy as np
 
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER
-from matplotlib import cm
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.colors import ListedColormap
 from netCDF4 import Dataset
 
 # First-party
@@ -32,6 +28,10 @@ from .utils.parse_plot_synop_ch import cat_station_score_range
 from .utils.parse_plot_synop_ch import station_score_range
 from .utils.scores_lists_settings import unit_number_scores, unitless_scores, _determine_cmap_and_bounds
 from .utils.FBI_scores_settings import param_score_range_fbi, _forward, _inverse, _forward_spec,     _inverse_spec, fbi_custom_ticks
+
+# Module-level cache for pre-rendered map background images.
+# Key: (extent_tuple, topography_path_or_None), Value: (rgba_array, xlim, ylim)
+_background_cache = {}
 
 
 def _calculate_figsize(num_rows, num_cols, single_plot_size=(8, 6), padding=(2, 2)):
@@ -56,10 +56,25 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict, topography=N
     num_cols = len(labels)
     num_rows = len(scores)
     figsize = _calculate_figsize(num_rows, num_cols, (7.3, 5), (0, 2))
+
+    projection = ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)
+
+    # Determine map extent from model version (same logic as before; last match wins)
+    extent = None
+    if "ch" in plot_setup["model_versions"][0][0]:
+        extent = [5.8, 10.6, 45.75, 47.8]
+    if "alps" in plot_setup["model_versions"][0][0]:
+        extent = [0.7, 16.5, 42.3, 50]
+
+    # Pre-render (or retrieve from cache) the map background image
+    bg_rgba = bg_xlim = bg_ylim = None
+    if extent is not None:
+        bg_rgba, bg_xlim, bg_ylim = _get_map_background(
+            extent, topography, projection
+        )
+
     fig, axes = plt.subplots(
-        subplot_kw=dict(
-            projection=ccrs.RotatedPole(pole_longitude=-170, pole_latitude=43)
-        ),
+        subplot_kw=dict(projection=projection),
         nrows=num_rows,
         ncols=num_cols,
         tight_layout=True,
@@ -68,11 +83,19 @@ def _initialize_plots(labels: list, scores: list, plot_setup: dict, topography=N
         squeeze=False,
     )
     for ax in axes.ravel():
-        if "ch" in plot_setup["model_versions"][0][0]:
-            ax.set_extent([5.8, 10.6, 45.75, 47.8], crs=ccrs.PlateCarree())
-        if "alps" in plot_setup["model_versions"][0][0]:
-            ax.set_extent([0.7, 16.5, 42.3, 50], crs=ccrs.PlateCarree())
-        _add_features(ax, topography)
+        if extent is not None:
+            ax.set_extent(extent, crs=ccrs.PlateCarree())
+            # Stamp the cached background image onto every subplot
+            assert bg_rgba is not None and bg_xlim is not None and bg_ylim is not None
+            ax.imshow(
+                bg_rgba,
+                extent=[bg_xlim[0], bg_xlim[1], bg_ylim[0], bg_ylim[1]],
+                origin='upper',
+                interpolation='bilinear',
+                zorder=9,
+                transform=projection,
+            )
+        _add_gridlines(ax)
     fig.tight_layout(w_pad=8, h_pad=2, rect=(0.05, 0.05, 0.90, 0.90))
     plt.subplots_adjust(bottom=0.15)
     return fig, axes
@@ -121,37 +144,26 @@ def _add_plot_text(ax, data, score, ltr):
     min_station = valid.idxmin()
     max_value = valid.max()
     max_station = valid.idxmax()
-    
-    if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
-        plt.text(
-            0.5,
-            -0.03,
-            f"""{start_str} to {end_str} -Min: {min_value} at station {min_station} +Max: {max_value} at station  {max_station}""",  # noqa: E501
-            horizontalalignment="center",
-            verticalalignment="center",
-            transform=ax.transAxes,
-            fontsize=8,
-        )
-    elif any(val1.startswith(val2) for val1 in {score} for val2 in unit_number_scores):
-        plt.text(
-            0.5,
-            -0.03,
-            f"""{start_str} to {end_str} -Min: {min_value} (Number) at station {min_station} +Max: {max_value} (Number) at station  {max_station}""",  # noqa: E501
-            horizontalalignment="center",
-            verticalalignment="center",
-            transform=ax.transAxes,
-            fontsize=8,
-        )
+
+    # Determine the unit suffix for the footer text
+    if any(score.startswith(p) for p in unitless_scores):
+        unit_suffix = ""
+    elif any(score.startswith(p) for p in unit_number_scores):
+        unit_suffix = " (Number)"
     else:
-        plt.text(
-            0.5,
-            -0.03,
-            f"""{start_str} to {end_str} -Min: {min_value} {unit} at station {min_station} +Max: {max_value} {unit} at station  {max_station}""",  # noqa: E501
-            horizontalalignment="center",
-            verticalalignment="center",
-            transform=ax.transAxes,
-            fontsize=8,
-        )
+        unit_suffix = f" {unit}"
+
+    plt.text(
+        0.5,
+        -0.03,
+        f"{start_str} to {end_str} "
+        f"-Min: {min_value}{unit_suffix} at station {min_station} "
+        f"+Max: {max_value}{unit_suffix} at station  {max_station}",
+        horizontalalignment="center",
+        verticalalignment="center",
+        transform=ax.transAxes,
+        fontsize=8,
+    )
     # pylint: enable=line-too-long
 
 
@@ -163,7 +175,6 @@ def _plot_and_save_scores(
     ltr_models_data,
     plot_setup,
     topography=None,
-    debug=False,
 ):
     for ltr, models_data in ltr_models_data.items():
         ltr_info = f"_{ltr}"
@@ -181,13 +192,11 @@ def _plot_and_save_scores(
                 for model_idx, data in enumerate(models_data.values()):
                     ax = subplot_axes[idx][model_idx]
                     ax.get_yaxis().get_major_formatter().set_useOffset(False)
-                    _add_datapoints2(
+                    _add_datapoints(
                         fig=fig,
                         data=data["df"],
                         score=score,
                         ax=ax,
-                        min=-10,
-                        max=10,
                         unit=data["header"]["Unit"][0],
                         param=data["header"]["Parameter"],
                     )
@@ -235,7 +244,6 @@ def _generate_station_plots(
         models_data,
         plot_setup,
         topography=topography,
-        debug=False,
     )
     _plot_and_save_scores(
         output_dir,
@@ -245,7 +253,6 @@ def _generate_station_plots(
         models_data,
         plot_setup,
         topography=topography,
-        debug=False,
     )
 
 
@@ -318,22 +325,8 @@ def _station_score_transformation(df, header):
     df.loc["lat"] = list(filter(None, header["Latitude"]))
     return df
 
-
-# PLOTTING PIPELINE FOR STATION SCORES PLOTS
-def _add_features(ax, topography=None):
-    """Add features to map.
-
-    # # point cartopy to the folder containing the shapefiles for the features on the map
-    # earth_data_path = Path("src/pytrajplot/resources/")
-    # assert (
-    #     earth_data_path.exists()
-    # ), f"The natural earth data could not be found at {earth_data_path}"
-    # # earth_data_path = str(earth_data_path)
-    # cartopy.config["pre_existing_data_dir"] = earth_data_path
-    # cartopy.config["data_dir"] = earth_data_path
-
-    # add grid & labels to map
-    """  # noqa: E501
+def _add_gridlines(ax):
+    """Add gridlines with formatted coordinate labels to a map axis."""
     gl = ax.gridlines(
         draw_labels=True, ls="--", lw=0.5, x_inline=False, y_inline=False, zorder=11
     )
@@ -346,6 +339,9 @@ def _add_features(ax, topography=None):
     gl.xlabel_style = {"rotation": 0}
     gl.ylabel_style = {"rotation": 0}
 
+
+def _add_geographic_features(ax, topography=None):
+    """Add geographic features (coastlines, borders, water bodies, topography) to a map axis."""
     ax.add_feature(cfeature.COASTLINE, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(
         cfeature.BORDERS, linestyle="--", alpha=1, rasterized=True, zorder=10
@@ -354,7 +350,7 @@ def _add_features(ax, topography=None):
     ax.add_feature(cfeature.LAKES, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(cfeature.RIVERS, alpha=0.5, rasterized=True, zorder=10)
     ax.add_feature(
-        cartopy.feature.NaturalEarthFeature(
+        cfeature.NaturalEarthFeature(
             category="physical",
             name="lakes_europe",
             scale="10m",
@@ -370,41 +366,69 @@ def _add_features(ax, topography=None):
     # add ICON-CH1-EPS topography on COSMO-1E grid
     if topography:
         topo_file = Path(topography)
-
         if not topo_file.is_file():
             print(
-                f"Warning: --topography file '{topography}' not found, skipping topography plotting."
+                f"Warning: --topography file '{topography}' not found, "
+                "skipping topography plotting."
             )
-            topo_file = None
-
-        if topo_file is not None and topo_file.exists():
-            try:
-                icon_ch1_eps_topo = Dataset(str(topo_file))
-                ax.contourf(
-                    icon_ch1_eps_topo["x_1"][:].data,
-                    icon_ch1_eps_topo["y_1"][:].data,
-                    icon_ch1_eps_topo["HSURF"][0, ...].data,
-                    cmap="gray_r",
-                    levels=np.arange(0, 8400, 400),
-                    extend="both",
-                    alpha=0.4,
-                )
-            except Exception as exc:  # pylint: disable=broad-except
-                print(
-                    f"Warning: Failed to read topography file '{topo_file}': {exc}. Skipping topography plotting."
-                )
-        else:
-            if topo_file is not None:
-                print(
-                    f"Warning: Topo file '{topo_file}' not found, skipping topography plotting."
-                )
+            return
+        try:
+            icon_ch1_eps_topo = Dataset(str(topo_file))
+            ax.contourf(
+                icon_ch1_eps_topo["x_1"][:].data,
+                icon_ch1_eps_topo["y_1"][:].data,
+                icon_ch1_eps_topo["HSURF"][0, ...].data,
+                cmap="gray_r",
+                levels=np.arange(0, 12000, 500), # do not use entire colormap range
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            print(
+                f"Warning: Failed to read topography file '{topo_file}': "
+                f"{exc}. Skipping topography plotting."
+            )
 
 
-def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
-    # dataframes have two different structures
+def _get_map_background(extent, topography, projection):
+    """Get or render a cached RGBA background image with geographic features.
 
+    Returns:
+        Tuple of (rgba_array, xlim, ylim) where xlim/ylim are in the native
+        projection coordinates.
+
+    """
+    cache_key = (tuple(extent), topography)
+    if cache_key in _background_cache:
+        return _background_cache[cache_key]
+
+    fig_temp = plt.figure(figsize=(7.3, 5), dpi=100)
+    ax_temp = fig_temp.add_axes((0, 0, 1, 1), projection=projection)
+    ax_temp.set_extent(extent, crs=ccrs.PlateCarree())  # type: ignore[union-attr]
+
+    _add_geographic_features(ax_temp, topography)
+
+    fig_temp.canvas.draw()
+
+    # The GeoAxes enforces its own aspect ratio. Crop the RGBA buffer to the actual axes pixel region
+    # so the image maps 1-to-1 onto (xlim, ylim) without squeezing.
+    bbox = ax_temp.get_window_extent(fig_temp.canvas.get_renderer())  # type: ignore[attr-defined]
+    full_rgba = np.array(fig_temp.canvas.buffer_rgba())  # type: ignore[attr-defined]
+    h = full_rgba.shape[0]
+    # buffer_rgba has origin at top-left; bbox origin is bottom-left -> flip y.
+    x0, x1 = round(bbox.x0), round(bbox.x1)
+    y0, y1 = h - round(bbox.y1), h - round(bbox.y0)
+    rgba = full_rgba[y0:y1, x0:x1].copy()
+
+    result = (rgba, ax_temp.get_xlim(), ax_temp.get_ylim())
+    plt.close(fig_temp)
+    _background_cache[cache_key] = result
+    return result
+
+
+def _add_datapoints(fig, data, score, ax, unit, param):
     # Workaround since check_params does not work for ATHD_S
     param = "ATHD_S" if param[0] == "ATHD_S" else check_params(param[0])
+    if param is None:
+        param = "*"
 
     if param in station_score_range.columns and score in station_score_range.index:
         param_score_range = station_score_range[param].loc[score]
@@ -435,8 +459,9 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         param, score, plot_data.loc[score], param_score_range
     )
 
+    norm = None
     if score.startswith("FBI"):
-        if param.startswith(("CLCT")):
+        if param.startswith("CLCT"):
             norm = mcolors.FuncNorm((_forward_spec, _inverse_spec),
                 vmin=param_score_range["min"], vmax=param_score_range["max"]
             )
@@ -450,10 +475,10 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         y=list(plot_data.loc["lat"]),
         marker="o",
         c=list(plot_data.loc[score]),
-        vmin=param_score_range["min"] if not score.startswith("FBI") else None,
-        vmax=param_score_range["max"] if not score.startswith("FBI") else None,
+        vmin=param_score_range["min"] if norm is None else None,
+        vmax=param_score_range["max"] if norm is None else None,
         cmap=cmap,
-        norm=norm if score.startswith("FBI") else None,
+        norm=norm,
         edgecolors="black",
         linewidth=0.4,
         rasterized=True,
@@ -496,10 +521,10 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         custom_ticks = fbi_custom_ticks(param)
         cbar.set_ticks(custom_ticks)
         cbar.ax.set_yticklabels([str(tick) for tick in custom_ticks])
-    #Plot bar label
-    if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
+    # Plot bar label
+    if any(score.startswith(p) for p in unitless_scores):
         cbar.set_label(f"{score}")
-    elif any(val1.startswith(val2) for val1 in {score} for val2 in unit_number_scores):
+    elif any(score.startswith(p) for p in unit_number_scores):
         cbar.set_label(f"{score}, (Number)")
     else:
         cbar.set_label(f"{score}, ({unit})")
@@ -514,71 +539,3 @@ def _add_datapoints2(fig, data, score, ax, min, max, unit, param, debug=False):
         linewidth=0.5,
     )
 
-
-def _add_datapoints(data, score, ax, min, max, unit, param, debug=False):
-    print(f"plotting:\t{param}/{score}")
-    # check param, before trying to assign cmap to it
-
-    print("Station Score Colortable")
-    # pprint(station_score_colortable)
-    print("Note: Index = Scores")
-
-    # print("Cat Station Score Colortable")
-    # print(data.loc[["lon", "lat", score]])
-    lower_bound = station_score_range[param[0], "min"][score]
-    upper_bound = station_score_range[param[0], "max"][score]
-
-    sc = ax.scatter(
-        x=list(data.loc["lon"].astype(float)),
-        y=list(data.loc["lat"].astype(float)),
-        marker="o",
-        c=list(data.loc[score].astype(float)),
-        vmin=lower_bound,
-        vmax=upper_bound,
-        rasterized=True,
-        transform=ccrs.PlateCarree(),
-    )
-
-    cbar = plt.colorbar(sc, ax=ax, orientation="vertical", fraction=0.046, pad=0.04)
-    #Plot bar label
-    if any(val1.startswith(val2) for val1 in {score} for val2 in unitless_scores):
-        cbar.set_label(f"{score}")
-    elif any(val1.startswith(val2) for val1 in score for val2 in unit_number_scores):
-        cbar.set_label(f"{score} (Number)")
-    else:
-        cbar.set_label(f"{score} ({unit})")
-
-
-def _add_text(
-    ax,
-    variable,
-    score,
-    header_dict,
-    lt_range,
-    min_value,
-    max_value,
-    min_station,
-    max_station,
-):
-    """Add footer and title to plot."""
-    footer = f"""Model: {header_dict["Model version"]} |
-    Period: {header_dict["Start time"][0]} - {header_dict["End time"][0]} | Min: {min_value} {header_dict["Unit"]}
-     @ {min_station} | Max: {max_value} {header_dict["Unit"]} @ {max_station}
-     | © MeteoSwiss"""  # noqa: E501
-
-    plt.suptitle(
-        footer,
-        x=0.125,
-        y=0.06,
-        horizontalalignment="left",
-        verticalalignment="top",
-        fontdict={
-            "size": 6,
-            "color": "k",
-        },
-    )
-
-    title = f"{variable}: {score}, LT: {lt_range}"
-    ax.set_title(title, fontsize=15, fontweight="bold")
-
-    return ax
