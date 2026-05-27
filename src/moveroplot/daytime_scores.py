@@ -246,6 +246,7 @@ def _plot_and_save_scores(
                 },
                 bbox={"facecolor": "none", "edgecolor": "grey"},
             )
+        plt.close(fig)
 
 def _generate_daytime_plots(
     plot_scores,
