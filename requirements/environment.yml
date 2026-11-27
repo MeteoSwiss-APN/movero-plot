@@ -27,10 +27,10 @@ dependencies:
   - brotli-python=1.1.0
   - bzip2=1.0.8
   - c-ares=1.24.0
-  - ca-certificates=2025.1.31
+  - ca-certificates=2026.11.20
   - cairo=1.18.0
   - cartopy=0.22.0
-  - certifi=2025.1.31
+  - certifi=2026.11.20
   - cffi=1.16.0
   - cfgv=3.3.1
   - cftime=1.6.4
